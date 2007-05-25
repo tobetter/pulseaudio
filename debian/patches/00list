@@ -6,3 +6,4 @@
 06_fix_suspend.dpatch
 07_fix_esdcompat_bashism.dpatch
 09_fix_esd_max_samplesize.dpatch
+10_fix_DoS_vulns.dpatch
