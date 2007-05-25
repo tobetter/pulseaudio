@@ -1,3 +1,11 @@
+pulseaudio (0.9.5-5ubuntu4.1) feisty-security; urgency=low
+
+  * SECURITY UPDATE: Denial of service (daemon crash).
+  * 10_fix_DoS_vulns.dpatch: extracted from upstream changes
+    (CVE-2007-1804)
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Fri, 25 May 2007 02:18:16 -0400
+
 pulseaudio (0.9.5-5ubuntu4) feisty; urgency=low
 
   * add 09_fix_esd_max_samplesize.dpatch to make sure the login and logout
