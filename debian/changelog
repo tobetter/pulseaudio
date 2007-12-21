@@ -1,3 +1,9 @@
+pulseaudio (0.9.6-1ubuntu2~feisty1) feisty-backports; urgency=low
+
+  * Automated backport upload; no source changes.
+
+ -- Jonathan Patrick Davies <jpatrickdavies@gmail.com>  Fri, 21 Dec 2007 12:11:59 +0000
+
 pulseaudio (0.9.6-1ubuntu2) gutsy; urgency=low
 
   * fix esound max samplesize again to make sure teh login sound is playable
