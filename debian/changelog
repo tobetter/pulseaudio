@@ -1,3 +1,14 @@
+pulseaudio (0.9.5-5ubuntu4.2) feisty-security; urgency=low
+
+  * SECURITY UPDATE: potential privilege escalation via pulseaudio if
+    setresuid() fails
+  * debian/patches/SECURITY_CVE-2008-0008.patch: fix caps.c to properly
+    drop privileges
+  * References
+    CVE-2008-0008
+
+ -- Jamie Strandboge <jamie@ubuntu.com>  Thu, 24 Jan 2008 09:46:33 +0000
+
 pulseaudio (0.9.5-5ubuntu4.1) feisty-security; urgency=low
 
   * SECURITY UPDATE: Denial of service (daemon crash).
