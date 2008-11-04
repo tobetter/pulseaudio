@@ -1,6 +1,5 @@
-0001-Set-ESD-socket-to-tmp-.esd-socket-to-match-up-with.patch
-0002-Fix-library-search-path-to-include-lib-and-usr-lib.patch
-0003-Define-PULSE_INTERNAL.patch
-0004-load-module-gconf-earlier.patch
-0005-Reduce-RT-prio-logging-severity.patch
-0006-fix-iteration-over-random-devices.patch
+0001-Fix-library-search-path-to-include-lib-and-usr-lib.patch
+0002-load-module-gconf-earlier.patch
+0003_change_resample_and_buffering.patch
+0004_disable_autospawn.patch
+0005_regen_autotools.patch

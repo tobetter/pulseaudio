@@ -15,6 +15,8 @@ common-install-arch::
 	find $(DEB_DESTDIR) -name "*.la" -delete
 	mkdir -p $(CURDIR)/debian/tmp/usr/share/lintian
 	cp -a $(CURDIR)/debian/overrides $(CURDIR)/debian/tmp/usr/share/lintian
+	mkdir -p $(CURDIR)/debian/tmp/usr/share/alsa
+	cp -a $(CURDIR)/debian/*.conf $(CURDIR)/debian/tmp/usr/share/alsa
 
 common-binary-post-install-arch:: list-missing
 
@@ -37,4 +39,4 @@ update-patch-series:
 DEB_CONFIGURE_EXTRA_FLAGS = --with-realtime-group=pulse-rt
 DEB_DH_MAKESHLIBS_ARGS_ALL = --exclude=usr/lib/pulse-0.9/modules
 DEB_DH_INSTALL_ARGS = --sourcedir=$(CURDIR)/debian/tmp
-DEB_UPDATE_RCD_PARAMS = defaults 25 15
+DEB_UPDATE_RCD_PARAMS = start 25 2 3 4 5 . stop 15 1 .
