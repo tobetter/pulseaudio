@@ -1,8 +1,10 @@
-# If we are loading a GNOME session, load pulseaudio.
+# If we are running the GNOME session, source ~/.gnomerc
 
-if [ "$BASESTARTUP" = gnome-session -o \
-	\( "$BASESTARTUP" = x-session-manager -a \
-	"`readlink /etc/alternatives/x-session-manager`" = \
-		/usr/bin/gnome-session \) ]; then
-  STARTUP="/usr/bin/pulse-session $STARTUP"
+if [ -x /usr/bin/pulse-session ]; then
+	if [ "$BASESTARTUP" = gnome-session -o \
+		\( "$BASESTARTUP" = x-session-manager -a \
+		"`readlink /etc/alternatives/x-session-manager`" = \
+			/usr/bin/gnome-session \) ]; then
+	  	STARTUP="/usr/bin/pulse-session $STARTUP"
+	fi
 fi
