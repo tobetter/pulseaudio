@@ -1,3 +1,11 @@
+pulseaudio (0.9.10-2ubuntu9.1) intrepid-proposed; urgency=low
+
+  * debian/70pulseaudio: Check that /usr/bin/pulse-session is executable before
+    adding it to the STARTUP variable. Fix based on patch thanks to
+    Maze <ForeverWatcher@googlemail.com>. (LP: #294541)
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Fri, 21 Nov 2008 12:39:21 +1100
+
 pulseaudio (0.9.10-2ubuntu9) intrepid; urgency=low
 
   * debian/70pulseaudio && debian/pulse-session: Use a wrapper script
