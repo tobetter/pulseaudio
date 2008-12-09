@@ -1,3 +1,11 @@
+pulseaudio (0.9.10-2ubuntu9.2) intrepid-proposed; urgency=low
+
+  * Add pm-utils sleep hook to suspend (and resume) users' pulseaudio
+    daemons (LP: #202089). Based on a patch by
+    Chow Loong Jin <hyperair@gmail.com>.
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Mon, 08 Dec 2008 22:11:32 -0800
+
 pulseaudio (0.9.10-2ubuntu9.1) intrepid-proposed; urgency=low
 
   * debian/70pulseaudio: Check that /usr/bin/pulse-session is executable before
