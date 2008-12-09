@@ -3,6 +3,7 @@ etc/pulse/daemon.conf
 etc/X11/Xsession.d/70pulseaudio
 usr/bin/pulseaudio
 usr/bin/pulse-session
+usr/lib/pm-utils/sleep.d/01PulseAudio
 usr/lib/pulse-*/modules/libalsa-util.so
 usr/lib/pulse-*/modules/libauthkey-prop.so
 usr/lib/pulse-*/modules/libauthkey.so
