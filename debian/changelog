@@ -1,3 +1,11 @@
+pulseaudio (0.9.10-2ubuntu9.3) intrepid-proposed; urgency=low
+
+  * Regression fix:
+    - pulse.conf: Always honour ~/.asoundrc with highest
+      priority (LP: #295832).
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Sun, 18 Jan 2009 15:04:21 -0500
+
 pulseaudio (0.9.10-2ubuntu9.2) intrepid-proposed; urgency=low
 
   * Add pm-utils sleep hook to suspend (and resume) users' pulseaudio
