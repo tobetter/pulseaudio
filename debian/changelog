@@ -1,3 +1,108 @@
+pulseaudio (0.9.15~test7-0ubuntu1~ppa1) jaunty; urgency=low
+
+  * New upstream test release.
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Wed, 01 Apr 2009 12:20:28 +1100
+
+pulseaudio (0.9.15~test6-0ubuntu1~ppa2) jaunty; urgency=low
+
+  * Add libudev-dev as a build dependency.
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Wed, 01 Apr 2009 12:07:52 +1100
+
+pulseaudio (0.9.15~test6-0ubuntu1~ppa1) jaunty; urgency=low
+
+  * New upstream test release.
+  * Generate .po template on build.
+  * Change init script start/stop symantics, taken from official jaunty package.
+  * Add -O3 CFLAGS, taken from official Jaunty package.
+  * Dropped autospawn patch, as its enabled by default anyway.
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Wed, 01 Apr 2009 11:49:43 +1100
+
+pulseaudio (0.9.15~test5-0ubuntu1~ppa2) jaunty; urgency=low
+
+  * add libbluetooth-util.so, thanks to Ernst Persson for the pointer
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Mon, 09 Mar 2009 09:39:13 +1100
+
+pulseaudio (0.9.15~test5-0ubuntu1~ppa1) jaunty; urgency=low
+
+  * New upstream test release
+  * add RAOP/AirTunes support, thanks to Christopher L Conway
+    <cconway@cs.nyu.edu> for the patch
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Fri, 06 Mar 2009 10:34:06 +1100
+
+pulseaudio (0.9.15~test3-0ubuntu1~ppa3) jaunty; urgency=low
+
+  * 0006_fix_bluetooth_modules.patch: Fix to allow bluetooth modules to be
+    loaded. This is similar breakage to the fix for the alsa modules in the
+    previous upload.
+  * Adjust autotools rebuild patch accordingly.
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Fri, 27 Feb 2009 10:28:11 +1100
+
+pulseaudio (0.9.15~test3-0ubuntu1~ppa2) jaunty; urgency=low
+
+  * 0005_fix_module_alsa_card.patch: Patch to fix a weird file not found error
+    with module-alsa-card
+  * 0006_regen_autotools.patch: Rebuild autotools related files dueo to above
+    patch
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Thu, 26 Feb 2009 13:02:06 +1100
+
+pulseaudio (0.9.15~test3-0ubuntu1~ppa1) jaunty; urgency=low
+
+  * New upstream release
+  * enable auto spawn as per the official PulseAudio jaunty package
+  * edd libxtst-dev and libxi-dev as build dependencies
+  * bumped libasound2-dev requirement to 1.0.19
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Wed, 25 Feb 2009 12:47:23 +1100
+
+pulseaudio (0.9.15~test2-0ubuntu1~ppa1) jaunty; urgency=low
+
+  * New upstream release
+  * Re-enable position event sounds module
+  * Add new modules to pulseaudio package.
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Fri, 13 Feb 2009 09:13:38 +1100
+
+pulseaudio (0.9.15~test1-0ubuntu1~ppa4) jaunty; urgency=low
+
+  * debian/pulseaudio.install: Add missing module-alsa-card.so
+    and module-card-restore.so
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Fri, 06 Feb 2009 19:59:00 -0500
+
+pulseaudio (0.9.15~test1-0ubuntu1~ppa3) jaunty; urgency=low
+
+  * Fix conflicts/replaces screwup from last upload, and libpulsecore0 ->
+    libpulsecore9
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Fri, 06 Feb 2009 17:18:35 +0100
+
+pulseaudio (0.9.15~test1-0ubuntu1~ppa2) jaunty; urgency=low
+
+  * Add conflicts/replaces for libpulse0
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Fri, 06 Feb 2009 16:30:02 +0100
+
+pulseaudio (0.9.15~test1-0ubuntu1~ppa1) jaunty; urgency=low
+
+  * New upstream release (testing only)
+    - Dropped patches that were originally taken from git head
+    - Disabled position event sounds module. Upstream has stated
+      that it is buggy, and should be disabled. A fix should be in
+      the next release
+  * Get rid of the libpulsecore package, since it no longer exists as
+    a shared library with a soname
+  * Put the new shared object file for libpulsecore in the pulseaudio package
+  * Add the libpulsecommon shared object file to libpulse0
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Fri, 06 Feb 2009 16:29:57 +0100
+
 pulseaudio (0.9.14-0ubuntu3) jaunty; urgency=low
 
   [ Daniel T Chen ]
