@@ -1,3 +1,48 @@
+pulseaudio (1:0.9.15-2ubuntu1) karmic; urgency=low
+
+  * Merge from Debian unstable, remaining changes:
+    - epoch (my stupid fault :S)
+    - Don't build against, and create jack package. Jack is not in main
+    - use linear resampler to work better with lack of PREEMPT in jaunty's
+      -generic kernel config, also change buffer size
+    - Add alsa configuration files to route alsa applications via pulseaudio
+    - Move libasound2-plugins from Recommends to Depends
+    - Add pm-utils sleep hook to suspend (and resume) users' pulseaudio
+      daemons
+    - patch to fix source/sink and suspend-on-idle race
+    - Make initscript more informative in the default case of per-user
+      sessions
+    - create /var/run/pulse, and make restart more robust
+    - add status check for system wide pulseaudio instance
+    - LSB {Required-*,Should-*} should specify hal instead of dbus,
+      since hal is required (and already requires dbus)
+    - indicate that the system pulseaudio instance is being started from the init
+      script
+    - Install more upstream man pages
+    - Link to pacat for parec man page
+    - check whether pulseaudio is running before preloading the padsp library
+    - Add DEB_OPT_FLAG = -O3 as per recommendation from
+      pulseaudio-discuss/2007-December/001017.html
+    - cache /usr/share/sounds/ubuntu/stereo/ wav files on pulseaudio load
+    - disable glitch free (use tsched=0)
+    - Generate a PO template on build
+    - add special case to disable pulseaudio loading if accessibility/speech
+      is being used
+    - the sd wrapper script should not load pulseaudio if pulseaudio is being
+      used as a system service
+    - add a pulseaudio apport hook
+    - fix some typos in README.Debian
+    - demote paprefs to suggests
+    - drop padevchooser(Recommends) and pavucontrol (Suggests)
+    - drop libasyncns-dev build dependency, its in universe
+    - add libudev-dev as a build-dependency
+    - Retain libbluetooth-dev build dependency
+  * debian/01Pulseaudio: Harvist users by UID, and not username, to ensure
+    that the script doesn't choak on characters not already considered as
+    used in a username (LP: #374694)
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Tue, 26 May 2009 23:33:42 +0200
+
 pulseaudio (0.9.15-2) unstable; urgency=low
 
   * debian/control: Add strict dependencies from libpulse-dev to the various
@@ -6,6 +51,62 @@ pulseaudio (0.9.15-2) unstable; urgency=low
     (Closes: #528405)
 
  -- Sjoerd Simons <sjoerd@debian.org>  Thu, 21 May 2009 00:54:38 +0100
+
+pulseaudio (1:0.9.15-1ubuntu3) karmic; urgency=low
+
+  * debian/control: libltdl7-dev -> libltdl-dev
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Mon, 11 May 2009 12:33:08 +1000
+
+pulseaudio (1:0.9.15-1ubuntu2) karmic; urgency=low
+
+  * debian/01PulseAudio: harvest users more robustly. Thanks,
+    Chow Loong Jin <hyperair@gmail.com>! (LP: #202089)
+  * debian/control: pulseaudio depends on pulseaudio-module-hal
+    to fix LP: #326532
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Thu, 09 Apr 2009 17:03:00 -0400
+
+pulseaudio (1:0.9.15-1ubuntu1) karmic; urgency=low
+
+  * Merge from unreleased Debian pulseaudio git, remaining changes:
+    - epoch (my stupid fault :S)
+    - Don't build against, and create jack package. Jack is not in main
+    - use linear resampler to work better with lack of PREEMPT in jaunty's
+      -generic kernel config, also change buffer size
+    - Add alsa configuration files to route alsa applications via pulseaudio
+    - Move libasound2-plugins from Recommends to Depends
+    - Add pm-utils sleep hook to suspend (and resume) users' pulseaudio
+      daemons
+    - patch to fix source/sink and suspend-on-idle race
+    - Make initscript more informative in the default case of per-user
+      sessions
+    - create /var/run/pulse, and make restart more robust
+    - add status check for system wide pulseaudio instance
+    - LSB {Required-*,Should-*} should specify hal instead of dbus,
+      since hal is required (and already requires dbus)
+    - indicate that the system pulseaudio instance is being started from the init
+      script
+    - Install more upstream man pages
+    - Link to pacat for parec man page
+    - check whether pulseaudio is running before preloading the padsp library
+    - Add DEB_OPT_FLAG = -O3 as per recommendation from
+      pulseaudio-discuss/2007-December/001017.html
+    - cache /usr/share/sounds/ubuntu/stereo/ wav files on pulseaudio load
+    - disable glitch free (use tsched=0)
+    - Generate a PO template on build
+    - add special case to disable pulseaudio loading if accessibility/speech
+      is being used
+    - the sd wrapper script should not load pulseaudio if pulseaudio is being
+      used as a system service
+    - add a pulseaudio apport hook
+    - fix some typos in README.Debian
+    - demote paprefs to suggests
+    - drop padevchooser(Recommends) and pavucontrol (Suggests)
+    - drop libasyncns-dev build dependency, its in universe
+  * add libudev-dev as a build-dependency
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Tue, 05 May 2009 14:18:20 +1000
 
 pulseaudio (0.9.15-1) unstable; urgency=low
 
@@ -96,6 +197,418 @@ pulseaudio (0.9.14-1) experimental; urgency=low
 
  -- Sjoerd Simons <sjoerd@debian.org>  Sun, 01 Feb 2009 12:47:55 +0000
 
+pulseaudio (1:0.9.14-0ubuntu20) jaunty; urgency=low
+
+  * debian/01PulseAudio: use pactl instead of pacmd (LP: #202089)
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Wed, 08 Apr 2009 18:54:30 -0400
+
+pulseaudio (1:0.9.14-0ubuntu19) jaunty; urgency=low
+
+  [ Daniel T Chen ]
+  * debian/pulseaudio.init:
+    - Fix inane stop() syntax (LP: #357201)
+  * Update backported (from git HEAD) fixes:
+    - 0091_workaround_alsa_horkage.patch
+  * Add new fixes:
+    - 0049_fix_sampling_rate_not_beyond_pa-rate-max.patch
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Thu, 09 Apr 2009 07:29:24 +1000
+
+pulseaudio (1:0.9.14-0ubuntu18) jaunty; urgency=low
+
+  * debian/apport-hook.py: Add apport hook
+  * debian/rules, debian/pulseaudio.install: Install apport hook
+  * LP: #357913
+
+ -- Matt Zimmerman <mdz@ubuntu.com>  Wed, 08 Apr 2009 20:14:17 +0100
+
+pulseaudio (1:0.9.14-0ubuntu17) jaunty; urgency=low
+
+  [ Daniel T Chen ]
+  * debian/pulseaudio.init:
+    - Actually create /var/run/pulse, and make handling of /restart
+      more robust (LP #317921)
+    - Add /status check for system-wide daemon instance
+      (LP: #298299)
+  * Backport from upstream git HEAD:
+    - 0046_ignore_hal_no_such_cap.patch,
+    - 0047_pick_up_all_cards.patch (LP: #353807),
+    - 0048_fix_stuck_prebuf.patch (LP: #355825)
+
+  [ Luke Yelavich ]
+  * debian/control: Drop recommends from the pulseaudio-module-x11 package. if
+    they were dropped previously, they were re-added somehow, so lets get rid
+    of them once and for all.
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Tue, 07 Apr 2009 16:51:59 +1000
+
+pulseaudio (1:0.9.14-0ubuntu16) jaunty; urgency=low
+
+  * Introduce epoch to fix my stupidity in uploading a test release of
+    pulseaudio.
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Wed, 01 Apr 2009 14:04:33 +1100
+
+pulseaudio (0.9.14-0ubuntu15) jaunty; urgency=low
+
+  [ Daniel T Chen ]
+  * README.Debian:
+    pulse-session:
+    pulseaudio.default: Clarify function of system-wide check, and
+    make /usr/bin/pulse-session do the right thing if system-wide
+    is enabled (LP: #286966)
+
+  [ Luke Yelavich ]
+  * Make the a11y no start special case per user, not system wide.
+  * Also make the esd wrapper script honour system wide pulseaudio.
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Mon, 30 Mar 2009 11:33:33 +1100
+
+pulseaudio (0.9.14-0ubuntu14) jaunty; urgency=low
+
+  * No-change rebuild to fix lpia shared library dependencies.
+
+ -- Colin Watson <cjwatson@ubuntu.com>  Thu, 19 Mar 2009 13:57:35 +0000
+
+pulseaudio (0.9.14-0ubuntu13) jaunty; urgency=low
+
+  * debian/rules: Generate a PO template on build. Thanks to Timo Jyrinki for
+    the patch! (LP: #342159)
+
+ -- Martin Pitt <martin.pitt@ubuntu.com>  Mon, 16 Mar 2009 10:14:19 +0100
+
+pulseaudio (0.9.14-0ubuntu12) jaunty; urgency=low
+
+  * 0091_workaround_alsa_horkage.patch:
+    - Lower severity of logging level to prevent DoS on syslog
+      LP: #320875, #343254
+      LP #330814
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Sat, 14 Mar 2009 22:39:03 -0400
+
+pulseaudio (0.9.14-0ubuntu11) jaunty; urgency=low
+
+  [ Daniel T Chen ]
+  * Reenable 0030_set_tsched0.patch, which re-disables glitch-free;
+    too many users are reporting regressions and audio aberrations.
+  * Adjust 0003_change_resample_and_buffering.patch to use linear
+    resampler to work better with lack of PREEMPT in jaunty's
+    -generic kernel config (LP: #207135, #322250, #332761, #335955,
+    LP: #336965).
+  * Last upload, specifically 0091_workaround_alsa_horkage, fixes:
+    LP: #235990, #237443, #279847, #317997, #323185, #330814,
+    LP: #334874.
+  * sudo -H change in ubuntu6 fixed LP: #312505.
+  * Closing old bugs fixed in 0.9.11+: LP: #187963, #193520, #211052.
+  * Refresh 0006_regen-autotools.patch.
+  * Add 0043_load_sample_dir_lazy.patch to cache
+    /usr/share/sounds/ubuntu/stereo/* in default.pa.
+  * debian/:
+    - control: Build against libcap2-dev (LP: #339448);
+    - copyright: Update copyright from Debian's 0.9.14-2;
+    - rules: Add DEB_OPT_FLAG = -O3 as per recommendation from
+      pulseaudio-discuss/2007-December/001017.html.
+  * Refresh fixes from git HEAD:
+    - 0038_handle_errno_properly.patch,
+    - 0091_workaround_alsa_horkage.patch,
+    - 0092_fix_null_pointer_access.patch.
+
+  [ Luke Yelavich ]
+  * Add a special case to prevent Pulseaudio from being started when the
+    blindness accessibility profile has been enabled from the Ubuntu live CD,
+    and for an accessibility install. Unfortunately Pulseaudio and speech do
+    not currently work very well with each other, and its too late in
+    the cycle to solve this problem any other way.
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Tue, 10 Mar 2009 09:00:40 +1100
+
+pulseaudio (0.9.14-0ubuntu10) jaunty; urgency=low
+
+  [ Daniel T Chen ]
+  * 0030_set_tsched0.patch: Disable this patch, which has the effect of
+    reenabling glitch-free. Depends on 0091_workaround_alsa_horkage.
+  * 0091_workaround_alsa_horkage.patch: Rework ALSA delay handling.
+
+  [ Luke Yelavich ]
+  * debian/control: re-add the vcs bzr URL for Ubuntu's pulseaudio packaging
+    as it got lost somewhere along the way
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Mon, 02 Mar 2009 10:40:11 +1100
+
+pulseaudio (0.9.14-0ubuntu9) jaunty; urgency=low
+
+  * PulseAudio does not need to be started before gdm, especially since we use
+    user sessions by default.
+
+ -- Scott James Remnant <scott@ubuntu.com>  Fri, 27 Feb 2009 01:27:20 +0000
+
+pulseaudio (0.9.14-0ubuntu8) jaunty; urgency=low
+
+  [ Daniel T Chen ]
+  * Backport fixes from git HEAD:
+    - 0041_clarify_cmdline_opts.patch,
+    - 0042_fix_selem_init.patch
+
+  [ Luke Yelavich ]
+  * 0001_more_translatable_strings.patch: Make the .desktop file and PolicyKit
+    files translatable, thanks to Gabor Kelemen <kelemeng@gnome.hu for this
+    work (LP: #331831)
+  * 0006_regen-autotools.patch: re-create to take into account changes needed
+    for the above mentioned translation additions
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Tue, 24 Feb 2009 13:46:25 +1100
+
+pulseaudio (0.9.14-0ubuntu7) jaunty; urgency=low
+
+  [ Luke Yelavich ]
+  * 0001-Fix-library-search-path-to-include-lib-and-usr-lib.patch: Dropped,
+    no longer applicable, as evident in Debian's pulseaudio git branch.
+
+  [ Daniel T Chen ]
+  * 0004_enable_autospawn.patch: Renamed from .."disable".. for clarity,
+    and actually apply it.
+  * 0012_clarify_driver_error_redirect_to_alsa_devs.patch: Clarify
+    logging message for 'linux' source package and ALSA developers
+    instead of PulseAudio developers in alsa-util.c, too.
+    - This patch can be tweaked, since upstream has now applied it to
+      git HEAD
+  * Backport fixes from git HEAD:
+    - 0035_fix_module-detect_access.patch,
+    - 0036_increase_memblock_imports.patch,
+    - 0037_fill_silence_fail_import_memblock.patch,
+    - 0038_handle_errno_properly.patch,
+    - 0039_add_validity_checks.patch,
+    - 0040_legacy_fixes.patch
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Thu, 19 Feb 2009 19:34:03 -0500
+
+pulseaudio (0.9.14-0ubuntu6) jaunty; urgency=low
+
+  * 0004_disable_autospawn.patch: Disable this patch. Doing so
+    allows the daemon to spawn if not already running, which
+    works around LP: #191027, #204272
+  * 0012_clarify_driver_error_redirect_to_alsa_devs.patch:
+    - Only log POLL* being set if tsched is used so that syslog
+      isn't filled with innocuous messages when we set tsched=0
+      (see 0030 below) (LP: #323712),
+    - Hint 'linux' source package instead of 'alsa-driver' for
+      Launchpad bug reports,
+    - The debug-specific portion is only applicable to 0.9.14;
+      0.9.15 enables a rate limiting module by default to work
+      around this (and other) issues
+  * 0029_fix_suspend_on_idle_null_race.patch: Handle sink case,
+    too
+  * 0030_set_tsched0.patch: Work around a shedload of (driver)
+    bugs by falling back to interrupt-based buffer semantics
+    (LP: #190754, #292880, #295519, #298494, #301755, #302964,
+     LP: #319118, #323976, #324103, #326205, #326864)
+  * Backport fixes from git HEAD:
+    - 0031_fix_6chan_map.patch,
+    - 0032_reinit_proplist.patch,
+    - 0033_fix_pa-gcc-packedmalloc.patch,
+    - 0034_bt_fixes.patch
+  * Make invoking the stop target in the initscript not fail an
+    upgrade (LP: #317921)
+  * Previous upload (0.9.14-0ubuntu3) fixed LP: #321357
+  * 01PulseAudio: use sudo -H to ensure that $HOME is, in fact,
+    the user's when invoking pacmd for suspend/resume
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Sun, 15 Feb 2009 02:35:26 -0500
+
+pulseaudio (0.9.14-0ubuntu5) jaunty; urgency=low
+
+  * Add fixes from git HEAD:
+    - 0028_fix_uninit_rtp_resamp.patch,
+    - 0029_fix_suspend_on_idle_null_race.patch
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Thu, 12 Feb 2009 18:28:42 -0500
+
+pulseaudio (0.9.14-0ubuntu4) jaunty; urgency=low
+
+  * Add fixes from git HEAD:
+    - 0023_work_around_dlsym_retval_mistyping.patch,
+    - 0024_fix_sink_source_calls_in_suspended.patch,
+    - 0025_shortcut_pa-sink-process-rewind.patch,
+    - 0026_reset_rewind-requested_when_suspend.patch,
+    - 0027_fix_piped_pacmd.patch
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Wed, 04 Feb 2009 19:36:09 -0500
+
+pulseaudio (0.9.14-0ubuntu3) jaunty; urgency=low
+
+  [ Daniel T Chen ]
+  * Add fixes from git HEAD:
+    - 0014_fix_avail-min_calc.patch,
+    - 0015_no_pa-asyncq-push_fail.patch,
+    - 0016_dont_rely_pa-sink-running-idle_for_optim.patch,
+    - 0017_fix_hsp_rate_chan.patch,
+    - 0018_dont_restore_mute_vol_when_already_set.patch,
+    - 0019_fix_mem_leak_in_pa-alsa-open-by-device-string.patch,
+    - 0020_ask_for_same_frag_set_when_resuming_oss_dev.patch,
+    - 0021_add_missing_const.patch,
+    - 0022_dont_hit_assert_in_esound-sink_when_latency_queried.patch
+
+  [ Luke Yelavich ]
+  * Re-instate /etc/X11/Xsession.d/70pulseaudio, to again load pulseaudio
+    earlier in the X session, to aleviate a pulse/login-sound race condition
+    (LP: #322374)
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Mon, 02 Feb 2009 15:27:55 +0100
+
+pulseaudio (0.9.14-0ubuntu2) jaunty; urgency=low
+
+  * Add fixes from trunk:
+    - 0012_clarify_driver_error_redirect_to_alsa_devs.patch
+  * Add 0013_add_padsp_wrapper_check.patch (LP: #269939)
+  * debian/pulseaudio.manpages:
+    debian/pulseaudio-esound-compat.manpages:
+    debian/pulseaudio-utils.links:
+    - Install upstream man pages (LP: #219669, #318660),
+    - Link to pacat for parec man page (LP: #294628)
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Thu, 22 Jan 2009 02:57:54 -0500
+
+pulseaudio (0.9.14-0ubuntu1) jaunty; urgency=low
+
+  * New upstream release. (LP: #317502, #317613)
+  * Dropped patches, all in upstream release.
+    - 0003-make-sure-to-use-64bit-rounding-even-on-32bit-machin.patch
+    - 0004-properly-remove-dbus-matches-an-filters-when-unloadi.patch
+    - 0005-Fix-two-typos-that-broke-tunnels.patch
+    - 0008_regen_autotools.patch
+    - 0009_shm-arch-indep.patch
+    - 0010_check_before_using_environment.patch
+    - 0011_load_restore_before_other_modules.patch
+    - 0013_dont_hit_assert_issuing_two_rewinds_in_single_iter.patch
+    - 0014_retry_without_snd-pcm-no-auto-format.patch
+    - 0015_use_fionread.patch
+    - 0016_add_pa-source-message-get-latency.patch
+    - 0017_allow_dev_dsp_w-ok.patch
+    - 0019_fix_macro_pa-unlikely.patch
+    - 0020_catch_driver_errors.patch
+    - 0022_fix_return_val_dump-resample-methods.patch
+    - 0023_use_gdbm-nolock.patch
+    - 0024_dont_mix_front-center_into_rear.patch
+    - 0025_drop_cap-nice_properly.patch
+    - 0027_handle_multicast_sdp_with_same_ip_ttl_as_rtp.patch
+    - 0029_add_minor_fixes.patch
+    - 0030_dont_drop_client_data.patch
+    - 0031_use_fragsize_for_record_stream_latency.patch
+  * Bumped shlibs for libpulse0.
+  * Package libpulsecore8 -> libpulsecore9.
+  * Add libdbus-glib-1-dev to build-depends.
+  * Regression fix:
+    - pulse.conf: Always honour ~/.asoundrc and /etc/asound.conf with highest
+      priority, thanks to Daniel T Chen. (LP: #295832)
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Mon, 19 Jan 2009 14:45:36 +1100
+
+pulseaudio (0.9.13-2ubuntu7) UNRELEASED; urgency=low
+
+  * Add fixes from 0.9.14:
+    - 0030_dont_drop_client_data.patch,
+    - 0031_use_fragsize_for_record_stream_latency.patch,
+    - 0032_fix_suspend_sinks_sources.patch (LP: #317613)
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Thu, 15 Jan 2009 17:26:14 -0500
+
+pulseaudio (0.9.13-2ubuntu6) jaunty; urgency=low
+
+  * debian/control: Package pulseaudio-module-x11,
+    Recommends: gnome-audio | ubuntu-sounds.
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Tue, 13 Jan 2009 16:15:48 +1100
+
+pulseaudio (0.9.13-2ubuntu5) jaunty; urgency=low
+
+  [ Daniel T Chen ]
+  * Add fixes from git:
+    - 0015_use_fionread.patch,
+    - 0016_add_pa-source-message-get-latency.patch,
+    - 0017_allow_dev_dsp_w-ok.patch,
+    - 0018_fix_return_val_pa-frame-aligned.patch,
+    - 0019_fix_macro_pa-unlikely.patch,
+    - 0020_catch_driver_errors.patch (LP: #312373),
+    - 0021_convert_to_pa-bool-t.patch,
+    - 0022_fix_return_val_dump-resample-methods.patch,
+    - 0023_use_gdbm-nolock.patch,
+    - 0024_dont_mix_front-center_into_rear.patch,
+    - 0025_drop_cap-nice_properly.patch,
+    - 0027_handle_multicast_sdp_with_same_ip_ttl_as_rtp.patch,
+    - 0028_prefer_mixer_controls_with_vols.patch (LP: #281605),
+    - 0029_add_minor_fixes.patch
+  * Forward-port workaround from hardy branch for source/sink and
+    suspend-on-idle race (LP: #203654):
+    - 0026_work_around_suspend-on-idle_source_sink_race.patch
+  * debian/control: Drop padevchooser(Recommends) and pavucontrol
+    (Suggests) completely - functionality has been subsumed by
+    jaunty's gnome-volume-control.
+  * debian/pulseaudio.init:
+    - Make initscript more informative in the default case of per-user
+      sessions (LP: #259522),
+    - Make initscript retry (until three-second timeout) if stopping
+      fails when restarting (LP: #244414),
+    - LSB {Required-*,Should-*} should specify hal instead of dbus,
+      since hal is required (and already requires dbus) (LP: #244679)
+  * Previous upload contains patches to close:
+    LP: #193491, #268891, #295164, #298301
+
+  [ Luke Yelavich ]
+  * 0008_regen_autotools.patch: Pull some libtool 2.2 updates from git,
+    and regenerate autotools glue.
+  * debian/rules: Add --enable-static to force creation of libpulse.a,
+    a side-effect of messing with the autotools files. This shouldn't
+    be needed for the 0.9.14 release.
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Fri, 09 Jan 2009 17:05:38 +1100
+
+pulseaudio (0.9.13-2ubuntu4) jaunty; urgency=low
+
+  * Demote paprefs to suggests (LP: #309422)
+  * Add fixes from git:
+    - 0010_check_before_using_environment.patch,
+    - 0011_load_restore_before_other_modules.patch,
+    - 0012_dont_hit_assert_checking_for_idleness.patch,
+    - 0013_dont_hit_assert_issuing_two_rewinds_in_single_iter.patch,
+    - 0014_retry_without_snd-pcm-no-auto-format.patch.
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Sun, 28 Dec 2008 23:43:01 -0500
+
+pulseaudio (0.9.13-2ubuntu3) jaunty; urgency=low
+
+  * Add pm-utils sleep hook to suspend (and resume) users' pulseaudio
+    daemons (LP: #202089). Based on a patch by
+    Chow Loong Jin <hyperair@gmail.com>.
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Mon, 08 Dec 2008 22:11:32 -0800
+
+pulseaudio (0.9.13-2ubuntu2) jaunty; urgency=low
+
+  * debian/patches/0009_shm-arch-indep.patch:
+    - Make shm marker architecture independant, taken from git.
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Mon, 01 Dec 2008 12:06:00 +1100
+
+pulseaudio (0.9.13-2ubuntu1) jaunty; urgency=low
+
+  * Merge from Debian experimental, remaining changes:
+    - Don't build against, and create jack package. Jack is not in main.
+    - Remove --disable-per-user-esound-socket from configure flags, as we still
+      want per user esound sockets.
+    - Remove stop links from rc0 and rc6.
+    - Change default resample algorithm and bubffer size.
+    - Add alsa configuration files to route alsa applications via pulseaudio.
+    - Move libasound2-plugins from Recommends to Depends.
+    - debian/pulseaudio.preinst: When upgrading from intrepid, remove
+      /etc/X11/Xsession.d/70pulseaudio, as this was used to minimize a race
+      condition when starting GNOME in intrepid. This race should not exist in
+      jaunty once libcanberra is built to use pulseaudio as a backend.
+    - Do not spawn a pulseaudio server if clients fail to find a running server.
+    - Regenerate autotools files for ubuntu.
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Wed, 19 Nov 2008 10:44:03 +1100
+
 pulseaudio (0.9.13-2) experimental; urgency=low
 
   * Rename libpulsecore5 to libpulsecore8 to correctly reflect the soname
@@ -108,6 +621,42 @@ pulseaudio (0.9.13-2) experimental; urgency=low
     - Fix tunnels. From upstream git
 
  -- Sjoerd Simons <sjoerd@debian.org>  Sun, 16 Nov 2008 18:13:05 +0000
+
+pulseaudio (0.9.13-1ubuntu3) jaunty; urgency=low
+
+  * Build-depend on libltdl7-dev to make the armel buildd happy.
+
+ -- Matthias Klose <doko@ubuntu.com>  Wed, 19 Nov 2008 16:26:45 +0000
+
+pulseaudio (0.9.13-1ubuntu2) jaunty; urgency=low
+
+  * Drop libasyncns-dev again. Its in universe, and we will worry about
+    whether we really need it again later.
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Tue, 18 Nov 2008 15:47:20 +1100
+
+pulseaudio (0.9.13-1ubuntu1) jaunty; urgency=low
+
+  * Merge from Debian unstable, remaining changes:
+    - Don't build against, and create jack package. Jack is not in main.
+    - Remove --disable-per-user-esound-socket from configure flags, as we still
+      want per user esound sockets.
+    - Remove stop links from rc0 and rc6.
+    - Change default resample algorithm and bubffer size.
+    - Add alsa configuration files to route alsa applications via pulseaudio.
+    - Move libasound2-plugins from Recommends to Depends.
+  * debian/pulseaudio.preinst: When upgrading from intrepid, remove
+    /etc/X11/Xsession.d/70pulseaudio, as this was used to minimize a race
+    condition when starting GNOME in intrepid. This race should not exist in
+    jaunty once libcanberra is built to use pulseaudio as a backend.
+  * Do not spawn a pulseaudio server if clients fail to find a running server.
+  * Remove explicit version dependency for libspeex-dev to allow the package
+    to be built for now.
+  * Regenerate autotools files to work with Ubuntu's newer libtool/libltdl.
+  * debian/control: libpulsecore5 -> libpulsecore8 to match the library
+    soname.
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Tue, 04 Nov 2008 15:46:00 +1100
 
 pulseaudio (0.9.13-1) experimental; urgency=low
 
@@ -157,6 +706,109 @@ pulseaudio (0.9.10-3) unstable; urgency=low
 
  -- Sjoerd Simons <sjoerd@debian.org>  Sat, 30 Aug 2008 14:24:51 +0100
 
+pulseaudio (0.9.10-2ubuntu9) intrepid; urgency=low
+
+  * debian/70pulseaudio && debian/pulse-session: Use a wrapper script
+    to start pulseaudio at the Xsession.d phase of the login process.
+    The wrapper script is necessary to execute processes that need to
+    be loaded after pulseaudio, such as the X session manager. This
+    works around a race condition involving pulseaudio and canberra-gtk-play
+    and the GNOME login sound. (LP: #274124)
+  * debian/pulseaudio.preinst: Remove /etc/xdg/autostart/pulseaudio.desktop
+    if it exists. We don't want pulseaudio started more than once.
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Mon, 20 Oct 2008 13:26:28 +1100
+
+pulseaudio (0.9.10-2ubuntu8) intrepid; urgency=low
+
+  * debian/pulseaudio.desktop: Use a slightly modified version of the
+    pulseaudio desktop file from more recent versions, and place it in
+    /etc/xdg/autostart, to start pulseaudio earlier in the GNOME desktop
+    initialization. This should avoid a race condition between the login
+    sound being played, and pulseaudio being loaded. (LP: #274124)
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Fri, 10 Oct 2008 15:22:51 +1100
+
+pulseaudio (0.9.10-2ubuntu7) intrepid; urgency=low
+
+  * Fix some errors in the pid file handling patch, thanks to Mandriva.
+  * debian/pulse.conf: Do not use an absolute path when referring to the
+    pulse alsa plugin, as this breaks bi-arch configurations. libasound2
+    and lib32/64asound2 now include ldconfig files to include the alsa-plugins
+    path for the architecture in use.
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Wed, 08 Oct 2008 11:20:17 +1100
+
+pulseaudio (0.9.10-2ubuntu6) intrepid; urgency=low
+
+  * debian/pulse-alsa.conf: extend configuration to include "pulse"
+    definitions for buggy ALSA applications (e.g., Skype). (LP: #258581)
+
+ -- Conn O Griofa <connogriofa@gmail.com>  Tue, 23 Sep 2008 16:12:19 +0100
+
+pulseaudio (0.9.10-2ubuntu5) intrepid; urgency=low
+
+  * debian/control: Bump libasound2-plugins from recommends to depends to be
+    sure that nobody's audio set up for alsa applications is broken.
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Tue, 23 Sep 2008 23:07:23 +1000
+
+pulseaudio (0.9.10-2ubuntu4) intrepid; urgency=low
+
+  * debian/pulse.conf, debian/pulse-alsa.conf. Asoundrc configuration files
+    to allow the use of pulseaudio as the default output for applications
+    using alsa, when pulseaudio is running.
+  * debian/patches/0015-Change-resampler-and-buffering.patch: Change the
+    resample method used as well as the buffer size.
+  * Some patches taken from Mandriva's pulseaudio package. See comments in
+    patch headers for more details:
+    - 0007-Perfer-client.conf-over-X11-property-variables.patch
+    - 0008-Also-link-libpulsecore.la-to-some-libraries-needed.patch
+    - 0009-Rejig-r2495-slightly-and-directly-compile-the-necess.patch
+    - 0010-Do-not-invalidate-the-cookie-if-no-file-was-specifie.patch
+    - 0011-fix-error-path-spotted-by-Coling-Guthrie.patch
+    - 0012-Change-policykit-policy-to-allow-high-priority-and-d.patch
+    - 0013-More-robust-pid-file-handling.patch
+    - 0014-Disable-hotplug-sound-as-it-interferes-with-too-many.patch
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Tue, 23 Sep 2008 16:02:48 +1000
+
+pulseaudio (0.9.10-2ubuntu3) intrepid; urgency=low
+
+  * Remove stop links from rc0 and rc6 (LP: #254254):
+    - debian/rules: change DEB_UPDATE_RCD_PARAMS to
+      start 25 2 3 4 5 . stop 15 1 .
+
+ -- Cesare Tirabassi <norsetto@ubuntu.com>  Mon, 04 Aug 2008 19:22:43 +0200
+
+pulseaudio (0.9.10-2ubuntu2) intrepid; urgency=low
+
+  * debian/patches/0006-pcspkr-last.patch: Load the PC speaker as a sink
+    after all other sound card sinks have been loaded. (LP: #242966)
+  * debian/patches/0007-relibtoolize.patch: Regenerate relevant libtool
+    bits, because even though libltdl7 is supposed to be API-compatible
+    with libltdl3, the package FTBFs without regeneration.
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Tue, 29 Jul 2008 16:07:18 +1000
+
+pulseaudio (0.9.10-2ubuntu1) intrepid; urgency=low
+
+  * Merge from Debian unstable.
+  * Patches
+    + 0001-Set-ESD-socket-to-tmp-.esd-socket-to-match-up-with.patch:
+      continue to disable this patch, as we want user sockets to be
+      the default in the conffile;
+    - 0050-Reduce-RT-highprio-log-to-info: absorbed into Debian unstable;
+    - 0051-Reduce-pa_pid_file_create-Daemon-already-running-log-spam:
+      removed as per discussion with Sjoerd, as it can confuse human
+      debugging;
+  * Packaging
+    + MaintainerField and Vcs munging;
+    + Don't generate or install the jackd module;
+    + Use multiuser semantics.
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Wed, 14 May 2008 15:47:31 -0400
+
 pulseaudio (0.9.10-2) unstable; urgency=low
 
   * debian/patches/0003-Define-PULSE_INTERNAL.patch
@@ -171,6 +823,32 @@ pulseaudio (0.9.10-2) unstable; urgency=low
     priorities is the default.
 
  -- Sjoerd Simons <sjoerd@debian.org>  Sat, 10 May 2008 22:16:12 +0200
+
+pulseaudio (0.9.10-1ubuntu1) hardy; urgency=low
+
+  [ Daniel T Chen ]
+  * Merge from Debian unstable:
+  * Patches
+    + 0050-Reduce-RT-highprio-log-to-info:
+    + 0051-Reduce-pa_pid_file_create-Daemon-already-running-log-spam:
+      Retain to prevent innocuous messages from spamming user log;
+    - 0052-Add-extra-checks-to-padsp-debug-calls:
+    - 0053-Handle-channel-map-failure:
+    - 0054-Invoke-pa_ltdl_done-conditionally:
+    - 0055-fix_record_stream_moved:  Merged in new upstream version.
+  * Packaging
+    + control:  Adhere to DebianMaintainerField spec, and add a
+      Vcs-Bzr entry;
+    + control:
+    + pulseaudio-module-jack.install:  Don't generate or install the
+      jackd module;
+    + pulseaudio.init:
+    + rules:  Use multiuser semantics.
+
+  [ Luke Yelavich ]
+  * FFe granted. (LP: #211592)
+
+ -- Luke Yelavich <luke.yelavich@canonical.com>  Mon, 07 Apr 2008 10:40:01 +1000
 
 pulseaudio (0.9.10-1) unstable; urgency=low
 
@@ -197,6 +875,52 @@ pulseaudio (0.9.10-1) unstable; urgency=low
 
  -- CJ van den Berg <cj@vdbonline.com>  Sun, 30 Mar 2008 20:11:02 +0200
 
+pulseaudio (0.9.9-1ubuntu4) hardy; urgency=low
+
+  * Patch from Thorvald Natvig to fix protocol error when moving source outputs.
+    (LP: #194756)
+
+ -- Luke Yelavich <luke.yelavich@canonical.com>  Fri, 28 Mar 2008 15:58:55 +1100
+
+pulseaudio (0.9.9-1ubuntu3) hardy; urgency=low
+
+  * Patches:
+    - Apply (new) patch to handle channel mapping failure.  From
+      upstream SVN changeset 2105.  (LP: #178442)
+    - Apply (new) patch to invoke pa_ltdl_done() conditionally.
+      From upstream SVN changeset 2111.
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Mon, 18 Feb 2008 18:40:28 -0500
+
+pulseaudio (0.9.9-1ubuntu2) hardy; urgency=low
+
+  * Packaging:
+    - Add versioned dependency on sysv-rc to pulseaudio for LTS->LTS.
+      Thanks, Steve Langasek (LP: #187469)!
+  * Patches:
+    - Apply (new) patch from Mandriva adding checks to debug calls,
+      preventing crashes, with padsp.
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Wed, 30 Jan 2008 20:43:29 -0500
+
+pulseaudio (0.9.9-1ubuntu1) hardy; urgency=low
+
+  * Merge from Debian unstable, remaining changes:
+    - Packaging:
+      + pulseaudio-module-x11 does not recommend an audio theme,
+      + no jack packages,
+      + pulseaudio-utils long description clarification,
+      + multiuser initscript semantics (Teardown spec),
+      + Vcs-Bzr entry and DebianMaintainerField mangling;
+    - Patches:
+      + omit 0001-Set-ESD-socket-to-tmp-..,
+      + omit socket parameter in 0007-Change-config-.. to apply
+        cleanly given above 0001-Set-ESD-socket omission,
+      + lower verboseness of some log messages,
+      + drop backported CVE-2008-008 fix (already in 0.9.9).
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Fri, 25 Jan 2008 16:04:34 -0500
+
 pulseaudio (0.9.9-1) unstable; urgency=high
 
   * New Upstream Version.
@@ -204,6 +928,48 @@ pulseaudio (0.9.9-1) unstable; urgency=high
   * Priority high because it fixes a security issue.
 
  -- Sjoerd Simons <sjoerd@debian.org>  Thu, 24 Jan 2008 12:44:55 +0100
+
+pulseaudio (0.9.8-2ubuntu3) hardy; urgency=low
+
+  * [SECURITY] Apply (new) patch fixing unchecked setuid() return
+    values.  Patch backported from upstream 0.9.9.
+  * References:
+    CVE-2008-0008
+    https://bugzilla.novell.com/show_bug.cgi?id=347822
+    https://bugzilla.redhat.com/show_bug.cgi?id=425481
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Wed, 23 Jan 2008 20:11:25 -0500
+
+pulseaudio (0.9.8-2ubuntu2) hardy; urgency=low
+
+  * Apply (new) 0051-Reduce-pa_pid_file_create.. patch that lowers the
+    "Daemon already running", "pa_pid_file_create() failed", and
+    "setrlimit(..Operation not permitted" levels to prevent spamming
+    /var/log/syslog.  Normal users not in the pulse-rt group don't need
+    this level of verbosity, and the "errors" are innocuous given per-
+    user session invocation.  (These changes really close LP #83137 and
+    duplicates.)
+  * Thanks to Sjoerd Simons for the insight.
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Tue, 08 Jan 2008 06:36:42 -0500
+
+pulseaudio (0.9.8-2ubuntu1) hardy; urgency=low
+
+  * Merge from Debian unstable, remaining changes:
+    - Packaging:
+      + pulseaudio-module-x11 does not recommend an audio theme,
+      + no jack packages,
+      + pulseaudio-utils long description clarification,
+      + multiuser initscript semantics (Teardown spec),
+      + Vcs-Bzr entry and DebianMaintainerField mangling;
+    - Patches:
+      + omit 0001-Set-ESD-socket-to-tmp-..,
+      + omit socket parameter in 0007-Change-config-.. to apply
+        cleanly given above 0001-Set-ESD-socket omission,
+      + apply (new) 0050-Reduce-RT-highprio-log-to-info.patch
+        (LP: #83137 and duplicates).
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Fri, 04 Jan 2008 21:46:57 +0000
 
 pulseaudio (0.9.8-2) unstable; urgency=low
 
@@ -227,6 +993,44 @@ pulseaudio (0.9.8-2) unstable; urgency=low
     Thanks to Aurelien Jarno for the patch (Closes: #454197)
 
  -- Sjoerd Simons <sjoerd@debian.org>  Fri, 04 Jan 2008 16:12:27 +0100
+
+pulseaudio (0.9.8-1ubuntu3) hardy; urgency=low
+
+  * debian/control: Drop Recommendation of ubuntu-sounds entirely; it's wrong
+    for derivatives, and theming should be done with seeds and derivative
+    specific meta packages.
+
+ -- Martin Pitt <martin.pitt@ubuntu.com>  Mon, 10 Dec 2007 14:37:37 +0100
+
+pulseaudio (0.9.8-1ubuntu2) hardy; urgency=low
+
+  * debian/control: Make pulseaudio-module-x11 recommend ubuntu-sounds,
+    not gnome-audio.
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Thu, 06 Dec 2007 07:12:07 -0500
+
+pulseaudio (0.9.8-1ubuntu1) hardy; urgency=low
+
+  "Hail our new PulseAudio overlords (part two)."
+
+  * Merge from Debian unstable.
+  * Ubuntu-specific changes:
+    - debian/control:
+      + Don't build-depend on libjack0.100.0-dev or build jack module
+        packages,
+      + Update pulseaudio's Recommends and Suggests to accomodate
+        existing promoted main packages,
+      + Explicitly mention pasuspender in pulseaudio-utils's long
+        description,
+      + Add Vcs-Bzr URI,
+      + Adhere to DebianMaintainerField;
+    - debian/rules: Use multiuser for update-rc.d;
+    - debian/patches/series: Retain the exclusion of
+      0001-Set-ESD-socket-to-tmp-.esd-socket-to-match-up-with.patch.
+  * Dropped Ubuntu-specific change (absorbed into Debian source):
+    debian/patches/0002-Double-esound-maximum-sample-size.patch.
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Tue, 04 Dec 2007 00:56:08 +0000
 
 pulseaudio (0.9.8-1) unstable; urgency=low
 
@@ -268,6 +1072,40 @@ pulseaudio (0.9.8-1) unstable; urgency=low
   * debian/pulseaudio.init: LSB-ify.
 
  -- CJ van den Berg <cj@vdbonline.com>  Thu, 22 Nov 2007 02:33:51 +0100
+
+pulseaudio (0.9.7-3ubuntu2) hardy; urgency=low
+
+  * Disable 0001-Set-ESD-socket-to-tmp-.esd-socket-to-match-up-with.patch. We
+    do want per-user esd sockets in Ubuntu. This unbreaks multiuser support
+    and matches the patch that we did to esound for the very same reason:
+    every user needs its own esd socket path to have them not conflict to each
+    other.
+
+ -- Martin Pitt <martin.pitt@ubuntu.com>  Tue, 20 Nov 2007 22:30:35 +0100
+
+pulseaudio (0.9.7-3ubuntu1) hardy; urgency=low
+
+  "Hail our new PulseAudio overlords (part one)."
+
+  * Merge from Debian unstable.
+  * Apply Ubuntu-specific changes:
+    - debian/control:
+      + drop libasyncns-dev and libjack0.100.0-dev build-dependencies
+        since we don't build the jack plugin [yet];
+      + add versioned lsb-base dependency to pulseaudio;
+      + keep pulseaudio installable by demoting some recommended
+        packages to suggested [retain libasound2-plugins,
+        libgstreamer-plugins-pulse0.10-0, and
+        pulseaudio-esound-compat.  pulseaudio-module-hal,
+        pulseaudio-module-x11, libao-pulse, paprefs, and
+        padevchooser are currently in universe];
+      + adhere to DebianMaintainerField spec;
+    - debian/rules:
+      + use multiuser instead of defaults in DEB_UPDATE_RCD_PARAMS.
+  * Drop obsolete Ubuntu-specific change:
+    - src/pulsecore/protocol-esound.c: applied upstream.
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Sat, 17 Nov 2007 00:10:48 +0000
 
 pulseaudio (0.9.7-3) unstable; urgency=low
 
@@ -346,6 +1184,25 @@ pulseaudio (0.9.6-2) unstable; urgency=low
 
  -- CJ van den Berg <cj@vdbonline.com>  Sun, 02 Sep 2007 20:22:19 +0200
 
+pulseaudio (0.9.6-1ubuntu2) gutsy; urgency=low
+
+  * fix esound max samplesize again to make sure teh login sound is playable
+    on networked connections. 
+
+ -- Oliver Grawert <ogra@ubuntu.com>  Thu, 28 Jun 2007 15:31:28 +0200
+
+pulseaudio (0.9.6-1ubuntu1) gutsy; urgency=low
+
+  * Merge from Debian unstable, remaining changes:
+    - debian/control:
+      + Add lsb-base (>= 3) to pulseaudio's dependencies,
+      + Adhere to DebianMaintainerField policy,
+      + Don't build-depend on libjack0.100.0-dev or libasyncns-dev,
+    - debian/patches/: Remove all Ubuntu-created patches (merged
+      upstream).
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Mon, 28 May 2007 22:30:44 +0100
+
 pulseaudio (0.9.6-1) unstable; urgency=low
 
   * New Upstream Version.
@@ -367,6 +1224,22 @@ pulseaudio (0.9.6-1) unstable; urgency=low
 
  -- CJ van den Berg <cj@vdbonline.com>  Mon, 28 May 2007 00:53:28 +0200
 
+pulseaudio (0.9.5-7ubuntu1) gutsy; urgency=low
+
+  * Merge from Debian unstable, remaining changes:
+    - debian/control:
+      + Add lsb-base (>= 3) to pulseaudio's dependencies,
+      + Adhere to DebianMaintainerField policy,
+    - debian/patches/:
+      + Add 10_fix_DoS_vulns.dpatch (pA ticket 67) and
+        11_disallow_excessively_high_sampling_rates.dpatch,
+      + Drop 06_fix_suspend.dpatch in favour of
+        06_pulseaudio-0.9.5-suspend.dpatch,
+      + Retain 07_fix_esdcompat_bashism.dpatch and
+        09_fix_esd_max_samplesize.dpatch.
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Fri, 25 May 2007 01:32:39 -0400
+
 pulseaudio (0.9.5-7) unstable; urgency=low
 
   * debian/control: Make pulseaudio-module-hal depend on hal, not just
@@ -383,6 +1256,39 @@ pulseaudio (0.9.5-6) unstable; urgency=low
 
  -- CJ van den Berg <cj@vdbonline.com>  Mon, 12 Feb 2007 11:24:50 +0100
 
+pulseaudio (0.9.5-5ubuntu4) feisty; urgency=low
+
+  * add 09_fix_esd_max_samplesize.dpatch to make sure the login and logout
+    gnome sounds can be processed on remote connections. 
+
+ -- Oliver Grawert <ogra@ubuntu.com>  Tue,  6 Mar 2007 14:14:08 +0100
+
+pulseaudio (0.9.5-5ubuntu3) feisty; urgency=low
+
+  * debian/control:
+    - Add lsb-base (>= 3) to pulseaudio's dependencies,
+    - Adhere to DebianMaintainerField policy,
+    - Pull in fix from Debian's 0.9.5-7 adding hal to
+      pulseaudio-module-hal's dependencies,
+  * debian/pulseaudio.init: LSB-ify.
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Sun, 25 Feb 2007 02:30:31 -0500
+
+pulseaudio (0.9.5-5ubuntu2) feisty; urgency=low
+
+  * added 06_fix_suspend.dpatch from http://pulseaudio.org/ticket/26
+  * added 07_fix_esdcompat_bashism.dpatch to avoid esdcompat trying to 
+    shift an empty $1 on POSIX shells
+
+ -- Oliver Grawert <ogra@ubuntu.com>  Tue, 30 Jan 2007 23:50:57 +0100
+
+pulseaudio (0.9.5-5ubuntu1) feisty; urgency=low
+
+  * Merge from Debian unstable, remaining change:
+    - debian/{control,rules}: Don't use jack or asyncns.
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Mon, 29 Jan 2007 10:36:35 -0500
+
 pulseaudio (0.9.5-5) unstable; urgency=low
 
   * debian/control: Make Build-deps more specific. (Closes: #401111)
@@ -390,6 +1296,19 @@ pulseaudio (0.9.5-5) unstable; urgency=low
       calling chown and chmod. (Closes: #405869)
 
  -- CJ van den Berg <cj@vdbonline.com>  Mon,  8 Jan 2007 23:02:53 +0100
+
+pulseaudio (0.9.5-4ubuntu2) feisty; urgency=low
+
+  * disable libasyncns to fix ftbfs 
+
+ -- Oliver Grawert <ogra@ubuntu.com>  Sat, 20 Jan 2007 11:10:59 +0100
+
+pulseaudio (0.9.5-4ubuntu1) feisty; urgency=low
+
+  * merge from debian unstable
+    * keep jack removal
+
+ -- Oliver Grawert <ogra@ubuntu.com>  Tue, 28 Nov 2006 19:51:21 +0100
 
 pulseaudio (0.9.5-4) unstable; urgency=low
 
@@ -407,6 +1326,20 @@ pulseaudio (0.9.5-4) unstable; urgency=low
       Patch from http://www.pulseaudio.org/ticket/28
 
  -- CJ van den Berg <cj@vdbonline.com>  Wed, 18 Oct 2006 23:10:47 +0200
+
+pulseaudio (0.9.5-3ubuntu1) feisty; urgency=low
+
+  * indeed remove the jack plugin from debian/control as well 
+
+ -- Oliver Grawert <ogra@ubuntu.com>  Tue, 14 Nov 2006 21:05:29 +0100
+
+pulseaudio (0.9.5-3ubuntu0) feisty; urgency=low
+
+  * initial package
+  * disable jack
+  * disable asyncns
+
+ -- Oliver Grawert <ogra@ubuntu.com>  Sun, 12 Nov 2006 20:00:18 +0100
 
 pulseaudio (0.9.5-3) unstable; urgency=low
 
