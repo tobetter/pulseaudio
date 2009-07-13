@@ -2,3 +2,4 @@
 0002-Fix-library-search-path-to-include-lib-and-usr-lib.patch
 0050-Reduce-RT-highprio-log-to-info.patch
 0051-Reduce-pa_pid_file_create-Daemon-already-running-log-spam.patch
+0040-do-not-exec-for-bindnow.patch
