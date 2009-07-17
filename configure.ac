@@ -77,6 +77,11 @@ case $host in
       ;;
 esac
 
+dnl Use immediate (now) bindings; avoids the funky re-call in itself
+dnl  the -z now syntax is lifted from Sun's linker and works with GNU's too
+IMMEDIATE_LDFLAGS="-Wl,-z,now"
+AC_SUBST([IMMEDIATE_LDFLAGS])
+
 #### Checks for programs. ####
 
 # mkdir -p

@@ -1,3 +1,11 @@
+pulseaudio (0.9.10-3+lenny1) stable-security; urgency=high
+  
+  * Remove broken re-exec (CVE-2009-1894)
+  * Used ld flags to pre-load DSOs
+  * Regenerate auto* files
+
+ -- Florian Weimer <fw@deneb.enyo.de>  Fri, 17 Jul 2009 20:33:40 +0200
+
 pulseaudio (0.9.10-3) unstable; urgency=low
 
   * debian/patches/0006-fix-iteration-over-random-devices.patch
