@@ -342,25 +342,6 @@ int main(int argc, char *argv[]) {
 #endif
 
 
-#if defined(__linux__) && defined(__OPTIMIZE__)
-    /*
-       Disable lazy relocations to make usage of external libraries
-       more deterministic for our RT threads. We abuse __OPTIMIZE__ as
-       a check whether we are a debug build or not.
-    */
-
-    if (!getenv("LD_BIND_NOW")) {
-        char *rp;
-
-        /* We have to execute ourselves, because the libc caches the
-         * value of $LD_BIND_NOW on initialization. */
-
-        putenv(pa_xstrdup("LD_BIND_NOW=1"));
-        pa_assert_se(rp = pa_readlink("/proc/self/exe"));
-        pa_assert_se(execv(rp, argv) == 0);
-    }
-#endif
-
 #ifdef HAVE_GETUID
     real_root = getuid() == 0;
     suid_root = !real_root && geteuid() == 0;

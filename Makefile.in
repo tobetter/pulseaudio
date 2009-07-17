@@ -64,7 +64,7 @@ DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/libpulse-mainloop-glib.pc.in \
 	$(srcdir)/libpulse-simple.pc.in $(srcdir)/libpulse.pc.in \
 	$(top_srcdir)/configure $(top_srcdir)/src/pulse/version.h.in \
-	compile config.guess config.rpath config.sub depcomp \
+	ChangeLog compile config.guess config.rpath config.sub depcomp \
 	install-sh ltmain.sh missing
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/acinclude.m4 \
@@ -140,6 +140,7 @@ DBUS_LIBS = @DBUS_LIBS@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
 DLLTOOL = @DLLTOOL@
+DSYMUTIL = @DSYMUTIL@
 ECHO = @ECHO@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
@@ -169,6 +170,7 @@ HAVE_OSS = @HAVE_OSS@
 HAVE_POLKIT = @HAVE_POLKIT@
 HAVE_SOLARIS = @HAVE_SOLARIS@
 HAVE_X11 = @HAVE_X11@
+IMMEDIATE_LDFLAGS = @IMMEDIATE_LDFLAGS@
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -205,6 +207,7 @@ LTLIBOBJS = @LTLIBOBJS@
 M4 = @M4@
 MAKEINFO = @MAKEINFO@
 MKDIR_P = @MKDIR_P@
+NMEDIT = @NMEDIT@
 OBJDUMP = @OBJDUMP@
 OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
