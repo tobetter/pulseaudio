@@ -16,7 +16,7 @@
 # along with PulseAudio; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA.
 
-VERSION=1.10
+VERSION=1.11
 
 run_versioned() {
     local P
