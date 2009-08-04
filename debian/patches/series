@@ -1,0 +1,7 @@
+0001-change-resample-and-buffering.patch
+0002-work-around-suspend-on-idle-source-sink-race.patch
+0003-add-padsp-wrapper-check.patch
+0005-load-sample-dir-lazy.patch
+0006-a11y-special-case-disable.patch
+0007-esd-honour-system-pulseaudio.patch
+0008-clean-out-old-files.patch
