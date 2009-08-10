@@ -50,3 +50,4 @@
 0048_fix_stuck_prebuf.patch
 0049_fix_sampling_rate_not_beyond_pa-rate-max.patch
 0040-do-not-exec-for-bindnow.patch
+0093_fix_lockfile_creation_hang.patch

@@ -1,3 +1,10 @@
+pulseaudio (1:0.9.14-0ubuntu20.3) jaunty-proposed; urgency=low
+
+  * Cherry-pick 27782205 from upstream; this causes PulseAudio to exit out
+    if it is unable to create a lock file at startup (LP: #330766).
+
+ -- Evan Broder <broder@mit.edu>  Sun, 09 Aug 2009 20:13:09 -0400
+
 pulseaudio (1:0.9.14-0ubuntu20.2) jaunty-security; urgency=low
 
   * SECURITY UPDATE: root escalation from BIND_NOW re-execution.
