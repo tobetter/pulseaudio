@@ -1,3 +1,15 @@
+pulseaudio (0.9.16-1) unstable; urgency=low
+
+  * New upstream release
+  * debian/copyright: updated
+  * debian/control: Remove the liboil build-dep
+  * debian/libpulse0.shlibs: Bump to >= 0.9.16
+  * debian/pulseaudio.postinst: No longer make pulseaudio suid and no longer
+    create the pulse-rt group. Setting realtime priorities is now handled by
+    rtkit.
+
+ -- Sjoerd Simons <sjoerd@debian.org>  Thu, 10 Sep 2009 21:53:15 +0100
+
 pulseaudio (0.9.16~test5-1) experimental; urgency=low
 
   * New Upstream Version
