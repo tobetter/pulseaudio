@@ -1,0 +1,42 @@
+#! /bin/sh
+
+. "${PM_FUNCTIONS}"
+
+get_pulse_users() {
+    ps -C pulseaudio -o uid= | tr -d ' '
+}
+
+suspend_pulse() {
+    for i in $(get_pulse_users); do
+        for j in $(echo list-sinks | sudo -H -u \#$i pacmd | awk '/\* index:/ {print $3}'); do
+            echo set-sink-mute $j true | sudo -H -u \#$i pacmd > /dev/null 2>&1
+        done
+        for j in $(echo list-sources | sudo -H -u \#$i pacmd | awk '/\* index:/ {print $3}'); do
+            echo set-source-mute $j true | sudo -H -u \#$i pacmd > /dev/null 2>&1
+        done
+        echo suspend true | sudo -H -u \#$i pacmd > /dev/null 2>&1
+    done
+}
+
+resume_pulse() {
+    for i in $(get_pulse_users); do
+        for j in $(echo list-sinks | sudo -H -u \#$i pacmd | awk '/\* index:/ {print $3}'); do
+            echo set-sink-mute $j false | sudo -H -u \#$i pacmd > /dev/null 2>&1
+        done
+        for j in $(echo list-sources | sudo -H -u \#$i pacmd | awk '/\* index:/ {print $3}'); do
+            echo set-source-mute $j false | sudo -H -u \#$i pacmd > /dev/null 2>&1
+        done
+        echo suspend false | sudo -H -u \#$i pacmd > /dev/null 2>&1
+    done
+}
+
+case $1 in 
+    hibernate|suspend)
+        suspend_pulse
+        ;;
+    thaw|resume)
+        resume_pulse
+        ;;
+    *) exit $NA
+        ;;
+esac
