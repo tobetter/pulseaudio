@@ -1,3 +1,12 @@
+pulseaudio (1:0.9.19-0ubuntu4.1) karmic-proposed; urgency=low
+
+  * debian/patches/0080-unref-unused-udev.patch (LP: #424655):
+    + Add from upstream stable-queue branch; we should free
+      the udev context for unused devices. Failing to do so
+      causes some nasty memory leaks.
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Tue, 12 Jan 2010 17:41:27 -0500
+
 pulseaudio (1:0.9.19-0ubuntu4) karmic; urgency=low
 
   * Remove 0053-fix-sigsegv-module-bluetooth-device.patch, as it did
