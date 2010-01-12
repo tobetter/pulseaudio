@@ -13,3 +13,4 @@
 0091-dont-load-cork-music-on-phone.patch
 0055-backport-alsa-bt-position-fixes-b3592a1.patch
 0056-ignore-sound-class-modem.patch
+0080-unref-unused-udev.patch
