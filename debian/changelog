@@ -1,3 +1,10 @@
+pulseaudio (1:0.9.22~0.9.21+stable-queue-32-g8478-0ubuntu9) lucid; urgency=low
+
+  * 0094-add-missing-mixer-paths-and-rerun-automake.patch: Fix missing paths
+    elements that broke volume control.
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Thu, 18 Feb 2010 23:56:42 -0500
+
 pulseaudio (1:0.9.22~0.9.21+stable-queue-32-g8478-0ubuntu8) lucid; urgency=low
 
   * Back out 307bd1 until we can roll a new tarball. Applying it to the
