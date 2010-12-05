@@ -1,3 +1,18 @@
+pulseaudio (0.9.22-1) experimental; urgency=low
+
+  * New upstream release
+  * debian/patches/0002-CVE-2009-1299.patch:
+    + Dropped, fixed upstream
+  * debian/patches/0003-Re-bootstrap.patch
+    + Dropped, not needed anymore
+  * debian/rules: Stop using -g0 on mips{,el} the toolchain has been fixed
+  * debian/rules, debian/control: Update build-depends and force building
+    with X11
+  * debian/control: Suggest rtkit
+  * debian/control: Prune unneeded depends of libpulse-dev
+
+ -- Sjoerd Simons <sjoerd@debian.org>  Sun, 05 Dec 2010 12:01:37 +0000
+
 pulseaudio (0.9.21-3) unstable; urgency=low
 
   * debian/rules: Compile with -g0 on mips{,el} to work around #519006 in
