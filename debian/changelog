@@ -1,3 +1,11 @@
+pulseaudio (1:0.9.22~0.9.21+stable-queue-32-g8478-0ubuntu14.1) lucid-proposed; urgency=low
+
+  * 0098-lp445849-highpitched-surround.patch: Backport patch from
+    maverick to fix Highpitched rattling like sound with 5.1 surround
+    configuration. (LP: #445849)
+
+ -- David Henningsson <david.henningsson@canonical.com>  Mon, 28 Mar 2011 17:19:50 +0200
+
 pulseaudio (1:0.9.22~0.9.21+stable-queue-32-g8478-0ubuntu14) lucid; urgency=low
 
   * 0096-lp451635-handle-dove-x0-line-hp-swap.patch: Make the connector
