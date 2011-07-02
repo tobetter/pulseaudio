@@ -1,3 +1,12 @@
+pulseaudio (0.9.21-4.1) unstable; urgency=low
+
+  * Non-maintainer upload.
+  * debian/patches/0005-Fix-FTBFS-with-new-toolchain.patch:
+    + Fix FTBFS with new toolchain, due to missing link flags
+      (Closes: #622578)
+
+ -- Cyril Brulebois <kibi@debian.org>  Sat, 02 Jul 2011 16:19:50 +0000
+
 pulseaudio (0.9.21-4) unstable; urgency=low
 
   * Team upload.
