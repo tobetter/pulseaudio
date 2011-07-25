@@ -258,7 +258,9 @@ pacmd_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS)
 
 pax11publish_SOURCES = utils/pax11publish.c
 pax11publish_CFLAGS = $(AM_CFLAGS) $(X11_CFLAGS)
-pax11publish_LDADD = $(AM_LDADD) libpulse.la libpulsecommon-@PA_MAJORMINORMICRO@.la $(X11_LIBS)
+pax11publish_LDADD = $(AM_LDADD) libpulse.la \
+  libpulsecommon-@PA_MAJORMINORMICRO@.la $(X11_LIBS) \
+  $(DBUS_LIBS)
 pax11publish_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS)
 
 pabrowse_SOURCES = utils/pabrowse.c
