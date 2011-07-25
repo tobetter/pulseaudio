@@ -1,3 +1,46 @@
+pulseaudio (0.9.23-1) unstable; urgency=low
+
+  [ Daniel T Chen ]
+  * debian/control:
+    + Fix typo in long description of pulseaudio-module-x11, thanks to
+      Sam Morris (Closes: #500038)
+    + Clarify long description of pulseaudio-esound-compat. Many apps
+      still in use require functionality from this package
+      (Closes: #601725)
+  * debian/libpulse-dev.examples: Apply patch from Mario Lang to include
+    simple examples in the dev package. Thanks! (Closes: #561258)
+  * debian/patches/
+    0003-Mention-speex-and-libsamplerate-in-pulse-daemon.conf.patch:
+    + Mention speex in the resampling section. Currently the Resampler
+      section of "Programming with Speex (the libspeex API)" contains
+      the relevant information (Closes: #541206)
+  * debian/patches/0004-Fix-FTBFS-with-xcb-util-0.3.8.patch:
+    + Apply patch from Arnaud Fontaine <arnau@debian.org> and the
+      suggestion from Alessandro Ghedini <al3xbio@gmail.com> to fix
+      FTBFS with xcb-util 0.3.8. Thanks, Arnaud and Alessandro!
+      (Closes: #624847)
+  * debian/pulseaudio-utils.links: Also add pamon(1), parec(1), and
+    parecord(1) (Closes: #599696)
+  * debian/README.Debian: Clarify historical pulse-rt use and document
+    current recommendation of RealtimeKit (Closes: #548363)
+
+  [ Sjoerd Simons ]
+  * New upstream release
+  * d/p/0003-Mention-speex-and-libsamplerate-in-pulse-daemon.conf.patch
+    + Removed, fixed upstream
+  * d/p/0004-Fix-FTBFS-with-xcb-util-0.3.8.patch
+    + Removed, fixed upstream
+  * Update to 0.9.23 versioning:
+    debian/libpulse0.shlibs
+    debian/pulseaudio.shlibs
+    debian/rules
+  * Switch to 3.0 (quilt) format
+  * debian/control: Use dh-autoreconf
+  * debian/patches/+0003-Explicitely-link-pax11publish-to-libdbus.patch:
+    + Added. Fix build with binutils-gold (Closes: #556124)
+
+ -- Sjoerd Simons <sjoerd@debian.org>  Mon, 25 Jul 2011 23:05:29 +0100
+
 pulseaudio (0.9.22-1) experimental; urgency=low
 
   * New upstream release
