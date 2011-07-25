@@ -3,7 +3,8 @@ Section: sound
 Priority: optional
 Maintainer: Pulseaudio maintenance team <pkg-pulseaudio-devel@lists.alioth.debian.org>
 Uploaders: CJ van den Berg <cj@vdbonline.com>, Sjoerd Simons <sjoerd@debian.org>
-Build-Depends: debhelper (>= 5), cdbs, quilt, m4, libltdl-dev (>= 2.2.6a-2),
+Build-Depends: debhelper (>= 5), cdbs, quilt, m4, dh-autoreconf,
+    libltdl-dev (>= 2.2.6a-2),
     libsamplerate0-dev, libsndfile1-dev (>= 1.0.20), libglib2.0-dev,
     libcap-dev [!kfreebsd-i386 !kfreebsd-amd64 !hurd-i386],
     libasound2-dev (>= 1.0.19) [!kfreebsd-i386 !kfreebsd-amd64 !hurd-i386],
@@ -16,7 +17,7 @@ Build-Depends: debhelper (>= 5), cdbs, quilt, m4, libltdl-dev (>= 2.2.6a-2),
     libbluetooth-dev (>= 4.40) [!kfreebsd-i386 !kfreebsd-amd64 !hurd-i386],
     libgdbm-dev, intltool, libgtk2.0-dev, libxtst-dev,
     libssl-dev,
-    libx11-xcb-dev, libice-dev, libxcb-atom1-dev
+    libx11-xcb-dev, libice-dev, libxcb1-dev (>= 1.6)
 Standards-Version: 3.8.1
 Vcs-Git: git://git.debian.org/git/pkg-pulseaudio/pulseaudio.git
 Vcs-Browser: http://git.debian.org/?p=pkg-pulseaudio/pulseaudio.git
@@ -117,8 +118,10 @@ Description: PulseAudio ESD compatibility layer
  WIN32 systems. It is a drop in replacement for the ESD sound server with
  much better latency, mixing/re-sampling quality and overall architecture.
  .
- This package contains the ESD compatibility components and enables a
- PulseAudio sound server to fully replace ESD.
+ This package contains the ESD compatibility components used by some
+ older versions of complete desktop environments, e.g., GNOME, and
+ many useful applications. It enables a PulseAudio sound server to
+ fully replace ESD.
 
 Package: pulseaudio-esound-compat-dbg
 Architecture: any
@@ -317,7 +320,7 @@ Description: X11 module for PulseAudio sound server
  much better latency, mixing/re-sampling quality and overall architecture.
  .
  This module enables PulseAudio to publish itself as the default sound
- server to the X11 root window automatically upon startup. The is also a
+ server to the X11 root window automatically upon startup. There is also a
  module to playback a sound file in place of the X11 bell beep.
  .
  The modules are called module-x11-publish and module-x11-bell.
