@@ -9,11 +9,15 @@
 0010-lp453966-handle-digmic-pt2.patch
 0013-Load-RAOP-Zeroconf-by-default.patch
 0016-nodisplay-autostart.patch
+0017-Hack-around-a-bug-in-the-core-causing-volumes-not-to.patch
 
 # Upstream patches post 1.0 from git master
 0100-extended-Fix-doxygen-comment-style-typos.patch
 0101-sink-source-Avoid-unnecessary-call-to-pa_rtclock_now.patch
 0102-Always-return-a-three-part-version-number-in-API-cal.patch
+0103-module-jackdbus-detect-Avoid-double-free-of-modargs.patch
+0104-source-output-Do-not-use-unset-channel-map-in-pa_sou.patch
+0105-Fix-deferred-volume-not-being-applied-if-sink-is-clo.patch
 
 # Jack detection patches
 0601-Introduce-available-concept-for-ports-and-communicat.patch
