@@ -1,3 +1,18 @@
+pulseaudio (1:1.0-0ubuntu3.1) oneiric-proposed; urgency=low
+
+  [ David Henningsson ]
+  * Added patches:
+    0103-module-jackdbus-detect-Avoid-double-free-of-modargs.patch:
+      (LP: #867444)
+    0104-source-output-Do-not-use-unset-channel-map-in-pa_sou.patch: 
+      (LP: #864071)
+    0105-Fix-deferred-volume-not-being-applied-if-sink-is-clo.patch,
+    0017-Hack-around-a-bug-in-the-core-causing-volumes-not-to.patch:
+      These two patches affect users not having their volume correctly
+      set on port change (LP: #877954)
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Thu, 27 Oct 2011 08:37:49 +1100
+
 pulseaudio (1:1.0-0ubuntu3) oneiric; urgency=low
 
   * debian/patches/0102-Always-return-a-three-part-version-number-in-API
