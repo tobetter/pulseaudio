@@ -86,7 +86,7 @@ EXTRA_DIST = \
 		daemon/esdcompat.in \
 		daemon/start-pulseaudio-x11.in \
 		daemon/start-pulseaudio-kde.in \
-		utils/padsp \
+		utils/padsp.in \
 		utils/qpaeq \
 		modules/module-defs.h.m4 \
 		daemon/pulseaudio.desktop.in \
@@ -523,7 +523,7 @@ connect_stress_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS)
 #         Common library          #
 ###################################
 
-lib_LTLIBRARIES = \
+pkglib_LTLIBRARIES = \
 		libpulsecommon-@PA_MAJORMINOR@.la
 
 libpulsecommon_@PA_MAJORMINOR@_la_SOURCES = \
@@ -688,7 +688,7 @@ pulseinclude_HEADERS = \
 		pulse/volume.h \
 		pulse/xmalloc.h
 
-lib_LTLIBRARIES += \
+lib_LTLIBRARIES = \
 		libpulse.la \
 		libpulse-simple.la
 
@@ -756,8 +756,18 @@ libpulse_mainloop_glib_la_LDFLAGS = $(AM_LDFLAGS) $(VERSIONING_LDFLAGS) -version
 ###################################
 
 if HAVE_OSS_WRAPPER
-lib_LTLIBRARIES += libpulsedsp.la
+padsplibdir = $(pkglibdir)
+padsplib_LTLIBRARIES = libpulsedsp.la
 bin_SCRIPTS += utils/padsp
+
+edit = @sed \
+       -e "s|@pkglibdir[@]|$(pkglibdir)|g"
+
+utils/padsp: utils/padsp.in
+	$(edit) $< >$@
+
+CLEANFILES += utils/padsp
+
 endif
 
 libpulsedsp_la_SOURCES = utils/padsp.c
@@ -1943,5 +1953,24 @@ update-map-file:
 	  echo "};" ) > $(srcdir)/map-file
 
 update-all: update-ffmpeg update-sbc update-map-file
+
+# Force installation order of libraries. libtool relinks on install time, in
+# which case libpulsecommon has to be install before others, but the padsp
+# preload library has to be done after the normal libraries (e.g. libpulse)
+# ...
+# Unfortunately automake behaviour means that rules without commands also
+# override build-in rules, so it's not trivial to add dependencies.
+# See http://debbugs.gnu.org/cgi/bugreport.cgi?bug=7328 for the workaround
+# ...
+# Isn't libtool/autotools fun!
+
+installlibLTLIBRARIES = install-libLTLIBRARIES
+$(installlibLTLIBRARIES): install-pkglibLTLIBRARIES
+
+installmodlibexecLTLIBRARIES = install-modlibexecLTLIBRARIES
+$(installmodlibexecLTLIBRARIES): install-pkglibLTLIBRARIES
+
+installpadsplibLTLIBRARIES = install-padsplibLTLIBRARIES
+$(installpadsplibLTLIBRARIES): install-libLTLIBRARIES
 
 .PHONY: utils/padsp massif update-all update-ffmpeg update-sbc update-map-file
