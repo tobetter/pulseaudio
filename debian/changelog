@@ -1,7 +1,17 @@
+pulseaudio (2.0-3) unstable; urgency=low
+
+  [ Martin-Éric Racine ]
+  * ChangeLog cleanup.
+  * rules: fix the update-rc.d arguments to match our LSB header.
+
+  [ Sjoerd Simons ]
+  * Add webrtc echo cancellation support
+
+ -- Sjoerd Simons <sjoerd@debian.org>  Sat, 19 May 2012 22:05:13 +0200
+
 pulseaudio (2.0-2) unstable; urgency=low
 
   [ Martin-Éric Racine ]
-  [Martin-Éric Racine]
   * Added myself to Uploaders.
   * Added patch 0001_man_page_typos.patch
   * control:
