@@ -1,3 +1,11 @@
+pulseaudio (1:1.1-0ubuntu15.1) precise-proposed; urgency=low
+
+  * 0621-Add-special-profiles-for-some-laptops-missing-speake.patch:
+    Fix missing internal mic and speaker not showing for some laptops
+    (LP: #946232)
+
+ -- David Henningsson <david.henningsson@canonical.com>  Wed, 30 May 2012 13:46:53 +0200
+
 pulseaudio (1:1.1-0ubuntu15) precise; urgency=low
 
   * 0125-alsa-sink-source-Really-set-volumes-on-port-change.patch:
