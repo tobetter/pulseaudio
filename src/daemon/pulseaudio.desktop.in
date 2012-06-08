@@ -10,3 +10,4 @@ NotShowIn=KDE;
 Categories=
 GenericName=
 X-GNOME-Autostart-Delay=8
+NoDisplay=true
