@@ -905,6 +905,10 @@ modlibexec_LTLIBRARIES = \
 		libprotocol-http.la \
 		libprotocol-native.la
 
+if HAVE_WEBRTC
+modlibexec_LTLIBRARIES += libwebrtc-util.la
+endif
+
 if HAVE_ESOUND
 modlibexec_LTLIBRARIES += \
 		libprotocol-esound.la
@@ -1101,6 +1105,8 @@ modlibexec_LTLIBRARIES += \
 dist_alsaprofilesets_DATA = \
 		modules/alsa/mixer/profile-sets/default.conf \
 		modules/alsa/mixer/profile-sets/extra-hdmi.conf \
+		modules/alsa/mixer/profile-sets/force-speaker.conf \
+		modules/alsa/mixer/profile-sets/force-speaker-and-int-mic.conf \
 		modules/alsa/mixer/profile-sets/maudio-fasttrack-pro.conf \
 		modules/alsa/mixer/profile-sets/native-instruments-audio4dj.conf \
 		modules/alsa/mixer/profile-sets/native-instruments-audio8dj.conf \
@@ -1125,6 +1131,7 @@ dist_alsapaths_DATA = \
 		modules/alsa/mixer/paths/analog-input-dock-mic.conf \
 		modules/alsa/mixer/paths/analog-input-front-mic.conf \
 		modules/alsa/mixer/paths/analog-input-internal-mic.conf \
+		modules/alsa/mixer/paths/analog-input-internal-mic-always.conf \
 		modules/alsa/mixer/paths/analog-input-rear-mic.conf \
 		modules/alsa/mixer/paths/analog-input-mic.conf.common \
 		modules/alsa/mixer/paths/analog-input-mic-line.conf \
@@ -1132,6 +1139,7 @@ dist_alsapaths_DATA = \
 		modules/alsa/mixer/paths/analog-input-video.conf \
 		modules/alsa/mixer/paths/analog-output.conf \
 		modules/alsa/mixer/paths/analog-output-speaker.conf \
+		modules/alsa/mixer/paths/analog-output-speaker-always.conf \
 		modules/alsa/mixer/paths/analog-output.conf.common \
 		modules/alsa/mixer/paths/analog-output-desktop-speaker.conf \
 		modules/alsa/mixer/paths/analog-output-headphones.conf \
@@ -1830,10 +1838,17 @@ if HAVE_SPEEX
 module_echo_cancel_la_SOURCES += modules/echo-cancel/speex.c
 endif
 if HAVE_WEBRTC
-module_echo_cancel_la_SOURCES += modules/echo-cancel/webrtc.cc
+# The webrtc code is split off into a helper library to avoid having automake
+# link module-echo-cancel with C++ (which it does if there are any C++ deps,
+# even conditional ones).
+
+libwebrtc_util_la_SOURCES = modules/echo-cancel/webrtc.cc
+libwebrtc_util_la_CXXFLAGS = $(AM_CXXFLAGS) $(SERVER_CFLAGS) $(WEBRTC_CFLAGS) -DHAVE_WEBRTC=1
+libwebrtc_util_la_LIBADD = $(WEBRTC_LIBS)
+libwebrtc_util_la_LDFLAGS = -avoid-version
+
 module_echo_cancel_la_CFLAGS += -DHAVE_WEBRTC=1
-module_echo_cancel_la_CXXFLAGS = $(AM_CXXFLAGS) $(SERVER_CFLAGS) $(WEBRTC_CFLAGS) -DHAVE_WEBRTC=1
-module_echo_cancel_la_LIBADD += $(WEBRTC_LIBS)
+module_echo_cancel_la_LIBADD += libwebrtc-util.la
 endif
 
 # RTP modules
