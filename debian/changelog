@@ -1,3 +1,16 @@
+pulseaudio (1:2.1-0ubuntu1) quantal; urgency=low
+
+  [ David Henningsson ]
+  * Remove the old 01PulseAudio pm-utils script, since it
+    causes (LP: #665314) and is not recommended by upstream.
+
+  [ Luke Yelavich ]
+  * New upstream release.
+  * Dropped patches, applied upstream:
+    - 0621-Add-special-profiles-for-some-laptops-missing-speake.patch
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Mon, 13 Aug 2012 15:05:52 +1000
+
 pulseaudio (1:2.0-0ubuntu1) quantal; urgency=low
 
   [ Luke Yelavich ]
