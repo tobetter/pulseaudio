@@ -49,11 +49,12 @@ restore_pulse_state() {
 # $2 = username
 mute_pulse() {
     su "${2}" -c -- "pacmd list-${1}s" | \
-        sed -n "s/^[[:space:]*]*//; /\(index\|mute\)/p" | \
+        sed -n "s/^[[:space:]*]*//; /\(index\|driver:\)/p" | \
         (index="";
             while read field value; do
                 if [ ${field%:} = "index" ]; then
                     index=${value}
+                elif [ ${value} != "<module-bluetooth-device.c>" ]; then
                     su "${2}" -c -- "pacmd \
                         set-${1}-mute ${index} yes"
                 fi

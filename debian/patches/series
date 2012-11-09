@@ -58,3 +58,7 @@
 0620-alsa-mixer-Show-HDMI-ports-for-older-Nvidia-cards.patch
 
 0621-Add-special-profiles-for-some-laptops-missing-speake.patch
+0622-Front-headphone.patch
+0623-resampler-Fix-volume-on-downmix-to-mono.patch
+0624-alsa-mixer-Add-Phantom-Jack-support.patch
+0625-alsa-mixer-Add-a-few-more-machines-to-internal-mic-w.patch
