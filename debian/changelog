@@ -1,3 +1,23 @@
+pulseaudio (1:1.1-0ubuntu15.2) precise-proposed; urgency=low
+
+  * 0622-Front-headphone.patch:
+    Fix "Front headphone Jack" not being picked up by PulseAudio
+    (LP: #1020471)
+  * 0623-resampler-Fix-volume-on-downmix-to-mono.patch:
+    Fix clipping audio on downmix to mono (LP: #416190)
+  * 01PulseAudio:
+    Don't mute Bluetooth devices on suspend, they might remain muted
+    after resume (LP: #1038084)
+  * 0624-alsa-mixer-Add-Phantom-Jack-support.patch:
+    This will allow us to work better with devices on the backport
+    stack by making use of a Quantal kernel feature (if it exists).
+    (LP: #946232)
+  * 0625-alsa-mixer-Add-a-few-more-machines-to-internal-mic-w.patch:
+    Add a few more machines to the internal mic whitelist 
+    (LP: #1076840) (LP: #1073420)
+
+ -- David Henningsson <david.henningsson@canonical.com>  Fri, 09 Nov 2012 12:31:19 +0100
+
 pulseaudio (1:1.1-0ubuntu15.1) precise-proposed; urgency=low
 
   * 0621-Add-special-profiles-for-some-laptops-missing-speake.patch:
