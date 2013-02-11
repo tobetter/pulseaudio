@@ -1,3 +1,53 @@
+pulseaudio (3.0-1) experimental; urgency=low
+
+  [ Sjoerd Simons ]
+  * debian/rules: use xz compression for binary packages. (Patch by Ansgar
+    Burchardt) (Closes: #683905)
+  * debian/pulseaudio.install: Install libwebrtc-util helper library
+  * Clarify init script message indicating the use of system
+    sessions (Closes: #644809)
+  * Don't claim to support reload from the init script (Closes: #690736)
+  * Set back to unreleased
+  * New upstream RC release (2.99.1)
+
+  [ Martin-Éric Racine ]
+  * LSB headers: Should-Start: Avahi (Closes: #687890)
+
+  [ Sjoerd Simons ]
+  * debian/README.Debian: Updated & cleaned up
+  * Sync with Ubuntu:
+    * debian/copyright: Updated
+    * debian/pulse-alsa.conf: set "show on" such that the default devices is
+      displayed as an option
+    * debian/libpulse-dev.install: Install cmake files
+    * debian/pulseaudio-module-bluetooth.install: Updated
+    * debian/pulseaudio.install: Install module-switch-on-port-available
+    * debian/{pulseaudio.install,apport-hook.py}: Install apport hook
+    * Split out the libpulsedsp into its own package
+    * debian/control: Bump cdbs build-depends
+    * debian/pulse.conf: No longer need to load asound.conf and .asoundrc
+      directly
+  * debian/control: Update-builddepends
+  * debian/patches/0001_man_page_typos.patch:
+    debian/patches/remove-analog-mono.patch
+    debian/patches/webrtc-utils-needs-to-be-installed-before-module-ech.patch:
+    * Removed. All fixed upstream
+  * debian/shlibs.local: Add libpulsecore to shlibs & update versions
+  * debian/patches/0001-Switch-the-default-resample-quality-to-1.patch:
+    * Added, Switch to a lower speex resampler quality level
+  * debian/patches/0002-Use-the-fixed-point-speex-resampler-on-ARM.patch
+    * Added, Use fix point resampler on ARM
+  * New upstream release (3.0)
+  * debian/control: Add conflicts & replaces for old pulseaudio-utils
+  * Added Patches from the 3.0-stable branch:
+    * d/patches/0003-alsa-mixer-Fix-the-analog-output-speaker-always-path.patch
+    * d/patches/0004-man-Update-log-target-documentation.patch
+    * d/patches/0005-build-Don-t-enable-BlueZ-if-libbluetooth-is-not-foun.patch
+    * d/patches/0006-Call-change_cb-only-when-there-s-an-actual-change.patch
+    * d/patches/0007-Initialize-monitor-s-busy-status-to-false-if-we-own-.patch
+
+ -- Sjoerd Simons <sjoerd@debian.org>  Mon, 11 Feb 2013 19:33:15 +0100
+
 pulseaudio (2.1-2) experimental; urgency=low
 
   * debian/control: Use linux-any where applicable instead of specifying

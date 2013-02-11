@@ -21,15 +21,15 @@ common-install-arch::
 	cp -a $(CURDIR)/debian/pulse.conf \
 		$(CURDIR)/debian/tmp/usr/share/alsa/alsa.conf.d
 	cp -a $(CURDIR)/debian/pulse-alsa.conf $(CURDIR)/debian/tmp/usr/share/alsa
+	dh_installman -ppulseaudio --language=C debian/tmp/usr/share/man/man5/default.pa.5
+	install -d $(CURDIR)/debian/tmp/usr/share/apport/package-hooks
+	cp $(CURDIR)/debian/apport-hook.py $(CURDIR)/debian/tmp/usr/share/apport/package-hooks/source_pulseaudio.py
 
 
 common-configure-arch::
 ifneq (,$(findstring $(DEB_HOST_ARCH), "arm armel"))
 	make -C src libpulsecore_2.1_la-svolume_arm.lo CFLAGS+=-march=armv6
 endif
-
-pulseaudio-install-arch::
-	dh_installman --language=C debian/tmp/usr/share/man/man5/default.pa.5
 
 common-binary-post-install-arch:: list-missing
 
@@ -62,3 +62,5 @@ LDFLAGS += -Wl,--no-as-needed
 
 DEB_DH_INSTALL_ARGS = --sourcedir=$(CURDIR)/debian/tmp
 DEB_UPDATE_RCD_PARAMS = start 25 2 3 4 5 . stop 15 0 1 6 .
+
+DEB_DH_BUILDDEB_ARGS = -- -Zxz

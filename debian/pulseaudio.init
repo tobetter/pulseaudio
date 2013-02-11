@@ -3,8 +3,8 @@
 # Provides:          pulseaudio esound
 # Required-Start:    $remote_fs $syslog
 # Required-Stop:     $remote_fs $syslog
-# Should-Start:      udev network-manager
-# Should-Stop:       udev network-manager
+# Should-Start:      avahi udev network-manager
+# Should-Stop:       avahi udev network-manager
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
 # Short-Description: Start the PulseAudio sound server
@@ -26,7 +26,7 @@ PULSEAUDIO_SYSTEM_START=0
 DISALLOW_MODULE_LOADING=1
 test -f /etc/default/pulseaudio && . /etc/default/pulseaudio
 if [ "$PULSEAUDIO_SYSTEM_START" != "1" ]; then
-	log_warning_msg "PulseAudio configured for per-user sessions"
+	log_action_msg "PulseAudio not started: Configured for per-user sessions"
 	exit 0
 fi
 
@@ -59,7 +59,7 @@ case "$1" in
 	start|stop)
 		pulseaudio_${1}
 		;;
-	restart|reload|force-reload)
+	restart|force-reload)
 		if [ -s $PIDFILE ] && kill -0 $(cat $PIDFILE) >/dev/null 2>&1; then
 			pulseaudio_stop
 			pulseaudio_start
@@ -75,7 +75,7 @@ case "$1" in
 		status_of_proc -p $PIDFILE "$DAEMON" "system-wide PulseAudio" && exit 0 || exit $?
 		;;
 	*)
-		echo "Usage: /etc/init.d/pulseaudio {start|stop|force-stop|restart|reload|force-reload|status}"
+		echo "Usage: /etc/init.d/pulseaudio {start|stop|force-stop|restart|force-reload|status}"
 		exit 1
 		;;
 esac
