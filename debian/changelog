@@ -1,3 +1,14 @@
+pulseaudio (2.0-6.1) unstable; urgency=low
+
+  * Non-maintainer upload.
+
+  [ Steven Chamberlain ]
+  * Import patch from FreeBSD to disable threads locking and
+    synchronisation on kFreeBSD. This fixes the opening of Gnome 3
+    sessions on these architectures. Closes: #705435
+
+ -- Didier Raboud <odyx@debian.org>  Wed, 24 Apr 2013 21:29:43 +0200
+
 pulseaudio (2.0-6) unstable; urgency=low
 
   * debian/rules: use xz compression for binary packages. (Patch by Ansgar
