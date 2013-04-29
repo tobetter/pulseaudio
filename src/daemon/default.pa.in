@@ -170,9 +170,9 @@ load-module module-filter-apply
 
 ifelse(@HAVE_DBUS@, 1, [dnl
 ### Load DBus protocol
-.ifexists module-dbus-protocol@PA_SOEXT@
-load-module module-dbus-protocol
-.endif
+#.ifexists module-dbus-protocol@PA_SOEXT@
+#load-module module-dbus-protocol
+#.endif
 ])dnl
 
 ifelse(@HAVE_X11@, 1, [dnl
