@@ -1,3 +1,12 @@
+pulseaudio (1:2.1-0ubuntu4.1) quantal-proposed; urgency=low
+
+  [ Kaj Ailomaa ]
+  * 0102-reserve-card.patch:
+    make pulseaudio let go of reserved cards when acquired by jack
+    (LP: #1163638)
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Thu, 23 May 2013 11:51:56 +1000
+
 pulseaudio (1:2.1-0ubuntu4) quantal-proposed; urgency=low
 
   * 0101-alsa-mixer-Remove-analog-output-lfe-on-mono.patch:
