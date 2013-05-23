@@ -12,3 +12,4 @@
 0020-stream-Return-error-in-case-a-client-peeks-to-early.patch
 0100-resampler-Fix-volume-on-downmix-to-mono.patch
 0101-alsa-mixer-Remove-analog-output-lfe-on-mono.patch
+0102-reserve-card.patch
