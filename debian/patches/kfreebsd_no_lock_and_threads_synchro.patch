@@ -1,0 +1,28 @@
+Description: Don't try to lock and synchronise threads on kFreeBSD.
+Bug-Debian: http://bugs.debian.org/705435
+Origin: http://svnweb.freebsd.org/ports/head/audio/pulseaudio/files/patch-src_daemon_main.c?revision=231972&view=markup&pathrev=231972
+Author: Joe Marcus Clarke <marcus@FreeBSD.org>
+Author: Steven Chamberlain <steven@pyro.eu.org>
+Last-Update: 2013-04-24
+
+--- a/src/daemon/main.c
++++ b/src/daemon/main.c
+@@ -737,6 +737,10 @@
+          * first take the autospawn lock to make things
+          * synchronous. */
+ 
++        /* This locking and thread synchronisation code doesn't work reliably
++         * on kFreeBSD (Debian bug #705435), or in upstream FreeBSD ports
++         * (bug reference: ports/128947, patched in SVN r231972). */
++#if !defined(__FreeBSD__) && !defined(__FreeBSD_kernel__)
+         if ((autospawn_fd = pa_autospawn_lock_init()) < 0) {
+             pa_log("Failed to initialize autospawn lock");
+             goto finish;
+@@ -748,6 +752,7 @@
+         }
+ 
+         autospawn_locked = TRUE;
++#endif
+     }
+ 
+     if (conf->daemonize) {
