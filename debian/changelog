@@ -1,3 +1,19 @@
+pulseaudio (4.0-5) unstable; urgency=low
+
+  * Add lintian overrides for rpaths in the modules to private pulseaudio
+    library directories
+
+ -- Sjoerd Simons <sjoerd@debian.org>  Fri, 19 Jul 2013 22:10:10 +0200
+
+pulseaudio (4.0-4) unstable; urgency=low
+
+  * debian/shlibs.local: Update to new soname versions
+    (Closes: #714381, #712919)
+  * debian/rules: svolume moved to libpulse-common, adjust accordingly to fix
+    build on armel
+
+ -- Sjoerd Simons <sjoerd@debian.org>  Sun, 14 Jul 2013 15:09:04 +0200
+
 pulseaudio (4.0-3) unstable; urgency=low
 
   * Fix build on arm
