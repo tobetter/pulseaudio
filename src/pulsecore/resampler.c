@@ -236,7 +236,11 @@ pa_resampler* pa_resampler_new(
 
     if (method == PA_RESAMPLER_AUTO) {
 #ifdef HAVE_SPEEX
+#  ifdef __arm__
+        method = PA_RESAMPLER_SPEEX_FIXED_BASE + 1;
+#  else
         method = PA_RESAMPLER_SPEEX_FLOAT_BASE + 1;
+#  endif
 #else
         if (flags & PA_RESAMPLER_VARIABLE_RATE)
             method = PA_RESAMPLER_TRIVIAL;
