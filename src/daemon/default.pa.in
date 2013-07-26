@@ -69,7 +69,7 @@ ifelse(@HAVE_MKFIFO@, 1, [dnl
 ### Automatically load driver modules depending on the hardware available
 ifelse(@HAVE_UDEV@, 1, [dnl
 .ifexists module-udev-detect@PA_SOEXT@
-load-module module-udev-detect
+load-module module-udev-detect use_ucm=0
 .else
 ], [dnl
 .ifexists module-detect@PA_SOEXT@
