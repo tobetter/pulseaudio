@@ -1,3 +1,11 @@
+pulseaudio (1:1.1-0ubuntu15.4) precise-proposed; urgency=low
+
+  * 0626/0627/0628-alsa-mixer patches:
+    Add better support for new machines with headphone-or-mic jacks, and
+    headset jacks without individual jack detection. (LP: #1169143)
+
+ -- David Henningsson <david.henningsson@canonical.com>  Mon, 29 Jul 2013 15:34:12 +0200
+
 pulseaudio (1:1.1-0ubuntu15.3) precise-proposed; urgency=low
 
   [ Kaj Ailomaa ]
