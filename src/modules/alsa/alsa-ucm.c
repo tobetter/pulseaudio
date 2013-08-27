@@ -654,6 +654,7 @@ static void ucm_add_port_combination(
     pa_device_port *port;
     int i;
     unsigned priority;
+    double prio2;
     char *name, *desc;
     const char *dev_name;
     const char *direction;
@@ -667,6 +668,7 @@ static void ucm_add_port_combination(
             : pa_sprintf_malloc("Combination port for %s", dev_name);
 
     priority = is_sink ? dev->playback_priority : dev->capture_priority;
+    prio2 = (priority == 0 ? 0 : 1.0/priority);
 
     for (i = 1; i < num; i++) {
         char *tmp;
@@ -682,9 +684,18 @@ static void ucm_add_port_combination(
         pa_xfree(desc);
         desc = tmp;
 
-        /* FIXME: Is this true? */
-        priority += (is_sink ? dev->playback_priority : dev->capture_priority);
+        priority = is_sink ? dev->playback_priority : dev->capture_priority;
+        if (priority != 0 && prio2 > 0)
+            prio2 += 1.0/priority;
     }
+
+    /* Make combination ports always have lower priority, and use the formula
+       1/p = 1/p1 + 1/p2 + ... 1/pn.
+       This way, the result will always be less than the individual components,
+       yet higher components will lead to higher result. */
+
+    if (num > 1)
+        priority = prio2 > 0 ? 1.0/prio2 : 0;
 
     port = pa_hashmap_get(ports, name);
     if (!port) {
@@ -719,7 +730,7 @@ static void ucm_add_port_combination(
     }
 }
 
-static int ucm_port_contains(const char *port_name, const char *dev_name, bool is_sink) {
+int pa_alsa_ucm_port_contains(const char *port_name, const char *dev_name, bool is_sink) {
     int ret = 0;
     const char *r;
     const char *state = NULL;
@@ -973,7 +984,7 @@ int pa_alsa_ucm_set_port(pa_alsa_ucm_mapping_context *context, pa_device_port *p
     PA_IDXSET_FOREACH(dev, context->ucm_devices, idx) {
         const char *dev_name = pa_proplist_gets(dev->proplist, PA_ALSA_PROP_UCM_NAME);
 
-        if (ucm_port_contains(port->name, dev_name, is_sink))
+        if (pa_alsa_ucm_port_contains(port->name, dev_name, is_sink))
             enable_devs[enable_num++] = dev_name;
         else {
             pa_log_debug("Disable ucm device %s", dev_name);
@@ -1484,7 +1495,8 @@ pa_alsa_profile_set* pa_alsa_ucm_add_profile_set(pa_alsa_ucm_config *ucm, pa_cha
 	    ucm_create_profile(ucm, ps, verb, verb_name, verb_desc);
     }
 
-    ucm_probe_profile_set(ucm, ps);
+/* Just trust that the person writing the UCM file knows what (s)he was doing, right? */
+/*    ucm_probe_profile_set(ucm, ps); */
     ps->probed = TRUE;
 
     return ps;
