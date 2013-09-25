@@ -78,6 +78,10 @@ load-module module-udev-detect
 load-module module-detect
 .endif
 
+.ifexists module-android-audio-hal@PA_SOEXT@
+load-module module-android-audio-hal
+.endif
+
 ### Automatically connect sink and source if JACK server is present
 .ifexists module-jackdbus-detect@PA_SOEXT@
 .nofail
