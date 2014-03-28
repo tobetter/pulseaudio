@@ -1,10 +1,67 @@
+pulseaudio (5.0-1) unstable; urgency=medium
+
+  [ Balint Reczey ]
+  * Add myself to uploaders
+
+  [ Wookey ]
+  * Add stage1 DEB_BUILD_PROFILES initial bootstrap support (Closes: #735485)
+
+  [ Jonas Eriksson ]
+  * Use channel 2 for raop sink (Closes: #658733)
+
+  [ Alexander Kurtz ]
+  * Exit PA with X session closing when PA is started by the session (Closes: 594001)
+
+  [ Balint Reczey ]
+  * Don't pass --disable-hal to ./configure (Closes: #729494)
+
+  [ Justin B Rye ]
+  * Make pulseaudio-utils suggest pulseaudio
+
+  [ Luca Capello ]
+  * Explain how to set up PulseAudio in a chroot (Closes: #649884)
+
+  [ Balint Reczey ]
+  * Imported Upstream version 5.0
+  * Make PA init script start PA unconditionally upon restart (Closes: #738143)
+  * Recommend consolekit instead of depending on it (Closes: #611491)
+  * Fix typo in debian/control
+
+  [ Sjoerd Simons ]
+  * Refresh patches:
+    + d/p/0002-Use-the-fixed-point-speex-resampler-on-ARM.patch
+    + d/p/kfreebsd_no_lock_and_threads_synchro.patch
+  * d/p/build-make-ARM-NEON-check-in-configure.ac-more-stric.patch:
+    + Dropped, fixed upstream
+  * Drop versioned dependency on libjack-dev (new enough version was available
+    in squeeze) to allow libjack-jackd2-dev to furfill the dependency.
+  * debian/rules: Use intltoolize when running autoreconf
+  * debian/pulseaudio-module-bluetooth.install:
+    + Update for new bluetooth module naming
+    + No longer install the proximity module as it has been removed upstream
+  * debian/libpulse0.symbols: Updated
+  * debian/shlibs.local, debian/rules: Update to private library version to 5
+  * debian/pulseaudio.install: Install new modules:
+    + module-role-ducking
+    + module-tunnel-{sink,source}-new
+    + module-remap-source
+  * debian/control: Add build-dependency on libsystemd-journal-dev to enable
+    systemd journal support
+  * debian/control: Drop even the recommends on consolekit as every desktop
+    session where it's useful will either have a dependency on consolekit or
+    systemd already.
+  * debian/control: Drop recommends on gstreamer0.10-pulseaudio as
+    gstreamer0.10 has been obsolete for some time
+
+ -- Sjoerd Simons <sjoerd@debian.org>  Sat, 29 Mar 2014 00:20:59 +0100
+
 pulseaudio (4.0-6) unstable; urgency=low
 
   * debian/patches/build-make-ARM-NEON-check-in-configure.ac-more-stric.patch
     + Added. Be more strict about the neon compiler flag ordering, fixes FBTS
       on ARM (Closes: #717444) (From upstream git)
 
- -- Sjoerd Simons <sjoerd@debian.org>  Sun, 21 Jul 2013 11:36:41 +0200
+ -- Sjoerd Simons <sjoerd@debian.org>  Fri, 28 Mar 2014 21:09:12 +0100
 
 pulseaudio (4.0-5) unstable; urgency=low
 
