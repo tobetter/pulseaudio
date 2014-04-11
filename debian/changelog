@@ -1,3 +1,24 @@
+pulseaudio (5.0-2) unstable; urgency=low
+
+  [ Balint Reczey ]
+  * Fix FTBFS on ARM architectures
+
+  [ Felipe Sateler ]
+  * Add myself to uploaders
+  * Install pulseaudio shell completions
+  * Add Breaks: on versions of jack with no latency API.
+     Closes: #685258
+  * Make pulseaudio-dbg Recommend libpulse0-dbg
+  * Drop xz flag to dh_builddeb, it is now default
+  * Try to ensure on non-arm platforms that the arm workaround will work
+  * Use canonical vcs addresses
+  * Don't pass start and stop arguments to update-rc.d, they are ignored
+
+  [ Sjoerd Simons ]
+  * debian/control: remove Martin-Éric Racine from Uploaders at his request
+
+ -- Sjoerd Simons <sjoerd@debian.org>  Fri, 11 Apr 2014 21:30:05 +0200
+
 pulseaudio (5.0-1) unstable; urgency=medium
 
   [ Balint Reczey ]
@@ -10,7 +31,8 @@ pulseaudio (5.0-1) unstable; urgency=medium
   * Use channel 2 for raop sink (Closes: #658733)
 
   [ Alexander Kurtz ]
-  * Exit PA with X session closing when PA is started by the session (Closes: 594001)
+  * Exit PA with X session closing when PA is started by the session
+    (Closes: #594001)
 
   [ Balint Reczey ]
   * Don't pass --disable-hal to ./configure (Closes: #729494)
