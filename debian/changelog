@@ -1,3 +1,44 @@
+pulseaudio (5.0-3) unstable; urgency=medium
+
+  [ Felipe Sateler ]
+  * Drop workaround for ARM < v6, upstream now conditionally compiles it.
+  * Drop special patches rule, not used anymore
+  * debian/patches/0003-exit-with-X-session.patch
+    - Kill pulseaudio on session exit with kde too
+    - Add DEP-3 header, forwarded
+  * Enable testsuite
+  * Bump debhelper compat level to 9
+    - debug symbols are now stored by build-id instead of by path
+    - Exclude private libpulsecommon-5.0.so from dh_makeshlibs
+  * Change init script dependency from avahi to avahi-daemon. Closes: #731609
+    - Requires adding a Breaks on avahi-daemon << 0.6.31-3
+  * Bump standards-version (No changes needed)
+  * Add lintian override for pulseaudio package
+    - bash completion is not meant to be executable
+    - neither are the pulseaudio configuration files
+  * Do not start pulseaudio in X session if it was already started.
+     Closes: #743813 
+  * Remove pulseaudio init script, place it under examples.
+     Closes: #696842
+  * debian/patches/only-autostart-kde-version.patch:
+     - Do not autostart pulseaudio twice under KDE, it sometimes leads
+       to slow system startup. Closes: #705426
+  * debian/patches/rtp-recv-fix-crash-on-empty-UDP-packets-CVE-2014-397.patch
+     - New patch from upstream, fixes crash on empty UDP packets.
+       Fixes CVE-2014-397
+  * zsh-completion: Fix completion for default sink/source
+  * Add bugscript to the pulseaudio package. Closes: #739294
+  * Make pulseaudio Depend on pulseaudio-utils
+    - start-pulseaudio{kde,x11} needs it. Closes: #648973
+    - The bugscript needs it too.
+  * Use dh_lintian instead of manually installing overrides
+
+  [ Jelmer Vernooij ]
+  * Disable building against tdb on the hurd, where it is not available.
+     Closes: #749333
+
+ -- Felipe Sateler <fsateler@debian.org>  Sat, 26 Jul 2014 01:02:03 -0400
+
 pulseaudio (5.0-2) unstable; urgency=low
 
   [ Balint Reczey ]
