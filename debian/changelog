@@ -1,3 +1,10 @@
+pulseaudio (5.0-4) unstable; urgency=medium
+
+  * Revert enabling of testsuite.
+    - Fails on multiple architectures, so disable while we work things out
+
+ -- Felipe Sateler <fsateler@debian.org>  Wed, 30 Jul 2014 10:08:18 -0400
+
 pulseaudio (5.0-3) unstable; urgency=medium
 
   [ Felipe Sateler ]
@@ -25,7 +32,7 @@ pulseaudio (5.0-3) unstable; urgency=medium
        to slow system startup. Closes: #705426
   * debian/patches/rtp-recv-fix-crash-on-empty-UDP-packets-CVE-2014-397.patch
      - New patch from upstream, fixes crash on empty UDP packets.
-       Fixes CVE-2014-397
+       Fixes CVE-2014-3970
   * zsh-completion: Fix completion for default sink/source
   * Add bugscript to the pulseaudio package. Closes: #739294
   * Make pulseaudio Depend on pulseaudio-utils
