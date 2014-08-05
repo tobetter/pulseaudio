@@ -181,7 +181,7 @@ char *pa_get_binary_name(char *s, size_t l) {
     }
 #endif
 
-#ifdef __linux__
+#ifdef __linux__ || defined(__FreeBSD_kernel__)
     {
         char *rp;
         /* This works on Linux only */
