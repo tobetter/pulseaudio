@@ -26,9 +26,9 @@ if /usr/bin/pulseaudio --check; then
     EXIT_WITH_X_SESSION=no
 else
     EXIT_WITH_X_SESSION=yes
+    @PA_BINARY@ --start "$@"
 fi
 
-@PA_BINARY@ --start "$@"
 
 if [ x"$DISPLAY" != x ] ; then
 
