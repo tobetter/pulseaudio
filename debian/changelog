@@ -1,3 +1,9 @@
+pulseaudio (5.0-9) experimental; urgency=medium
+
+  * More patches from upstream for kFreeBSD
+
+ -- Felipe Sateler <fsateler@debian.org>  Sat, 16 Aug 2014 13:01:43 -0400
+
 pulseaudio (5.0-8) experimental; urgency=medium
 
   * Pick some patches from upstream fixing tests
