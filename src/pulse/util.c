@@ -32,6 +32,7 @@
 #include <time.h>
 #include <unistd.h>
 #include <sys/types.h>
+#include <dlfcn.h>
 
 #ifdef HAVE_PWD_H
 #include <pwd.h>
@@ -63,6 +64,10 @@
 #include <pulsecore/usergroup.h>
 
 #include "util.h"
+
+#ifdef HAVE_DLADDR
+extern int main(int, char*[]);
+#endif
 
 char *pa_get_user_name(char *s, size_t l) {
     const char *p;
@@ -202,6 +207,19 @@ char *pa_get_binary_name(char *s, size_t l) {
             pa_strlcpy(s, pa_path_get_filename(rp), l);
             pa_xfree(rp);
             return s;
+        }
+    }
+#endif
+
+#ifdef HAVE_DLADDR
+    {
+        Dl_info DLInfo;
+        int err = dladdr(&main, &DLInfo);
+        if (err != 0) {
+            char *p = pa_realpath(DLInfo.dli_fname);
+            if (p) {
+                return p;
+            }
         }
     }
 #endif
