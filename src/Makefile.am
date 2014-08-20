@@ -1175,6 +1175,16 @@ modlibexec_LTLIBRARIES += \
 		module-alsa-source.la \
 		module-alsa-card.la
 
+if HAVE_ANDROID
+modlibexec_LTLIBRARIES += \
+		libdroid-util.la \
+		libdroid-sink.la \
+		libdroid-source.la \
+		module-droid-sink.la \
+		module-droid-source.la \
+		module-droid-card.la
+endif
+
 dist_alsaprofilesets_DATA = \
 		modules/alsa/mixer/profile-sets/default.conf \
 		modules/alsa/mixer/profile-sets/extra-hdmi.conf \
@@ -1423,6 +1433,13 @@ SYMDEF_FILES = \
 		module-switch-on-port-available-symdef.h \
 		module-filter-apply-symdef.h \
 		module-filter-heuristics-symdef.h
+
+if HAVE_ANDROID
+SYMDEF_FILES += \
+		module-droid-sink-symdef.h \
+		module-droid-source-symdef.h \
+		module-droid-card-symdef.h
+endif
 
 if HAVE_ESOUND
 SYMDEF_FILES += \
@@ -1723,6 +1740,44 @@ if HAVE_DBUS
 libalsa_util_la_SOURCES += modules/reserve.h modules/reserve.c modules/reserve-monitor.h modules/reserve-monitor.c
 libalsa_util_la_LIBADD += $(DBUS_LIBS)
 libalsa_util_la_CFLAGS += $(DBUS_CFLAGS)
+endif
+
+if HAVE_ANDROID
+libdroid_util_la_SOURCES = modules/droid/droid-util.c modules/droid/droid-util.h
+libdroid_util_la_LDFLAGS = -avoid-version
+libdroid_util_la_LIBADD = $(MODULE_LIBADD) $(LIBHARDWARE_LIBS)
+libdroid_util_la_CFLAGS = $(AM_CFLAGS) $(LIBHARDWARE_CFLAGS)
+
+libdroid_sink_la_SOURCES = modules/droid/droid-sink.c modules/droid/droid-sink.h
+libdroid_sink_la_LDFLAGS = -avoid-version
+libdroid_sink_la_LIBADD = $(MODULE_LIBADD) $(LIBHARDWARE_LIBS) libdroid-util.la
+libdroid_sink_la_CFLAGS = $(AM_CFLAGS) $(LIBHARDWARE_CFLAGS)
+
+libdroid_source_la_SOURCES = modules/droid/droid-source.c modules/droid/droid-source.h
+libdroid_source_la_LDFLAGS = -avoid-version
+libdroid_source_la_LIBADD = $(MODULE_LIBADD) $(LIBHARDWARE_LIBS) libdroid-util.la
+libdroid_source_la_CFLAGS = $(AM_CFLAGS) $(LIBHARDWARE_CFLAGS)
+
+module_droid_sink_la_SOURCES = modules/droid/module-droid-sink.c
+module_droid_sink_la_LDFLAGS = $(MODULE_LDFLAGS)
+module_droid_sink_la_LIBADD = $(MODULE_LIBADD) $(LIBHARDWARE_LIBS) libdroid-util.la libdroid-sink.la
+module_droid_sink_la_CFLAGS = $(AM_CFLAGS) $(LIBHARDWARE_CFLAGS)
+
+module_droid_source_la_SOURCES = modules/droid/module-droid-source.c
+module_droid_source_la_LDFLAGS = $(MODULE_LDFLAGS)
+module_droid_source_la_LIBADD = $(MODULE_LIBADD) $(LIBHARDWARE_LIBS) libdroid-util.la libdroid-source.la
+module_droid_source_la_CFLAGS = $(AM_CFLAGS) $(LIBHARDWARE_CFLAGS)
+
+module_droid_card_la_SOURCES = modules/droid/module-droid-card.c
+module_droid_card_la_LDFLAGS = $(MODULE_LDFLAGS)
+module_droid_card_la_LIBADD = $(MODULE_LIBADD) $(LIBHARDWARE_LIBS) libdroid-util.la libdroid-sink.la libdroid-source.la
+module_droid_card_la_CFLAGS = $(AM_CFLAGS) $(LIBHARDWARE_CFLAGS)
+
+if HAVE_UDEV
+module_droid_card_la_SOURCES += modules/droid/droid-extcon.c modules/droid/droid-extcon.h
+module_droid_card_la_LIBADD += $(UDEV_LIBS)
+module_droid_card_la_CFLAGS += $(UDEV_CFLAGS)
+endif
 endif
 
 module_alsa_sink_la_SOURCES = modules/alsa/module-alsa-sink.c
