@@ -24,6 +24,10 @@
 #include <config.h>
 #endif
 
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE 1
+#endif
+
 #include <errno.h>
 #include <limits.h>
 #include <stdio.h>
@@ -32,6 +36,7 @@
 #include <time.h>
 #include <unistd.h>
 #include <sys/types.h>
+#include <dlfcn.h>
 
 #ifdef HAVE_PWD_H
 #include <pwd.h>
@@ -63,6 +68,10 @@
 #include <pulsecore/usergroup.h>
 
 #include "util.h"
+
+#if defined(HAVE_DLADDR) && defined(PA_GCC_WEAKREF)
+static int _main() PA_GCC_WEAKREF(main);
+#endif
 
 char *pa_get_user_name(char *s, size_t l) {
     const char *p;
@@ -202,6 +211,21 @@ char *pa_get_binary_name(char *s, size_t l) {
             pa_strlcpy(s, pa_path_get_filename(rp), l);
             pa_xfree(rp);
             return s;
+        }
+    }
+#endif
+
+#if defined(HAVE_DLADDR) && defined(PA_GCC_WEAKREF)
+    {
+        Dl_info info;
+        if(_main) {
+            int err = dladdr(&_main, &info);
+            if (err != 0) {
+                char *p = pa_realpath(info.dli_fname);
+                if (p) {
+                    return p;
+                }
+            }
         }
     }
 #endif
