@@ -24,6 +24,10 @@
 #include <config.h>
 #endif
 
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE 1
+#endif
+
 #include <errno.h>
 #include <limits.h>
 #include <stdio.h>
@@ -65,8 +69,8 @@
 
 #include "util.h"
 
-#ifdef HAVE_DLADDR
-extern int main(int, char*[]);
+#if defined(HAVE_DLADDR) && defined(PA_GCC_WEAKREF)
+static int _main() PA_GCC_WEAKREF(main);
 #endif
 
 char *pa_get_user_name(char *s, size_t l) {
@@ -211,14 +215,16 @@ char *pa_get_binary_name(char *s, size_t l) {
     }
 #endif
 
-#ifdef HAVE_DLADDR
+#if defined(HAVE_DLADDR) && defined(PA_GCC_WEAKREF)
     {
-        Dl_info DLInfo;
-        int err = dladdr(&main, &DLInfo);
-        if (err != 0) {
-            char *p = pa_realpath(DLInfo.dli_fname);
-            if (p) {
-                return p;
+        Dl_info info;
+        if(_main) {
+            int err = dladdr(&_main, &info);
+            if (err != 0) {
+                char *p = pa_realpath(info.dli_fname);
+                if (p) {
+                    return p;
+                }
             }
         }
     }
