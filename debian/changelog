@@ -1,3 +1,10 @@
+pulseaudio (1:4.0-0ubuntu11.1) trusty; urgency=medium
+
+  * 0107-sink-source-Fix-restore-of-volume-on-devices-without.patch:
+    - Fix initial volume for sink (LP: #598308)
+
+ -- Ricardo Salveti de Araujo <ricardo.salveti@canonical.com>  Wed, 28 Jan 2015 16:17:08 -0200
+
 pulseaudio (1:4.0-0ubuntu11) trusty; urgency=medium
 
   * 0105-sink-source-Initialize-port-before-fixate-hook-fixes.patch:

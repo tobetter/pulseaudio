@@ -15,6 +15,7 @@
 0104-default-system.pa-Do-not-load-module-dbus-protocol.patch
 0105-sink-source-Initialize-port-before-fixate-hook-fixes.patch
 0106-module-switch-on-port-available-Don-t-switch-profile.patch
+0107-sink-source-Fix-restore-of-volume-on-devices-without.patch
 
 # Ubuntu touch stuff
 0201-ALSA-Add-extcon-Android-switch-jack-detection.patch
