@@ -15,9 +15,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #ifdef HAVE_CONFIG_H
@@ -216,6 +214,9 @@ static void defer_cb(pa_mainloop_api *a, pa_defer_event *e, void *userdata) {
 
     if (n < 0) {
         pa_log("snd_mixer_poll_descriptors_count() failed: %s", pa_alsa_strerror(n));
+        return;
+    } else if (n == 0) {
+        pa_log("snd_mixer_poll_descriptors_count() equal 0");
         return;
     }
     num_fds = (unsigned) n;

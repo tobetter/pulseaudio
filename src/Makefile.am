@@ -15,9 +15,7 @@
 # General Public License for more details.
 #
 # You should have received a copy of the GNU Lesser General Public License
-# along with PulseAudio; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-# USA.
+# along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 
 ###################################
 #       Extra directories         #
@@ -924,6 +922,7 @@ libpulsecore_@PA_MAJORMINOR@_la_SOURCES = \
 		pulsecore/core-subscribe.c pulsecore/core-subscribe.h \
 		pulsecore/core.c pulsecore/core.h \
 		pulsecore/hook-list.c pulsecore/hook-list.h \
+		pulsecore/inotify-wrapper.c pulsecore/inotify-wrapper.h \
 		pulsecore/ltdl-helper.c pulsecore/ltdl-helper.h \
 		pulsecore/modargs.c pulsecore/modargs.h \
 		pulsecore/modinfo.c pulsecore/modinfo.h \
@@ -1252,6 +1251,16 @@ modlibexec_LTLIBRARIES += \
 		module-alsa-source.la \
 		module-alsa-card.la
 
+if HAVE_ANDROID
+modlibexec_LTLIBRARIES += \
+		libdroid-util.la \
+		libdroid-sink.la \
+		libdroid-source.la \
+		module-droid-sink.la \
+		module-droid-source.la \
+		module-droid-card.la
+endif
+
 dist_alsaprofilesets_DATA = \
 		modules/alsa/mixer/profile-sets/default.conf \
 		modules/alsa/mixer/profile-sets/force-speaker.conf \
@@ -1520,6 +1529,13 @@ SYMDEF_FILES = \
 		module-switch-on-port-available-symdef.h \
 		module-filter-apply-symdef.h \
 		module-filter-heuristics-symdef.h
+
+if HAVE_ANDROID
+SYMDEF_FILES += \
+		module-droid-sink-symdef.h \
+		module-droid-source-symdef.h \
+		module-droid-card-symdef.h
+endif
 
 if HAVE_ESOUND
 SYMDEF_FILES += \
@@ -1830,6 +1846,44 @@ libalsa_util_la_LIBADD += $(DBUS_LIBS)
 libalsa_util_la_CFLAGS += $(DBUS_CFLAGS)
 endif
 
+if HAVE_ANDROID
+libdroid_util_la_SOURCES = modules/droid/droid-util.c modules/droid/droid-util.h
+libdroid_util_la_LDFLAGS = -avoid-version
+libdroid_util_la_LIBADD = $(MODULE_LIBADD) $(LIBHARDWARE_LIBS)
+libdroid_util_la_CFLAGS = $(AM_CFLAGS) $(LIBHARDWARE_CFLAGS)
+
+libdroid_sink_la_SOURCES = modules/droid/droid-sink.c modules/droid/droid-sink.h
+libdroid_sink_la_LDFLAGS = -avoid-version
+libdroid_sink_la_LIBADD = $(MODULE_LIBADD) $(LIBHARDWARE_LIBS) libdroid-util.la
+libdroid_sink_la_CFLAGS = $(AM_CFLAGS) $(LIBHARDWARE_CFLAGS)
+
+libdroid_source_la_SOURCES = modules/droid/droid-source.c modules/droid/droid-source.h
+libdroid_source_la_LDFLAGS = -avoid-version
+libdroid_source_la_LIBADD = $(MODULE_LIBADD) $(LIBHARDWARE_LIBS) libdroid-util.la
+libdroid_source_la_CFLAGS = $(AM_CFLAGS) $(LIBHARDWARE_CFLAGS)
+
+module_droid_sink_la_SOURCES = modules/droid/module-droid-sink.c
+module_droid_sink_la_LDFLAGS = $(MODULE_LDFLAGS)
+module_droid_sink_la_LIBADD = $(MODULE_LIBADD) $(LIBHARDWARE_LIBS) libdroid-util.la libdroid-sink.la
+module_droid_sink_la_CFLAGS = $(AM_CFLAGS) $(LIBHARDWARE_CFLAGS)
+
+module_droid_source_la_SOURCES = modules/droid/module-droid-source.c
+module_droid_source_la_LDFLAGS = $(MODULE_LDFLAGS)
+module_droid_source_la_LIBADD = $(MODULE_LIBADD) $(LIBHARDWARE_LIBS) libdroid-util.la libdroid-source.la
+module_droid_source_la_CFLAGS = $(AM_CFLAGS) $(LIBHARDWARE_CFLAGS)
+
+module_droid_card_la_SOURCES = modules/droid/module-droid-card.c
+module_droid_card_la_LDFLAGS = $(MODULE_LDFLAGS)
+module_droid_card_la_LIBADD = $(MODULE_LIBADD) $(LIBHARDWARE_LIBS) libdroid-util.la libdroid-sink.la libdroid-source.la
+module_droid_card_la_CFLAGS = $(AM_CFLAGS) $(LIBHARDWARE_CFLAGS)
+
+if HAVE_UDEV
+module_droid_card_la_SOURCES += modules/droid/droid-extcon.c modules/droid/droid-extcon.h
+module_droid_card_la_LIBADD += $(UDEV_LIBS)
+module_droid_card_la_CFLAGS += $(UDEV_CFLAGS)
+endif
+endif
+
 module_alsa_sink_la_SOURCES = modules/alsa/module-alsa-sink.c
 module_alsa_sink_la_LDFLAGS = $(MODULE_LDFLAGS)
 module_alsa_sink_la_LIBADD = $(MODULE_LIBADD) $(ASOUNDLIB_LIBS) libalsa-util.la
@@ -2032,7 +2086,7 @@ if HAVE_WEBRTC
 
 libwebrtc_util_la_SOURCES = modules/echo-cancel/webrtc.cc
 libwebrtc_util_la_CXXFLAGS = $(AM_CXXFLAGS) $(SERVER_CFLAGS) $(WEBRTC_CFLAGS) -DHAVE_WEBRTC=1
-libwebrtc_util_la_LIBADD = $(WEBRTC_LIBS)
+libwebrtc_util_la_LIBADD = libpulsecore-@PA_MAJORMINOR@.la $(WEBRTC_LIBS)
 libwebrtc_util_la_LDFLAGS = -avoid-version
 
 module_echo_cancel_la_CFLAGS += -DHAVE_WEBRTC=1

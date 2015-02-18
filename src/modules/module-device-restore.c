@@ -15,9 +15,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #ifdef HAVE_CONFIG_H
@@ -53,6 +51,7 @@
 #include <pulsecore/pstream-util.h>
 #include <pulsecore/database.h>
 #include <pulsecore/tagstruct.h>
+#include <pulsecore/proplist-util.h>
 
 #include "module-device-restore-symdef.h"
 
@@ -67,6 +66,7 @@ PA_MODULE_USAGE(
         "restore_formats=<Save/restore saved formats?>");
 
 #define SAVE_INTERVAL (10 * PA_USEC_PER_SEC)
+#define MODULE_DEVICE_RESTORE_SKIP_PROPERTY "module-device-restore.skip"
 
 static const char* const valid_modargs[] = {
     "restore_volume",
@@ -613,6 +613,9 @@ static void subscribe_callback(pa_core *c, pa_subscription_event_type_t t, uint3
         if (!(sink = pa_idxset_get_by_index(c->sinks, idx)))
             return;
 
+        if (pa_proplist_gets(sink->proplist, MODULE_DEVICE_RESTORE_SKIP_PROPERTY))
+            return;
+
         type = PA_DEVICE_TYPE_SINK;
         name = pa_sprintf_malloc("sink:%s", sink->name);
         if (sink->active_port)
@@ -650,6 +653,9 @@ static void subscribe_callback(pa_core *c, pa_subscription_event_type_t t, uint3
         pa_assert((t & PA_SUBSCRIPTION_EVENT_FACILITY_MASK) == PA_SUBSCRIPTION_EVENT_SOURCE);
 
         if (!(source = pa_idxset_get_by_index(c->sources, idx)))
+            return;
+
+        if (pa_proplist_gets(source->proplist, MODULE_DEVICE_RESTORE_SKIP_PROPERTY))
             return;
 
         type = PA_DEVICE_TYPE_SOURCE;
@@ -818,6 +824,9 @@ static pa_hook_result_t sink_port_hook_callback(pa_core *c, pa_sink *sink, struc
     pa_assert(u);
     pa_assert(u->restore_volume || u->restore_muted);
 
+    if (pa_proplist_gets(sink->proplist, MODULE_DEVICE_RESTORE_SKIP_PROPERTY))
+        return PA_HOOK_OK;
+
     name = pa_sprintf_malloc("sink:%s", sink->name);
 
     if ((e = perportentry_read(u, name, (sink->active_port ? sink->active_port->name : NULL)))) {
@@ -960,6 +969,9 @@ static pa_hook_result_t source_port_hook_callback(pa_core *c, pa_source *source,
     pa_assert(u);
     pa_assert(u->restore_volume || u->restore_muted);
 
+    if (pa_proplist_gets(source->proplist, MODULE_DEVICE_RESTORE_SKIP_PROPERTY))
+        return PA_HOOK_OK;
+
     name = pa_sprintf_malloc("source:%s", source->name);
 
     if ((e = perportentry_read(u, name, (source->active_port ? source->active_port->name : NULL)))) {
@@ -1023,6 +1035,7 @@ static void read_sink_format_reply(struct userdata *u, pa_tagstruct *reply, pa_s
         PA_IDXSET_FOREACH(f, e->formats, idx) {
             pa_tagstruct_put_format_info(reply, f);
         }
+        perportentry_free(e);
     }
     pa_xfree(name);
 }

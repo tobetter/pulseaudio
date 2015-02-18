@@ -14,9 +14,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #ifdef HAVE_CONFIG_H
@@ -277,6 +275,8 @@ int pa_card_set_profile(pa_card *c, pa_card_profile *profile, bool save) {
         c->save_profile = c->save_profile || save;
         return 0;
     }
+
+    pa_hook_fire(&c->core->hooks[PA_CORE_HOOK_CARD_PROFILE_CHANGING], profile);
 
     if ((r = c->set_profile(c, profile)) < 0)
         return r;

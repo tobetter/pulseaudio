@@ -17,9 +17,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #include <pulse/mainloop-api.h>
@@ -124,6 +122,7 @@ typedef enum pa_core_hook {
     PA_CORE_HOOK_CARD_PUT,
     PA_CORE_HOOK_CARD_UNLINK,
     PA_CORE_HOOK_CARD_PROFILE_CHANGED,
+    PA_CORE_HOOK_CARD_PROFILE_CHANGING,
     PA_CORE_HOOK_CARD_PROFILE_ADDED,
     PA_CORE_HOOK_CARD_PROFILE_AVAILABLE_CHANGED,
     PA_CORE_HOOK_PORT_AVAILABLE_CHANGED,

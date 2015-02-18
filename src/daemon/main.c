@@ -15,9 +15,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #ifdef HAVE_CONFIG_H
@@ -75,6 +73,7 @@
 #include <pulsecore/core-rtclock.h>
 #include <pulsecore/core-scache.h>
 #include <pulsecore/core.h>
+#include <pulsecore/inotify-wrapper.h>
 #include <pulsecore/module.h>
 #include <pulsecore/cli-command.h>
 #include <pulsecore/log.h>
@@ -334,6 +333,15 @@ static char *check_configured_address(void) {
     return default_server;
 }
 
+static bool valid_pid_file = false;
+static void pid_file_deleted(void *userdata)
+{
+    pa_core *c = userdata;
+    pa_log_info("Our pid file has been deleted (probably due to session logout), quitting...");
+    valid_pid_file = false;
+    pa_core_exit(c, true, 0);
+}
+
 #ifdef HAVE_DBUS
 static pa_dbus_connection *register_dbus_name(pa_core *c, DBusBusType bus, const char* name) {
     DBusError error;
@@ -376,7 +384,6 @@ int main(int argc, char *argv[]) {
     char *s;
     char *configured_address;
     int r = 0, retval = 1, d = 0;
-    bool valid_pid_file = false;
     bool ltdl_init = false;
     int n_fds = 0, *passed_fds = NULL;
     const char *e;
@@ -384,6 +391,7 @@ int main(int argc, char *argv[]) {
     int daemon_pipe[2] = { -1, -1 };
     int daemon_pipe2[2] = { -1, -1 };
 #endif
+    pa_inotify *pid_monitor = NULL;
     int autospawn_fd = -1;
     bool autospawn_locked = false;
 #ifdef HAVE_DBUS
@@ -975,7 +983,7 @@ int main(int argc, char *argv[]) {
     if (pa_in_system_mode())
         pa_log_warn(_("OK, so you are running PA in system mode. Please note that you most likely shouldn't be doing that.\n"
                       "If you do it nonetheless then it's your own fault if things don't work as expected.\n"
-                      "Please read http://pulseaudio.org/wiki/WhatIsWrongWithSystemMode for an explanation why system mode is usually a bad idea."));
+                      "Please read http://www.freedesktop.org/wiki/Software/PulseAudio/Documentation/User/WhatIsWrongWithSystemWide/ for an explanation why system mode is usually a bad idea."));
 
     if (conf->use_pid_file) {
         int z;
@@ -1023,6 +1031,9 @@ int main(int argc, char *argv[]) {
         pa_log(_("pa_core_new() failed."));
         goto finish;
     }
+
+    if (valid_pid_file)
+        pid_monitor = pa_inotify_start(pa_pid_file_name(), c, pid_file_deleted, c);
 
     c->default_sample_spec = conf->default_sample_spec;
     c->alternate_sample_rate = conf->alternate_sample_rate;
@@ -1154,6 +1165,9 @@ finish:
 
         pa_autospawn_lock_done(false);
     }
+
+    if (pid_monitor)
+        pa_inotify_stop(pid_monitor);
 
     if (c) {
         /* Ensure all the modules/samples are unloaded when the core is still ref'ed,

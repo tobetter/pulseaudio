@@ -15,9 +15,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public
-  License along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  License along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #ifdef HAVE_CONFIG_H
@@ -181,6 +179,11 @@ static int proc_name_ours(pid_t pid, const char *procname) {
     return 1;
 #endif
 
+}
+
+char *pa_pid_file_name()
+{
+    return pa_runtime_path("pid");
 }
 
 /* Create a new PID file for the current process. */

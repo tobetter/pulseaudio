@@ -13,8 +13,7 @@
 # General Public License for more details.
 #
 # You should have received a copy of the GNU Lesser General Public License
-# along with PulseAudio; if not, write to the Free Software Foundation,
-# Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA.
+# along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 
 # This startup script is used only if PulseAudio is started per-user
 # (i.e. not in system mode)
@@ -161,7 +160,7 @@ load-module module-systemd-login
 load-module module-position-event-sounds
 
 ### Cork music/video streams when a phone stream is active
-load-module module-role-cork
+#load-module module-role-cork
 
 ### Modules to allow autoloading of filters (such as echo cancellation)
 ### on demand. module-filter-heuristics tries to determine what filters
