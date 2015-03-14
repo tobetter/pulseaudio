@@ -1,3 +1,14 @@
+pulseaudio (6.0-1) experimental; urgency=medium
+
+  [ Luke Yelavich ]
+  * New upstream release
+  * Remove pulseaudio-kde autostart file on upgrade (Closes: #776331)
+
+  [ Felipe Sateler ]
+  * Upload to experimental
+
+ -- Felipe Sateler <fsateler@debian.org>  Fri, 13 Mar 2015 22:45:13 -0300
+
 pulseaudio (5.99.2-2) experimental; urgency=medium
 
   * Let configure guess if systemd is available. Closes: #773879

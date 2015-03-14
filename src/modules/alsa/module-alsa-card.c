@@ -14,9 +14,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #ifdef HAVE_CONFIG_H
@@ -455,6 +453,12 @@ static void init_eld_ctls(struct userdata *u) {
     pa_device_port *port;
 
     if (!u->mixer_handle)
+        return;
+
+    /* The code in this function expects ports to have a pa_alsa_port_data
+     * struct as their data, but in UCM mode ports don't have any data. Hence,
+     * the ELD controls can't currently be used in UCM mode. */
+    if (u->use_ucm)
         return;
 
     PA_HASHMAP_FOREACH(port, u->card->ports, state) {
