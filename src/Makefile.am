@@ -15,9 +15,7 @@
 # General Public License for more details.
 #
 # You should have received a copy of the GNU Lesser General Public License
-# along with PulseAudio; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-# USA.
+# along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 
 ###################################
 #       Extra directories         #
@@ -2032,7 +2030,7 @@ if HAVE_WEBRTC
 
 libwebrtc_util_la_SOURCES = modules/echo-cancel/webrtc.cc
 libwebrtc_util_la_CXXFLAGS = $(AM_CXXFLAGS) $(SERVER_CFLAGS) $(WEBRTC_CFLAGS) -DHAVE_WEBRTC=1
-libwebrtc_util_la_LIBADD = $(WEBRTC_LIBS)
+libwebrtc_util_la_LIBADD = libpulsecore-@PA_MAJORMINOR@.la $(WEBRTC_LIBS)
 libwebrtc_util_la_LDFLAGS = -avoid-version
 
 module_echo_cancel_la_CFLAGS += -DHAVE_WEBRTC=1
