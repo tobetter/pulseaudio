@@ -40,7 +40,7 @@ struct ffmpeg_data { /* data specific to ffmpeg */
 
 static int copy_init(pa_resampler *r);
 
-static void setup_remap(const pa_resampler *r, pa_remap_t *m);
+static void setup_remap(const pa_resampler *r, pa_remap_t *m, bool *lfe_remixed);
 static void free_remap(pa_remap_t *m);
 
 static int (* const init_table[])(pa_resampler *r) = {
@@ -298,10 +298,12 @@ pa_resampler* pa_resampler_new(
         const pa_channel_map *am,
         const pa_sample_spec *b,
         const pa_channel_map *bm,
+	unsigned crossover_freq,
         pa_resample_method_t method,
         pa_resample_flags_t flags) {
 
     pa_resampler *r = NULL;
+    bool lfe_remixed = false;
 
     pa_assert(pool);
     pa_assert(a);
@@ -390,7 +392,15 @@ pa_resampler* pa_resampler_new(
 
     /* set up the remap structure */
     if (r->map_required)
-        setup_remap(r, &r->remap);
+        setup_remap(r, &r->remap, &lfe_remixed);
+
+    if (lfe_remixed && crossover_freq > 0) {
+        pa_sample_spec wss = r->o_ss;
+        wss.format = r->work_format;
+        /* FIXME: For now just hardcode maxrewind to 3 seconds */
+        r->lfe_filter = pa_lfe_filter_new(&wss, &r->o_cm, (float)crossover_freq, b->rate * 3);
+        pa_log_debug("  lfe filter activated (LR4 type), the crossover_freq = %uHz", crossover_freq);
+    }
 
     /* initialize implementation */
     if (init_table[method](r) < 0)
@@ -411,6 +421,9 @@ void pa_resampler_free(pa_resampler *r) {
         r->impl.free(r);
     else
         pa_xfree(r->impl.data);
+
+    if (r->lfe_filter)
+        pa_lfe_filter_free(r->lfe_filter);
 
     if (r->to_work_format_buf.memblock)
         pa_memblock_unref(r->to_work_format_buf.memblock);
@@ -450,6 +463,9 @@ void pa_resampler_set_output_rate(pa_resampler *r, uint32_t rate) {
     r->o_ss.rate = rate;
 
     r->impl.update_rates(r);
+
+    if (r->lfe_filter)
+        pa_lfe_filter_update_rate(r->lfe_filter, rate);
 }
 
 size_t pa_resampler_request(pa_resampler *r, size_t out_length) {
@@ -533,6 +549,23 @@ void pa_resampler_reset(pa_resampler *r) {
 
     if (r->impl.reset)
         r->impl.reset(r);
+
+    if (r->lfe_filter)
+        pa_lfe_filter_reset(r->lfe_filter);
+
+    *r->have_leftover = false;
+}
+
+void pa_resampler_rewind(pa_resampler *r, size_t out_frames) {
+    pa_assert(r);
+
+    /* For now, we don't have any rewindable resamplers, so we just
+       reset the resampler instead (and hope that nobody hears the difference). */
+    if (r->impl.reset)
+        r->impl.reset(r);
+
+    if (r->lfe_filter)
+        pa_lfe_filter_rewind(r->lfe_filter, out_frames);
 
     *r->have_leftover = false;
 }
@@ -731,7 +764,7 @@ static int front_rear_side(pa_channel_position_t p) {
     return ON_OTHER;
 }
 
-static void setup_remap(const pa_resampler *r, pa_remap_t *m) {
+static void setup_remap(const pa_resampler *r, pa_remap_t *m, bool *lfe_remixed) {
     unsigned oc, ic;
     unsigned n_oc, n_ic;
     bool ic_connected[PA_CHANNELS_MAX];
@@ -740,6 +773,7 @@ static void setup_remap(const pa_resampler *r, pa_remap_t *m) {
 
     pa_assert(r);
     pa_assert(m);
+    pa_assert(lfe_remixed);
 
     n_oc = r->o_ss.channels;
     n_ic = r->i_ss.channels;
@@ -752,6 +786,7 @@ static void setup_remap(const pa_resampler *r, pa_remap_t *m) {
     memset(m->map_table_i, 0, sizeof(m->map_table_i));
 
     memset(ic_connected, 0, sizeof(ic_connected));
+    *lfe_remixed = false;
 
     if (r->flags & PA_RESAMPLER_NO_REMAP) {
         for (oc = 0; oc < PA_MIN(n_ic, n_oc); oc++)
@@ -772,8 +807,8 @@ static void setup_remap(const pa_resampler *r, pa_remap_t *m) {
     } else {
 
         /* OK, we shall do the full monty: upmixing and downmixing. Our
-         * algorithm is relatively simple, does not do spacialization, delay
-         * elements or apply lowpass filters for LFE. Patches are always
+         * algorithm is relatively simple, does not do spacialization, or delay
+         * elements. LFE filters are done after the remap step. Patches are always
          * welcome, though. Oh, and it doesn't do any matrix decoding. (Which
          * probably wouldn't make any sense anyway.)
          *
@@ -863,6 +898,9 @@ static void setup_remap(const pa_resampler *r, pa_remap_t *m) {
 
                     oc_connected = true;
                     ic_connected[ic] = true;
+
+                    if (a == PA_CHANNEL_POSITION_MONO && on_lfe(b) && !(r->flags & PA_RESAMPLER_NO_LFE))
+                        *lfe_remixed = true;
                 }
                 else if (b == PA_CHANNEL_POSITION_MONO) {
                     m->map_table_f[oc][ic] = 1.0f / (float) n_ic;
@@ -945,6 +983,8 @@ static void setup_remap(const pa_resampler *r, pa_remap_t *m) {
 
                     /* Please note that a channel connected to LFE doesn't
                      * really count as connected. */
+
+                    *lfe_remixed = true;
                 }
             }
         }
@@ -1314,6 +1354,9 @@ void pa_resampler_run(pa_resampler *r, const pa_memchunk *in, pa_memchunk *out) 
         buf = resample(r, buf);
         buf = remap_channels(r, buf);
     }
+
+    if (r->lfe_filter)
+        buf = pa_lfe_filter_process(r->lfe_filter, buf);
 
     if (buf->length) {
         buf = convert_from_work_format(r, buf);

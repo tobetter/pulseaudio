@@ -26,6 +26,7 @@
 #include <pulsecore/memchunk.h>
 #include <pulsecore/sconv.h>
 #include <pulsecore/remap.h>
+#include <pulsecore/filter/lfe-filter.h>
 
 typedef struct pa_resampler pa_resampler;
 typedef struct pa_resampler_impl pa_resampler_impl;
@@ -103,6 +104,8 @@ struct pa_resampler {
     pa_remap_t remap;
     bool map_required;
 
+    pa_lfe_filter_t *lfe_filter;
+
     pa_resampler_impl impl;
 };
 
@@ -112,6 +115,7 @@ pa_resampler* pa_resampler_new(
         const pa_channel_map *am,
         const pa_sample_spec *b,
         const pa_channel_map *bm,
+	unsigned crossover_freq,
         pa_resample_method_t resample_method,
         pa_resample_flags_t flags);
 
@@ -137,6 +141,9 @@ void pa_resampler_set_output_rate(pa_resampler *r, uint32_t rate);
 
 /* Reinitialize state of the resampler, possibly due to seeking or other discontinuities */
 void pa_resampler_reset(pa_resampler *r);
+
+/* Rewind resampler */
+void pa_resampler_rewind(pa_resampler *r, size_t out_frames);
 
 /* Return the resampling method of the resampler object */
 pa_resample_method_t pa_resampler_get_method(pa_resampler *r);
