@@ -1,6 +1,12 @@
+pulseaudio (1:6.0-0ubuntu8) wily; urgency=medium
+
+  * 0311-tests-add-tolerant-variation-for-comparing-the-rewin.patch:
+    Fix build failure on i386
+
+ -- David Henningsson <david.henningsson@canonical.com>  Mon, 25 May 2015 14:45:41 +0200
+
 pulseaudio (1:6.0-0ubuntu7) wily; urgency=medium
 
-  [ Hui Wang ]
   * debian/patches/0300-lfe-filter-Import-code-from-the-Chrome-OS-audio-serv.patch
   * debian/patches/0301-lfe-filter-Enable-LFE-filter-in-the-resampler.patch
   * debian/patches/0302-lfe-filter-Cleanup-and-refactor.patch
@@ -12,10 +18,10 @@ pulseaudio (1:6.0-0ubuntu7) wily; urgency=medium
   * debian/patches/0308-daemon-conf-enable-the-lfe-remixing-by-default.patch
   * debian/patches/0309-resampler-Allow-disabling-the-LFE-filter-by-setting-.patch
   * debian/patches/0310-resampler-Rename-lfe_filter_required-to-lfe_remixed.patch
-    - Add lfe filter patches from upstream
+    - Add lfe filter patches
       (LP: #1286021)
 
- -- David Henningsson <david.henningsson@canonical.com>  Wed, 13 May 2015 14:34:14 +0200
+ -- Hui Wang <hui.wang@canonical.com>  Wed, 13 May 2015 15:06:28 +0800
 
 pulseaudio (1:6.0-0ubuntu6) vivid; urgency=medium
 
