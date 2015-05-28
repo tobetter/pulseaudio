@@ -1,3 +1,10 @@
+pulseaudio (1:6.0-0ubuntu9) wily; urgency=medium
+
+  * 0312-lfe-filter-test-Use-S16NE-format.patch:
+    Fix build failure on powerpc
+
+ -- David Henningsson <david.henningsson@canonical.com>  Thu, 28 May 2015 11:02:48 +0200
+
 pulseaudio (1:6.0-0ubuntu8) wily; urgency=medium
 
   * 0311-tests-add-tolerant-variation-for-comparing-the-rewin.patch:
