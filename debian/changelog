@@ -1,3 +1,9 @@
+pulseaudio (1:6.0-0ubuntu10~gcc5.1) wily; urgency=medium
+
+  * No-change test rebuild for g++5 ABI transition
+
+ -- Steve Langasek <steve.langasek@ubuntu.com>  Wed, 15 Jul 2015 15:57:11 +0000
+
 pulseaudio (1:6.0-0ubuntu9) wily; urgency=medium
 
   * 0312-lfe-filter-test-Use-S16NE-format.patch:
