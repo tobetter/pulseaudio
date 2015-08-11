@@ -1,3 +1,9 @@
+pulseaudio (1:6.0-0ubuntu10~gcc5.2) wily; urgency=medium
+
+  * No-change rebuild against libjack-jackd2-0v5
+
+ -- Steve Langasek <steve.langasek@ubuntu.com>  Tue, 11 Aug 2015 07:01:56 +0000
+
 pulseaudio (1:6.0-0ubuntu10~gcc5.1) wily; urgency=medium
 
   * No-change test rebuild for g++5 ABI transition
