@@ -1456,6 +1456,7 @@ static void exit_signal_callback(pa_mainloop_api *m, pa_signal_event *e, int sig
 static int parse_volume(const char *vol_spec, pa_volume_t *vol, enum volume_flags *vol_flags) {
     double v;
     char *vs;
+    const char *atod_input;
 
     pa_assert(vol_spec);
     pa_assert(vol);
@@ -1475,7 +1476,12 @@ static int parse_volume(const char *vol_spec, pa_volume_t *vol, enum volume_flag
         vs[strlen(vs)-2] = 0;
     }
 
-    if (pa_atod(vs, &v) < 0) {
+    atod_input = vs;
+
+    if (atod_input[0] == '+')
+        atod_input++; /* pa_atod() doesn't accept leading '+', so skip it. */
+
+    if (pa_atod(atod_input, &v) < 0) {
         pa_log(_("Invalid volume specification"));
         pa_xfree(vs);
         return -1;
@@ -1947,7 +1953,7 @@ int main(int argc, char *argv[]) {
             action = SET_SINK_MUTE;
 
             if (argc != optind+3) {
-                pa_log(_("You have to specify a sink name/index and a mute boolean"));
+                pa_log(_("You have to specify a sink name/index and a mute action (0, 1, or 'toggle')"));
                 goto quit;
             }
 
@@ -1962,7 +1968,7 @@ int main(int argc, char *argv[]) {
             action = SET_SOURCE_MUTE;
 
             if (argc != optind+3) {
-                pa_log(_("You have to specify a source name/index and a mute boolean"));
+                pa_log(_("You have to specify a source name/index and a mute action (0, 1, or 'toggle')"));
                 goto quit;
             }
 
@@ -1977,7 +1983,7 @@ int main(int argc, char *argv[]) {
             action = SET_SINK_INPUT_MUTE;
 
             if (argc != optind+3) {
-                pa_log(_("You have to specify a sink input index and a mute boolean"));
+                pa_log(_("You have to specify a sink input index and a mute action (0, 1, or 'toggle')"));
                 goto quit;
             }
 
@@ -1995,7 +2001,7 @@ int main(int argc, char *argv[]) {
             action = SET_SOURCE_OUTPUT_MUTE;
 
             if (argc != optind+3) {
-                pa_log(_("You have to specify a source output index and a mute boolean"));
+                pa_log(_("You have to specify a source output index and a mute action (0, 1, or 'toggle')"));
                 goto quit;
             }
 
