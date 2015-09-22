@@ -298,6 +298,7 @@ pa_resampler* pa_resampler_new(
         const pa_channel_map *am,
         const pa_sample_spec *b,
         const pa_channel_map *bm,
+	unsigned crossover_freq,
         pa_resample_method_t method,
         pa_resample_flags_t flags) {
 
@@ -396,9 +397,8 @@ pa_resampler* pa_resampler_new(
     if (lfe_filter_required) {
         pa_sample_spec wss = r->o_ss;
         wss.format = r->work_format;
-        /* TODO: Temporary code that sets crossover freq to 120 Hz. This should be a parameter */
-        r->lfe_filter = pa_lfe_filter_new(&wss, &r->o_cm, 120.0f);
-        pa_log_debug("  lfe filter activated (LR4 type)");
+        r->lfe_filter = pa_lfe_filter_new(&wss, &r->o_cm, (float)crossover_freq);
+        pa_log_debug("  lfe filter activated (LR4 type), the crossover_freq = %uHz", crossover_freq);
     }
 
     /* initialize implementation */
