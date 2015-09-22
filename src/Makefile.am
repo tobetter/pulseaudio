@@ -637,6 +637,7 @@ pkglib_LTLIBRARIES = \
 # to the existing libpulse being linked to libpulsecommon). Duplicating the
 # code allows us to prevent this circular linking.
 libpulsecommon_@PA_MAJORMINOR@_la_SOURCES = \
+		pulsecore/access.h \
 		pulse/client-conf.c pulse/client-conf.h \
 		pulse/fork-detect.c pulse/fork-detect.h \
 		pulse/format.c pulse/format.h \
