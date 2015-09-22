@@ -1,3 +1,10 @@
+pulseaudio (1:6.0-0ubuntu12) wily; urgency=medium
+
+  * debian/rules: disable bluez4 support, it's not useful and leads to
+    syslog warnings
+
+ -- Sebastien Bacher <seb128@ubuntu.com>  Tue, 22 Sep 2015 18:19:45 +0200
+
 pulseaudio (1:6.0-0ubuntu11) wily; urgency=medium
 
   * debian/patches/04*:
