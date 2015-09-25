@@ -1,3 +1,16 @@
+pulseaudio (7.0-1) unstable; urgency=medium
+
+  [ Luke Yelavich ]
+  * New upstream release
+  * Dropped patch, applied upstream
+  * Update shlibs file for 7.0
+
+  [ Felipe Sateler ]
+  * Update bash completion lintian override
+  * Upload to unstable
+
+ -- Felipe Sateler <fsateler@debian.org>  Fri, 25 Sep 2015 09:53:54 -0300
+
 pulseaudio (6.99.1-2) experimental; urgency=medium
 
   * Fix test suite failure on alpha. Patch from Michael Cree. 
