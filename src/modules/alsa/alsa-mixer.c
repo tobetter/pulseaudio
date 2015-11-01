@@ -328,6 +328,9 @@ static void defer_cb(pa_mainloop_api *a, pa_defer_event *e, void *userdata) {
     if (n < 0) {
         pa_log("snd_mixer_poll_descriptors_count() failed: %s", pa_alsa_strerror(n));
         return;
+    } else if (n == 0) {
+        pa_log("snd_mixer_poll_descriptors_count() equal 0");
+        return;
     }
     num_fds = (unsigned) n;
 
@@ -1743,10 +1746,10 @@ static int element_probe(pa_alsa_element *e, snd_mixer_t *m) {
 
                     if (e->n_channels <= 0) {
                         pa_log_warn("Volume element %s with no channels?", e->alsa_name);
-                        return -1;
+                        e->volume_use = PA_ALSA_VOLUME_IGNORE;
                     }
 
-                    if (e->n_channels > 2) {
+                    else if (e->n_channels > 2) {
                         /* FIXME: In some places code like this is used:
                          *
                          *     e->masks[alsa_channel_ids[p]][e->n_channels-1]
@@ -1759,7 +1762,7 @@ static int element_probe(pa_alsa_element *e, snd_mixer_t *m) {
                          * don't support elements with more than two
                          * channels... */
                         pa_log_warn("Volume element %s has %u channels. That's too much! I can't handle that!", e->alsa_name, e->n_channels);
-                        return -1;
+                        e->volume_use = PA_ALSA_VOLUME_IGNORE;
                     }
 
                     if (!e->override_map) {

@@ -27,6 +27,7 @@ typedef struct pa_client pa_client;
 #include <pulse/proplist.h>
 #include <pulsecore/core.h>
 #include <pulsecore/module.h>
+#include <pulsecore/creds.h>
 
 /* Every connection to the server should have a pa_client
  * attached. That way the user may generate a listing of all connected
@@ -35,6 +36,9 @@ typedef struct pa_client pa_client;
 struct pa_client {
     uint32_t index;
     pa_core *core;
+
+    pa_creds creds;
+    bool creds_valid;
 
     pa_proplist *proplist;
     pa_module *module;

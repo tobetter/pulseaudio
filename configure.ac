@@ -807,6 +807,21 @@ AM_CONDITIONAL([HAVE_ALSA], [test "x$HAVE_ALSA" = x1])
 AS_IF([test "x$HAVE_ALSA" = "x1"], AC_DEFINE([HAVE_ALSA], 1, [Have ALSA?]))
 AS_IF([test "x$HAVE_ALSA_UCM" = "x1"], AC_DEFINE([HAVE_ALSA_UCM], 1, [Have ALSA UCM?]))
 
+#### Android Audio HAL support (optional) ####
+
+AC_ARG_ENABLE([android-hal],
+    AS_HELP_STRING([--disable-android-hal],[Disable optional droid module (Android Audio HAL support)]))
+
+AS_IF([test "x$enable_android_hal" != "xno"],
+    [PKG_CHECK_MODULES(LIBHARDWARE, [ libhardware ], HAVE_ANDROID=1, HAVE_ANDROID=0)],
+    HAVE_ANDROID=0)
+
+AS_IF([test "x$enable_android_hal" = "xyes" && test "x$HAVE_ANDROID" = "x0"],
+    [AC_MSG_ERROR([*** libhardware not found])])
+
+AM_CONDITIONAL([HAVE_ANDROID], [test "x$HAVE_ANDROID" = "x1"])
+AS_IF([test "x$HAVE_ANDROID" = "x1"], AC_DEFINE([HAVE_ANDROID], 1, [Have Android Audio HAL?]))
+
 #### EsounD support (optional) ####
 
 AC_ARG_ENABLE([esound],
@@ -1384,6 +1399,19 @@ AS_IF([test "x$enable_adrian_aec" != "xno"],
     [HAVE_ADRIAN_EC=1])
 AM_CONDITIONAL([HAVE_ADRIAN_EC], [test "x$HAVE_ADRIAN_EC" = "x1"])
 
+# Ubuntu touch trust store
+
+AC_ARG_ENABLE([trust-store],
+    AS_HELP_STRING([--enable-trust-store], [Enable Ubuntu touch trust store]))
+
+AS_IF([test "x$enable_trust_store" != "xno"],
+    [PKG_CHECK_MODULES(TRUST_STORE, [ trust-store ], [HAVE_TRUST_STORE=1], [HAVE_TRUST_STORE=0])],
+    [HAVE_WEBRTC=0])
+
+AS_IF([test "x$enable_trust_store" = "xyes" && test "x$HAVE_TRUST_STORE" = "x0"],
+    [AC_MSG_ERROR([*** Ubuntu touch trust store library not found])])
+
+AM_CONDITIONAL([HAVE_TRUST_STORE], [test "x$HAVE_TRUST_STORE" = "x1"])
 
 
 ###################################
@@ -1439,7 +1467,7 @@ AC_SUBST(udevrulesdir)
 AC_ARG_WITH([bash-completion-dir],
         AS_HELP_STRING([--with-bash-completion-dir=DIR], [Directory for bash completion files]),
         [bashcompletiondir=$withval], [bashcompletiondir=$($PKG_CONFIG --variable=completionsdir bash-completion)])
-if test "x$bashcompletionsdir" = ""; then
+if test "x$bashcompletionsdir" = "x"; then
 	bashcompletiondir="${datadir}/bash-completion/completions"
 fi
 
@@ -1521,6 +1549,7 @@ AS_IF([test "x$HAVE_X11" = "x1"], ENABLE_X11=yes, ENABLE_X11=no)
 AS_IF([test "x$HAVE_OSS_OUTPUT" = "x1"], ENABLE_OSS_OUTPUT=yes, ENABLE_OSS_OUTPUT=no)
 AS_IF([test "x$HAVE_OSS_WRAPPER" = "x1"], ENABLE_OSS_WRAPPER=yes, ENABLE_OSS_WRAPPER=no)
 AS_IF([test "x$HAVE_ALSA" = "x1"], ENABLE_ALSA=yes, ENABLE_ALSA=no)
+AS_IF([test "x$HAVE_ANDROID" = "x1"], ENABLE_ANDROID=yes, ENABLE_ANDROID=no)
 AS_IF([test "x$HAVE_COREAUDIO" = "x1"], ENABLE_COREAUDIO=yes, ENABLE_COREAUDIO=no)
 AS_IF([test "x$HAVE_SOLARIS" = "x1"], ENABLE_SOLARIS=yes, ENABLE_SOLARIS=no)
 AS_IF([test "x$HAVE_WAVEOUT" = "x1"], ENABLE_WAVEOUT=yes, ENABLE_WAVEOUT=no)
@@ -1552,6 +1581,7 @@ AS_IF([test "x$HAVE_ADRIAN_EC" = "x1"], ENABLE_ADRIAN_EC=yes, ENABLE_ADRIAN_EC=n
 AS_IF([test "x$HAVE_SPEEX" = "x1"], ENABLE_SPEEX=yes, ENABLE_SPEEX=no)
 AS_IF([test "x$HAVE_SOXR" = "x1"], ENABLE_SOXR=yes, ENABLE_SOXR=no)
 AS_IF([test "x$HAVE_WEBRTC" = "x1"], ENABLE_WEBRTC=yes, ENABLE_WEBRTC=no)
+AS_IF([test "x$HAVE_TRUST_STORE" = "x1"], ENABLE_TRUST_STORE=yes, ENABLE_TRUST_STORE=no)
 AS_IF([test "x$HAVE_TDB" = "x1"], ENABLE_TDB=yes, ENABLE_TDB=no)
 AS_IF([test "x$HAVE_GDBM" = "x1"], ENABLE_GDBM=yes, ENABLE_GDBM=no)
 AS_IF([test "x$HAVE_SIMPLEDB" = "x1"], ENABLE_SIMPLEDB=yes, ENABLE_SIMPLEDB=no)
@@ -1583,6 +1613,7 @@ echo "
     Enable OSS Wrapper:            ${ENABLE_OSS_WRAPPER}
     Enable EsounD:                 ${ENABLE_ESOUND}
     Enable Alsa:                   ${ENABLE_ALSA}
+    Enable Android Audio HAL:      ${ENABLE_ANDROID}
     Enable CoreAudio:              ${ENABLE_COREAUDIO}
     Enable Solaris:                ${ENABLE_SOLARIS}
     Enable WaveOut:                ${ENABLE_WAVEOUT}
@@ -1615,6 +1646,7 @@ echo "
     Enable speex (resampler, AEC): ${ENABLE_SPEEX}
     Enable soxr (resampler):       ${ENABLE_SOXR}
     Enable WebRTC echo canceller:  ${ENABLE_WEBRTC}
+    Enable Ubuntu trust store:     ${ENABLE_TRUST_STORE}
     Enable gcov coverage:          ${ENABLE_GCOV}
     Enable unit tests:             ${ENABLE_TESTS}
     Database
