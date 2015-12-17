@@ -136,19 +136,22 @@ static void thread_func(void *data) {
     // there are 3 possible values for the app name that we will consider at this point
     //  * empty string: there was an error when retrieving the value and therefore we will
     //                  automatically deny access
-    //  * uncofined: the app is unconfined and therefore we will automatically grant access
+    //  * unconfined: the app is unconfined and therefore we will automatically grant access
     //  * appname: we need the user to decide what to do.
 
     if (pc->appname == NULL) {
         pa_log_info("Client apparmor could not retrieved.");
         pa_atomic_store(&pc->result, REQUEST_DENIED);
     } else if (pa_streq(pc->appname, "unconfined")) {
-        pa_log_info("Conected client is unconfined.");
+        pa_log_info("Connected client is unconfined.");
         pa_atomic_store(&pc->result, REQUEST_GRANTED);
     } else {
         pa_log_info("User needs to authorize the application..");
         bool result = pa_trust_store_check(pc->userdata->ts, pc->appname, pc->uid, pc->pid,
-            _("%1% wants to record audio."));
+            /// TRANSLATORS: The app icon and name appears above this string. If the phrase
+            /// can't be translated in this language, translate the whole sentence
+            /// 'This app wants to record audio.'
+            _("wants to record audio."));
         pa_atomic_store(&pc->result, result ? REQUEST_GRANTED : REQUEST_DENIED);
     }
 

@@ -1,3 +1,14 @@
+pulseaudio (1:7.1-1ubuntu3) xenial; urgency=medium
+
+  * trust-store: Update translation string
+    Actually ship the .so files in the correct package
+  * Cherrypick upstream patches to allow client.conf.d
+    and daemon.conf.d
+  * debian/patches/0508/0509/0510*.patches
+    - More patches for bluez5 + ofono + HFP support 
+
+ -- David Henningsson <david.henningsson@canonical.com>  Thu, 17 Dec 2015 12:36:42 +0100
+
 pulseaudio (1:7.1-1ubuntu2) xenial; urgency=medium
 
   * debian/patches/050*.patch:
