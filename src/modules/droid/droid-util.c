@@ -110,6 +110,20 @@ static bool string_convert_str_to_num(const struct string_conversion *list, cons
     return false;
 }
 
+static bool check_port_availability(const char *port) {
+    pa_assert(port);
+
+    pa_log_debug("Checking availability for port '%s'", port);
+
+    for (unsigned int i = 0; port_availability[i]; i++) {
+        if (pa_streq(port_availability[i], port)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 static char *list_string(struct string_conversion *list, uint32_t flags) {
     char *str = NULL;
     char *tmp;
@@ -1035,6 +1049,9 @@ static pa_droid_port *create_o_port(pa_droid_mapping *am, uint32_t device, const
     if (am->profile_set->config->global_config.default_output_device & device)
         p->priority += DEFAULT_PRIORITY;
 
+    if (check_port_availability(p->name))
+        p->priority += (DEFAULT_PRIORITY * 3);
+
     return p;
 }
 
@@ -1123,6 +1140,13 @@ static void add_i_port(pa_droid_mapping *am, uint32_t device, const char *name) 
 
         if (am->profile_set->config->global_config.attached_input_devices & device)
             p->priority += DEFAULT_PRIORITY;
+
+        /* Make builtin mic the default input device */
+        if (device == AUDIO_DEVICE_IN_BUILTIN_MIC)
+            p->priority += DEFAULT_PRIORITY;
+
+        if (check_port_availability(p->name))
+            p->priority += (DEFAULT_PRIORITY * 3);
 
         pa_hashmap_put(am->profile_set->all_ports, p->name, p);
     } else
@@ -1296,6 +1320,9 @@ static int add_ports(pa_core *core, pa_card_profile *cp, pa_hashmap *ports, pa_d
             data->device = p->device;
         } else
             pa_log_debug("  Port %s from cache", p->name);
+
+        /* If port/jack detection is available, start as not available by default */
+        dp->available = check_port_availability(p->name) ? PA_AVAILABLE_NO : PA_AVAILABLE_UNKNOWN;
 
         if (cp) {
             if (!pa_hashmap_get(dp->profiles, cp->name))
@@ -1748,6 +1775,9 @@ pa_droid_stream *pa_droid_open_input_stream(pa_droid_hw_module *module,
 
     if ((s->sample_spec.rate = s->in->common.get_sample_rate(&s->in->common)) != spec->rate)
         pa_log_warn("Requested sample rate %u but got %u instead.", spec->rate, s->sample_spec.rate);
+
+    if (s->sample_spec.channels != spec->channels)
+        pa_log_warn("Requested chennel %u but got %u instead.", spec->channels, s->sample_spec.channels);
 
     pa_idxset_put(module->inputs, s, NULL);
 
