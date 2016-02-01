@@ -1358,8 +1358,13 @@ static pa_droid_hw_module *droid_hw_module_open(pa_core *core, pa_droid_config_a
 
     hw_get_module_by_class(AUDIO_HARDWARE_MODULE_ID, module->name, (const hw_module_t**) &hwmod);
     if (!hwmod) {
-        pa_log("Failed to get hw module %s.", module->name);
-        goto fail;
+        /* alternative hardware module id for MTK. */
+        pa_log("Failed to get hw module id: %s name: %s, trying alternative.", AUDIO_HARDWARE_MODULE_ID, module->name);
+        hw_get_module_by_class(AUDIO_HARDWARE_MODULE_ID2, module->name, (const hw_module_t**) &hwmod);
+        if (!hwmod) {
+            pa_log("Failed to get hw module id: %s name: %s.", AUDIO_HARDWARE_MODULE_ID2, module->name);
+            goto fail;
+        }
     }
 
     pa_log_info("Loaded hw module %s (HAL %d.%d.%d)", module->name,
