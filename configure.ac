@@ -1399,6 +1399,19 @@ AS_IF([test "x$enable_adrian_aec" != "xno"],
     [HAVE_ADRIAN_EC=1])
 AM_CONDITIONAL([HAVE_ADRIAN_EC], [test "x$HAVE_ADRIAN_EC" = "x1"])
 
+# Ubuntu touch trust store
+
+AC_ARG_ENABLE([trust-store],
+    AS_HELP_STRING([--enable-trust-store], [Enable Ubuntu touch trust store]))
+
+AS_IF([test "x$enable_trust_store" != "xno"],
+    [PKG_CHECK_MODULES(TRUST_STORE, [ trust-store ], [HAVE_TRUST_STORE=1], [HAVE_TRUST_STORE=0])],
+    [HAVE_WEBRTC=0])
+
+AS_IF([test "x$enable_trust_store" = "xyes" && test "x$HAVE_TRUST_STORE" = "x0"],
+    [AC_MSG_ERROR([*** Ubuntu touch trust store library not found])])
+
+AM_CONDITIONAL([HAVE_TRUST_STORE], [test "x$HAVE_TRUST_STORE" = "x1"])
 
 
 ###################################
@@ -1568,6 +1581,7 @@ AS_IF([test "x$HAVE_ADRIAN_EC" = "x1"], ENABLE_ADRIAN_EC=yes, ENABLE_ADRIAN_EC=n
 AS_IF([test "x$HAVE_SPEEX" = "x1"], ENABLE_SPEEX=yes, ENABLE_SPEEX=no)
 AS_IF([test "x$HAVE_SOXR" = "x1"], ENABLE_SOXR=yes, ENABLE_SOXR=no)
 AS_IF([test "x$HAVE_WEBRTC" = "x1"], ENABLE_WEBRTC=yes, ENABLE_WEBRTC=no)
+AS_IF([test "x$HAVE_TRUST_STORE" = "x1"], ENABLE_TRUST_STORE=yes, ENABLE_TRUST_STORE=no)
 AS_IF([test "x$HAVE_TDB" = "x1"], ENABLE_TDB=yes, ENABLE_TDB=no)
 AS_IF([test "x$HAVE_GDBM" = "x1"], ENABLE_GDBM=yes, ENABLE_GDBM=no)
 AS_IF([test "x$HAVE_SIMPLEDB" = "x1"], ENABLE_SIMPLEDB=yes, ENABLE_SIMPLEDB=no)
@@ -1632,6 +1646,7 @@ echo "
     Enable speex (resampler, AEC): ${ENABLE_SPEEX}
     Enable soxr (resampler):       ${ENABLE_SOXR}
     Enable WebRTC echo canceller:  ${ENABLE_WEBRTC}
+    Enable Ubuntu trust store:     ${ENABLE_TRUST_STORE}
     Enable gcov coverage:          ${ENABLE_GCOV}
     Enable unit tests:             ${ENABLE_TESTS}
     Database

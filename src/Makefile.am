@@ -1072,6 +1072,10 @@ if HAVE_WEBRTC
 modlibexec_LTLIBRARIES += libwebrtc-util.la
 endif
 
+if HAVE_TRUST_STORE
+modlibexec_LTLIBRARIES += libtruststore-util.la
+endif
+
 if HAVE_ESOUND
 modlibexec_LTLIBRARIES += \
 		libprotocol-esound.la
@@ -1195,6 +1199,11 @@ modlibexec_LTLIBRARIES += \
 		module-filter-apply.la \
 		module-filter-heuristics.la \
 		module-role-ducking.la
+
+if HAVE_TRUST_STORE
+modlibexec_LTLIBRARIES += \
+		module-trust-store.la
+endif
 
 if HAVE_ESOUND
 modlibexec_LTLIBRARIES += \
@@ -1522,6 +1531,7 @@ SYMDEF_FILES = \
 		module-intended-roles-symdef.h \
 		module-suspend-on-idle-symdef.h \
 		module-echo-cancel-symdef.h \
+		module-trust-store-symdef.h \
 		module-hal-detect-symdef.h \
 		module-udev-detect-symdef.h \
 		module-systemd-login-symdef.h \
@@ -2112,6 +2122,20 @@ libwebrtc_util_la_LDFLAGS = -avoid-version
 
 module_echo_cancel_la_CFLAGS += -DHAVE_WEBRTC=1
 module_echo_cancel_la_LIBADD += libwebrtc-util.la
+endif
+
+if HAVE_TRUST_STORE
+# Separate helper library to keep C and C++ code apart, like we do for webrtc
+libtruststore_util_la_SOURCES = modules/trust-store/truststore.cc
+libtruststore_util_la_CXXFLAGS = $(AM_CXXFLAGS) -std=c++11 $(SERVER_CFLAGS) $(TRUST_STORE_CFLAGS) \
+	$(DBUS_CFLAGS) -DHAVE_TRUST_STORE=1
+libtruststore_util_la_LIBADD = libpulsecore-@PA_MAJORMINOR@.la $(TRUST_STORE_LIBS) $(DBUS_LIBS)
+libtruststore_util_la_LDFLAGS = -avoid-version
+
+module_trust_store_la_SOURCES = modules/trust-store/module-trust-store.c
+module_trust_store_la_LDFLAGS = $(MODULE_LDFLAGS)
+module_trust_store_la_LIBADD = $(MODULE_LIBADD) libtruststore-util.la
+module_trust_store_la_CFLAGS = $(AM_CFLAGS) -DHAVE_TRUST_STORE=1
 endif
 
 # RTP modules
