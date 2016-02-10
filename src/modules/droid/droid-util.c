@@ -882,8 +882,8 @@ static pa_droid_profile *add_combined_profile(pa_droid_profile_set *ps,
     }
     to_inputs = pa_strlist_reverse(to_inputs);
 
-    o_str = pa_strlist_tostring(to_outputs);
-    i_str = pa_strlist_tostring(to_inputs);
+    o_str = pa_strlist_to_string(to_outputs);
+    i_str = pa_strlist_to_string(to_inputs);
 
     pa_log_debug("New combined profile: %s (outputs: %s, inputs: %s)", module->name, o_str, i_str);
 
