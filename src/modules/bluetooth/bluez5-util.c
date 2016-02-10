@@ -299,6 +299,12 @@ bool pa_bluetooth_device_any_transport_connected(const pa_bluetooth_device *d) {
     return false;
 }
 
+bool pa_bluetooth_device_is_transport_connected(const pa_bluetooth_device *d, pa_bluetooth_profile_t profile) {
+    pa_assert(d);
+
+    return d->transports[profile] && d->transports[profile]->state == PA_BLUETOOTH_TRANSPORT_STATE_IDLE;
+}
+
 static int transport_state_from_string(const char* value, pa_bluetooth_transport_state_t *state) {
     pa_assert(value);
     pa_assert(state);
@@ -915,7 +921,9 @@ static void get_managed_objects_reply(DBusPendingCall *pending, void *userdata) 
 
     if (!y->ofono_backend && y->headset_backend != HEADSET_BACKEND_NATIVE)
         y->ofono_backend = pa_bluetooth_ofono_backend_new(y->core, y);
-    if (!y->ofono_backend && !y->native_backend && y->headset_backend != HEADSET_BACKEND_OFONO)
+    if (!y->native_backend && y->headset_backend == HEADSET_BACKEND_BOTH)
+        y->native_backend = pa_bluetooth_native_backend_new(y->core, y);
+    else if (!y->ofono_backend && !y->native_backend)
         y->native_backend = pa_bluetooth_native_backend_new(y->core, y);
 
 finish:
@@ -1153,6 +1161,20 @@ const char *pa_bluetooth_profile_to_string(pa_bluetooth_profile_t profile) {
             return "headset_audio_gateway";
         case PA_BLUETOOTH_PROFILE_OFF:
             return "off";
+    }
+
+    return NULL;
+}
+
+const char *pa_bluetooth_transport_state_to_string(pa_bluetooth_transport_state_t state)
+{
+    switch (state) {
+        case PA_BLUETOOTH_TRANSPORT_STATE_DISCONNECTED:
+            return "disconnected";
+        case PA_BLUETOOTH_TRANSPORT_STATE_IDLE:
+            return "idle";
+        case PA_BLUETOOTH_TRANSPORT_STATE_PLAYING:
+            return "playing";
     }
 
     return NULL;
