@@ -1,3 +1,23 @@
+pulseaudio (8.0-2) unstable; urgency=medium
+
+  * Add patch from upstream to switch back to HDMI when port is back.
+    (Closes: #816963)
+  * Bump standards-version (no changes needed)
+  * Use canonical Vcs-* urls
+    - Use cgit url for browser
+    - Use https url for git
+  * Drop XS-Testsuite header.
+    - Newer dpkg-dev adds the field automatically
+    - Add versioned Build-Depends for such a version (1.17.14)
+  * Fix Build-Profile stage1 support
+    - Mark libbluetooth-dev dependency as <!stage1>
+    - Mark pulseaudio-module-bluetooth as <!stage1>
+    - Build-depend on new enough debhelper (9.20141010)
+    - Use correct flag --disable-bluez5
+    - Drop manual ignoring of bluetooth packages, debhelper knows to do so
+
+ -- Felipe Sateler <fsateler@debian.org>  Sat, 02 Apr 2016 20:42:36 -0300
+
 pulseaudio (8.0-1) unstable; urgency=medium
 
   [ Luke Yelavich ]
