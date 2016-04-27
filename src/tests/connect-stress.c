@@ -63,7 +63,7 @@ static const pa_sample_spec sample_spec = {
 
 static void context_state_callback(pa_context *c, void *userdata);
 
-static void connect(const char *name, int *try) {
+static void connect2(const char *name, int *try) {
     int ret;
     pa_mainloop_api *api;
 
@@ -201,7 +201,7 @@ START_TEST (connect_stress_test) {
         streams[i] = NULL;
 
     for (i = 0; i < NTESTS; i++) {
-        connect(bname, &i);
+        connect2(bname, &i);
         usleep(rand() % 500000);
         disconnect();
         usleep(rand() % 500000);
