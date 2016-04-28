@@ -641,6 +641,7 @@ commonlib_LTLIBRARIES = \
 # to the existing libpulse being linked to libpulsecommon). Duplicating the
 # code allows us to prevent this circular linking.
 libpulsecommon_@PA_MAJORMINOR@_la_SOURCES = \
+		pulsecore/access.h \
 		pulse/client-conf.c pulse/client-conf.h \
 		pulse/fork-detect.c pulse/fork-detect.h \
 		pulse/format.c pulse/format.h \
@@ -938,6 +939,7 @@ libpulsecore_@PA_MAJORMINOR@_la_SOURCES = \
 		pulsecore/core-subscribe.c pulsecore/core-subscribe.h \
 		pulsecore/core.c pulsecore/core.h \
 		pulsecore/hook-list.c pulsecore/hook-list.h \
+		pulsecore/inotify-wrapper.c pulsecore/inotify-wrapper.h \
 		pulsecore/ltdl-helper.c pulsecore/ltdl-helper.h \
 		pulsecore/modargs.c pulsecore/modargs.h \
 		pulsecore/modinfo.c pulsecore/modinfo.h \
@@ -1075,6 +1077,10 @@ if HAVE_WEBRTC
 modlibexec_LTLIBRARIES += libwebrtc-util.la
 endif
 
+if HAVE_TRUST_STORE
+modlibexec_LTLIBRARIES += libtruststore-util.la
+endif
+
 if HAVE_ESOUND
 modlibexec_LTLIBRARIES += \
 		libprotocol-esound.la
@@ -1199,6 +1205,11 @@ modlibexec_LTLIBRARIES += \
 		module-filter-heuristics.la \
 		module-role-ducking.la
 
+if HAVE_TRUST_STORE
+modlibexec_LTLIBRARIES += \
+		module-trust-store.la
+endif
+
 if HAVE_ESOUND
 modlibexec_LTLIBRARIES += \
 		module-esound-protocol-tcp.la \
@@ -1271,6 +1282,29 @@ modlibexec_LTLIBRARIES += \
 		module-alsa-sink.la \
 		module-alsa-source.la \
 		module-alsa-card.la
+
+if HAVE_ANDROID
+modlibexec_LTLIBRARIES += \
+		module-droid-discover.la
+if HAVE_ANDROID_HEADERS_19
+modlibexec_LTLIBRARIES += \
+		libdroid-util-19.la \
+		libdroid-sink-19.la \
+		libdroid-source-19.la \
+		module-droid-sink-19.la \
+		module-droid-source-19.la \
+		module-droid-card-19.la
+endif
+if HAVE_ANDROID_HEADERS_22
+modlibexec_LTLIBRARIES += \
+		libdroid-util-22.la \
+		libdroid-sink-22.la \
+		libdroid-source-22.la \
+		module-droid-sink-22.la \
+		module-droid-source-22.la \
+		module-droid-card-22.la
+endif
+endif
 
 dist_alsaprofilesets_DATA = \
 		modules/alsa/mixer/profile-sets/default.conf \
@@ -1515,6 +1549,7 @@ SYMDEF_FILES = \
 		module-intended-roles-symdef.h \
 		module-suspend-on-idle-symdef.h \
 		module-echo-cancel-symdef.h \
+		module-trust-store-symdef.h \
 		module-hal-detect-symdef.h \
 		module-udev-detect-symdef.h \
 		module-systemd-login-symdef.h \
@@ -1541,6 +1576,23 @@ SYMDEF_FILES = \
 		module-switch-on-port-available-symdef.h \
 		module-filter-apply-symdef.h \
 		module-filter-heuristics-symdef.h
+
+if HAVE_ANDROID
+SYMDEF_FILES += \
+		module-droid-discover-symdef.h
+if HAVE_ANDROID_HEADERS_19
+SYMDEF_FILES += \
+		module-droid-sink-19-symdef.h \
+		module-droid-source-19-symdef.h \
+		module-droid-card-19-symdef.h
+endif
+if HAVE_ANDROID_HEADERS_22
+SYMDEF_FILES += \
+		module-droid-sink-22-symdef.h \
+		module-droid-source-22-symdef.h \
+		module-droid-card-22-symdef.h
+endif
+endif
 
 if HAVE_ESOUND
 SYMDEF_FILES += \
@@ -1851,6 +1903,88 @@ libalsa_util_la_LIBADD += $(DBUS_LIBS)
 libalsa_util_la_CFLAGS += $(DBUS_CFLAGS)
 endif
 
+if HAVE_ANDROID
+module_droid_discover_la_SOURCES = modules/droid/module-droid-discover.c
+module_droid_discover_la_LDFLAGS = $(MODULE_LDFLAGS)
+module_droid_discover_la_LIBADD = $(MODULE_LIBADD) $(LIBANDROID_PROPERTIES_LIBS)
+module_droid_discover_la_CFLAGS = $(AM_CFLAGS) $(LIBANDROID_PROPERTIES_CFLAGS)
+
+if HAVE_ANDROID_HEADERS_19
+libdroid_util_19_la_SOURCES = modules/droid/droid-util.c modules/droid/droid-util.h
+libdroid_util_19_la_LDFLAGS = -avoid-version
+libdroid_util_19_la_LIBADD = $(MODULE_LIBADD) $(LIBHARDWARE_LIBS)
+libdroid_util_19_la_CFLAGS = $(AM_CFLAGS) $(ANDROID_HEADERS_19_CFLAGS)
+
+libdroid_sink_19_la_SOURCES = modules/droid/droid-sink.c modules/droid/droid-sink.h
+libdroid_sink_19_la_LDFLAGS = -avoid-version
+libdroid_sink_19_la_LIBADD = $(MODULE_LIBADD) $(LIBHARDWARE_LIBS) libdroid-util-19.la
+libdroid_sink_19_la_CFLAGS = $(AM_CFLAGS) $(ANDROID_HEADERS_19_CFLAGS)
+
+libdroid_source_19_la_SOURCES = modules/droid/droid-source.c modules/droid/droid-source.h
+libdroid_source_19_la_LDFLAGS = -avoid-version
+libdroid_source_19_la_LIBADD = $(MODULE_LIBADD) $(LIBHARDWARE_LIBS) libdroid-util-19.la
+libdroid_source_19_la_CFLAGS = $(AM_CFLAGS) $(ANDROID_HEADERS_19_CFLAGS)
+
+module_droid_sink_19_la_SOURCES = modules/droid/module-droid-sink.c
+module_droid_sink_19_la_LDFLAGS = $(MODULE_LDFLAGS)
+module_droid_sink_19_la_LIBADD = $(MODULE_LIBADD) $(LIBHARDWARE_LIBS) libdroid-util-19.la libdroid-sink-19.la
+module_droid_sink_19_la_CFLAGS = $(AM_CFLAGS) $(ANDROID_HEADERS_19_CFLAGS)
+
+module_droid_source_19_la_SOURCES = modules/droid/module-droid-source.c
+module_droid_source_19_la_LDFLAGS = $(MODULE_LDFLAGS)
+module_droid_source_19_la_LIBADD = $(MODULE_LIBADD) $(LIBHARDWARE_LIBS) libdroid-util-19.la libdroid-source-19.la
+module_droid_source_19_la_CFLAGS = $(AM_CFLAGS) $(ANDROID_HEADERS_19_CFLAGS)
+
+module_droid_card_19_la_SOURCES = modules/droid/module-droid-card.c
+module_droid_card_19_la_LDFLAGS = $(MODULE_LDFLAGS)
+module_droid_card_19_la_LIBADD = $(MODULE_LIBADD) $(LIBHARDWARE_LIBS) libdroid-util-19.la libdroid-sink-19.la libdroid-source-19.la
+module_droid_card_19_la_CFLAGS = $(AM_CFLAGS) $(ANDROID_HEADERS_19_CFLAGS)
+
+if HAVE_UDEV
+module_droid_card_19_la_SOURCES += modules/droid/droid-extcon.c modules/droid/droid-extcon.h
+module_droid_card_19_la_LIBADD += $(UDEV_LIBS)
+module_droid_card_19_la_CFLAGS += $(UDEV_CFLAGS)
+endif
+endif # HAVE_ANDROID_HEADERS_19
+if HAVE_ANDROID_HEADERS_22
+libdroid_util_22_la_SOURCES = modules/droid/droid-util.c modules/droid/droid-util.h
+libdroid_util_22_la_LDFLAGS = -avoid-version
+libdroid_util_22_la_LIBADD = $(MODULE_LIBADD) $(LIBHARDWARE_LIBS)
+libdroid_util_22_la_CFLAGS = $(AM_CFLAGS) $(ANDROID_HEADERS_22_CFLAGS)
+
+libdroid_sink_22_la_SOURCES = modules/droid/droid-sink.c modules/droid/droid-sink.h
+libdroid_sink_22_la_LDFLAGS = -avoid-version
+libdroid_sink_22_la_LIBADD = $(MODULE_LIBADD) $(LIBHARDWARE_LIBS) libdroid-util-22.la
+libdroid_sink_22_la_CFLAGS = $(AM_CFLAGS) $(ANDROID_HEADERS_22_CFLAGS)
+
+libdroid_source_22_la_SOURCES = modules/droid/droid-source.c modules/droid/droid-source.h
+libdroid_source_22_la_LDFLAGS = -avoid-version
+libdroid_source_22_la_LIBADD = $(MODULE_LIBADD) $(LIBHARDWARE_LIBS) libdroid-util-22.la
+libdroid_source_22_la_CFLAGS = $(AM_CFLAGS) $(ANDROID_HEADERS_22_CFLAGS)
+
+module_droid_sink_22_la_SOURCES = modules/droid/module-droid-sink.c
+module_droid_sink_22_la_LDFLAGS = $(MODULE_LDFLAGS)
+module_droid_sink_22_la_LIBADD = $(MODULE_LIBADD) $(LIBHARDWARE_LIBS) libdroid-util-22.la libdroid-sink-22.la
+module_droid_sink_22_la_CFLAGS = $(AM_CFLAGS) $(ANDROID_HEADERS_22_CFLAGS)
+
+module_droid_source_22_la_SOURCES = modules/droid/module-droid-source.c
+module_droid_source_22_la_LDFLAGS = $(MODULE_LDFLAGS)
+module_droid_source_22_la_LIBADD = $(MODULE_LIBADD) $(LIBHARDWARE_LIBS) libdroid-util-22.la libdroid-source-22.la
+module_droid_source_22_la_CFLAGS = $(AM_CFLAGS) $(ANDROID_HEADERS_22_CFLAGS)
+
+module_droid_card_22_la_SOURCES = modules/droid/module-droid-card.c
+module_droid_card_22_la_LDFLAGS = $(MODULE_LDFLAGS)
+module_droid_card_22_la_LIBADD = $(MODULE_LIBADD) $(LIBHARDWARE_LIBS) libdroid-util-22.la libdroid-sink-22.la libdroid-source-22.la
+module_droid_card_22_la_CFLAGS = $(AM_CFLAGS) $(ANDROID_HEADERS_22_CFLAGS)
+
+if HAVE_UDEV
+module_droid_card_22_la_SOURCES += modules/droid/droid-extcon.c modules/droid/droid-extcon.h
+module_droid_card_22_la_LIBADD += $(UDEV_LIBS)
+module_droid_card_22_la_CFLAGS += $(UDEV_CFLAGS)
+endif
+endif # HAVE_ANDROID_HEADERS_22
+endif # HAVE_ANDROID
+
 module_alsa_sink_la_SOURCES = modules/alsa/module-alsa-sink.c
 module_alsa_sink_la_LDFLAGS = $(MODULE_LDFLAGS)
 module_alsa_sink_la_LIBADD = $(MODULE_LIBADD) $(ASOUNDLIB_LIBS) libalsa-util.la
@@ -2060,6 +2194,20 @@ libwebrtc_util_la_LDFLAGS = -avoid-version
 
 module_echo_cancel_la_CFLAGS += -DHAVE_WEBRTC=1
 module_echo_cancel_la_LIBADD += libwebrtc-util.la
+endif
+
+if HAVE_TRUST_STORE
+# Separate helper library to keep C and C++ code apart, like we do for webrtc
+libtruststore_util_la_SOURCES = modules/trust-store/truststore.cc
+libtruststore_util_la_CXXFLAGS = $(AM_CXXFLAGS) -std=c++11 $(SERVER_CFLAGS) $(TRUST_STORE_CFLAGS) \
+	$(DBUS_CFLAGS) -DHAVE_TRUST_STORE=1
+libtruststore_util_la_LIBADD = libpulsecore-@PA_MAJORMINOR@.la $(TRUST_STORE_LIBS) $(DBUS_LIBS)
+libtruststore_util_la_LDFLAGS = -avoid-version
+
+module_trust_store_la_SOURCES = modules/trust-store/module-trust-store.c
+module_trust_store_la_LDFLAGS = $(MODULE_LDFLAGS) -lapparmor
+module_trust_store_la_LIBADD = $(MODULE_LIBADD) libtruststore-util.la
+module_trust_store_la_CFLAGS = $(AM_CFLAGS) -DHAVE_TRUST_STORE=1
 endif
 
 # RTP modules

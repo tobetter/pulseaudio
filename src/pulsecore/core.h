@@ -49,6 +49,7 @@ typedef enum pa_suspend_cause {
 #include <pulsecore/source.h>
 #include <pulsecore/core-subscribe.h>
 #include <pulsecore/msgobject.h>
+#include <pulsecore/access.h>
 
 typedef enum pa_server_type {
     PA_SERVER_TYPE_UNSET,
@@ -121,6 +122,7 @@ typedef enum pa_core_hook {
     PA_CORE_HOOK_CARD_PUT,
     PA_CORE_HOOK_CARD_UNLINK,
     PA_CORE_HOOK_CARD_PROFILE_CHANGED,
+    PA_CORE_HOOK_CARD_PROFILE_CHANGING,
     PA_CORE_HOOK_CARD_PROFILE_ADDED,
     PA_CORE_HOOK_CARD_PROFILE_AVAILABLE_CHANGED,
     PA_CORE_HOOK_PORT_AVAILABLE_CHANGED,
@@ -205,6 +207,8 @@ struct pa_core {
 
     /* hooks */
     pa_hook hooks[PA_CORE_HOOK_MAX];
+    /* access hooks */
+    pa_hook access[PA_ACCESS_HOOK_MAX];
 };
 
 PA_DECLARE_PUBLIC_CLASS(pa_core);
