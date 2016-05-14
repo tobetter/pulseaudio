@@ -1,3 +1,12 @@
+pulseaudio (8.99.1-1) experimental; urgency=medium
+
+  * New upstream release candidate
+    - Closes: #813423
+    - Drop patches, applied upstream
+  * Bump dependency on libwebrtc-audio-processing to >= 0.2
+
+ -- Felipe Sateler <fsateler@debian.org>  Sat, 14 May 2016 15:16:09 -0300
+
 pulseaudio (8.0-3) experimental; urgency=medium
 
   * Split module-udev-detect into a separate package
