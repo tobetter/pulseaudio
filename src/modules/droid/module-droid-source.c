@@ -40,7 +40,11 @@
 #include "droid-util.h"
 #include "droid-source.h"
 
-#include "module-droid-source-symdef.h"
+#if ANDROID_VERSION_MAJOR == 4 && ANDROID_VERSION_MINOR == 2
+#include "module-droid-source-19-symdef.h"
+#elif ANDROID_VERSION_MAJOR == 5 && ANDROID_VERSION_MINOR == 1
+#include "module-droid-source-22-symdef.h"
+#endif
 
 PA_MODULE_AUTHOR("Juho Hämäläinen");
 PA_MODULE_DESCRIPTION("Droid source");
@@ -50,8 +54,14 @@ PA_MODULE_VERSION(PACKAGE_VERSION);
 
 static const char* const valid_modargs[] = {
     "rate",
+    "format",
+    "channels",
+    "channel_map",
+    "source_rate",
+    "source_format",
+    "source_channel_map",
     "flags",
-    "devices",
+    "input_devices",
     "source_name",
     "module_id",
     "source_buffer",
@@ -74,11 +84,11 @@ int pa__init(pa_module *m) {
     pa_assert(m);
 
     if (!(ma = pa_modargs_new(m->argument, valid_modargs))) {
-        pa_log("Failed to parse module argumets.");
+        pa_log("Failed to parse module arguments.");
         goto fail;
     }
 
-    if (!(m->userdata = pa_droid_source_new(m, ma, __FILE__, NULL, NULL, NULL)))
+    if (!(m->userdata = pa_droid_source_new(m, ma, __FILE__, (audio_devices_t) 0, NULL, NULL, NULL)))
         goto fail;
 
     pa_modargs_free(ma);
