@@ -1,3 +1,17 @@
+pulseaudio (1:8.0-2ubuntu2) yakkety; urgency=medium
+
+  [ Simon Fels ]
+  * debian/patches/0700-modules-add-snappy-policy-module.patch:
+    - Add initial support for a snappy specific policy manager
+      which will deny all audio recording from snaps for now
+      until real integration with the trust-store is available. (LP: #1583057)
+  * debian/rules:
+    - Build with snappy support
+  * debian/pulseaudio.install:
+    - Include new snappy policy module
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Wed, 01 Jun 2016 12:04:14 +1000
+
 pulseaudio (1:8.0-2ubuntu1) yakkety; urgency=medium
 
   * Merge from Debian experimental, remaining changes:
