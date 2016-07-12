@@ -19,7 +19,6 @@ usr/lib/pulse-*/modules/libwebrtc-util.so
 [linux-any] usr/lib/pulse-*/modules/module-alsa-sink.so
 [linux-any] usr/lib/pulse-*/modules/module-alsa-source.so
 usr/lib/pulse-*/modules/module-always-sink.so
-usr/lib/pulse-*/modules/module-console-kit.so
 usr/lib/pulse-*/modules/module-device-restore.so
 usr/lib/pulse-*/modules/module-echo-cancel.so
 usr/lib/pulse-*/modules/module-stream-restore.so
@@ -76,6 +75,7 @@ usr/lib/pulse-*/modules/module-virtual-sink.so
 usr/lib/pulse-*/modules/module-virtual-source.so
 usr/lib/pulse-*/modules/module-switch-on-port-available.so
 usr/lib/pulse-*/modules/module-virtual-surround-sink.so
+usr/lib/pulse-*/modules/module-snappy-policy.so
 [linux-any] usr/lib/pulse-*/modules/module-systemd-login.so
 [linux-any] usr/lib/systemd/user/pulseaudio.*
 usr/share/bash-completion/completions/*
