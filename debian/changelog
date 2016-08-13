@@ -1,3 +1,22 @@
+pulseaudio (9.0-2) unstable; urgency=medium
+
+  * Merge module-udev-detect back into main package.
+    Closes: #831518, #831355
+  * Demote udev Depends to Suggests.
+    Turns out libudev does not error out when udev is not available,
+    instead it just does nothing.
+  * Merge pulseaudio-module-x11 back into main package.
+    Split is not very useful, as main pulseaudio package
+    already depends on X libs. Therefore, only 56Kb are added
+    to the main package.
+    Closes: #833011
+  * Drop versioned breaks against ancient libltdl version
+  * Drop versioned breaks against avahi-daemon version older than jessie
+  * libpulsedsp: drop versioned breaks against ancient pulseaudio-utils
+    version
+
+ -- Felipe Sateler <fsateler@debian.org>  Fri, 12 Aug 2016 22:40:38 -0400
+
 pulseaudio (9.0-1.1) unstable; urgency=medium
 
   * Non-maintainer upload.
