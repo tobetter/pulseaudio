@@ -815,6 +815,7 @@ static pa_hook_result_t sink_port_hook_callback(pa_core *c, pa_sink *sink, struc
     pa_assert(u);
     pa_assert(u->restore_volume || u->restore_muted);
 
+#define MODULE_DEVICE_RESTORE_SKIP_PROPERTY "module-device-restore.skip"
     if (pa_proplist_gets(sink->proplist, MODULE_DEVICE_RESTORE_SKIP_PROPERTY))
         return PA_HOOK_OK;
 
