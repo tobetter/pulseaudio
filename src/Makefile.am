@@ -1224,6 +1224,11 @@ modlibexec_LTLIBRARIES += \
 		module-esound-sink.la
 endif
 
+if HAVE_APPARMOR
+modlibexec_LTLIBRARIES += \
+		module-snappy-policy.la
+endif
+
 # See comment at librtp.la above
 if !OS_IS_WIN32
 modlibexec_LTLIBRARIES += \
@@ -1609,6 +1614,11 @@ SYMDEF_FILES += \
 		module-esound-compat-spawnfd-symdef.h \
 		module-esound-compat-spawnpid-symdef.h \
 		module-esound-sink-symdef.h
+endif
+
+if HAVE_APPARMOR
+SYMDEF_FILES += \
+		module-snappy-policy-symdef.h
 endif
 
 EXTRA_DIST += $(SYMDEF_FILES)
@@ -2218,6 +2228,14 @@ module_trust_store_la_SOURCES = modules/trust-store/module-trust-store.c
 module_trust_store_la_LDFLAGS = $(MODULE_LDFLAGS) -lapparmor
 module_trust_store_la_LIBADD = $(MODULE_LIBADD) libtruststore-util.la
 module_trust_store_la_CFLAGS = $(AM_CFLAGS) -DHAVE_TRUST_STORE=1
+endif
+
+# Snappy
+if HAVE_APPARMOR
+module_snappy_policy_la_SOURCES = modules/module-snappy-policy.c
+module_snappy_policy_la_LDFLAGS = $(MODULE_LDFLAGS) -lapparmor
+module_snappy_policy_la_LIBADD = $(MODULE_LIBADD)
+module_snappy_policy_la_CFLAGS = $(AM_CFLAGS) -DHAVE_SNAPPY=1
 endif
 
 # RTP modules
