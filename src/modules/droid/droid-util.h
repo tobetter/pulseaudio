@@ -54,6 +54,9 @@
 
 #define PA_DROID_PRIMARY_DEVICE     "primary"
 
+/* Workaround for MTK */
+#define AUDIO_HARDWARE_MODULE_ID2 "libaudio"
+
 typedef struct pa_droid_hw_module pa_droid_hw_module;
 typedef struct pa_droid_stream pa_droid_stream;
 typedef struct pa_droid_card_data pa_droid_card_data;
