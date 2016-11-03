@@ -40,30 +40,36 @@
 #include "droid-util.h"
 #include "droid-sink.h"
 
-#include "module-droid-sink-symdef.h"
+#if ANDROID_VERSION_MAJOR == 4 && ANDROID_VERSION_MINOR == 2
+#include "module-droid-sink-19-symdef.h"
+#elif ANDROID_VERSION_MAJOR == 5 && ANDROID_VERSION_MINOR == 1
+#include "module-droid-sink-22-symdef.h"
+#endif
 
 PA_MODULE_AUTHOR("Juho Hämäläinen");
 PA_MODULE_DESCRIPTION("Droid sink");
 PA_MODULE_USAGE("master_sink=<sink to connect to> "
-                "sink_name=<name of created sink> "
-                "sco_fake_sink=<name of the fake sco sink used for hsp>");
+                "sink_name=<name of created sink>");
 PA_MODULE_VERSION(PACKAGE_VERSION);
 
 static const char* const valid_modargs[] = {
     "rate",
+    "format",
+    "channels",
+    "channel_map",
+    "sink_rate",
+    "sink_format",
+    "sink_channel_map",
     "flags",
-    "devices",
+    "output_devices",
     "sink_name",
     "module_id",
     "mute_routing_before",
     "mute_routing_after",
     "sink_buffer",
     "deferred_volume",
-    "voice_volume_call_mode",
     "voice_property_key",
     "voice_property_value",
-    "voice_virtual_stream",
-    "sco_fake_sink",
     NULL,
 };
 
@@ -78,15 +84,24 @@ void pa__done(pa_module *m) {
 
 int pa__init(pa_module *m) {
     pa_modargs *ma = NULL;
+    const char *flags_str;
+    audio_output_flags_t flags = 0;
 
     pa_assert(m);
 
     if (!(ma = pa_modargs_new(m->argument, valid_modargs))) {
-        pa_log("Failed to parse module argumets.");
+        pa_log("Failed to parse module arguments.");
         goto fail;
     }
 
-    if (!(m->userdata = pa_droid_sink_new(m, ma, __FILE__, NULL, 0, NULL, NULL)))
+    if ((flags_str = pa_modargs_get_value(ma, "flags", NULL))) {
+        if (!pa_string_convert_flag_str_to_num(flags_str, &flags)) {
+            pa_log("Failed to parse flags");
+            goto fail;
+        }
+    }
+
+    if (!(m->userdata = pa_droid_sink_new(m, ma, __FILE__, NULL, flags, NULL, NULL)))
         goto fail;
 
     pa_modargs_free(ma);
