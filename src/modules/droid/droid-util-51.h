@@ -402,4 +402,12 @@ struct string_conversion string_conversion_table_format[] = {
 };
 #undef STRING_ENTRY
 
+/* Ports with availability option (for port/jack detection) */
+static const char* port_availability[] = {
+    "output-wired_headset",
+    "output-wired_headphone",
+    "input-wired_headset",
+    NULL
+};
+
 #endif
