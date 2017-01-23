@@ -38,11 +38,13 @@
 PA_MODULE_AUTHOR("João Paulo Rechi Vita");
 PA_MODULE_DESCRIPTION("Detect available BlueZ 4 Bluetooth audio devices and load BlueZ 4 Bluetooth audio drivers");
 PA_MODULE_VERSION(PACKAGE_VERSION);
-PA_MODULE_USAGE("sco_sink=<name of sink> "
+PA_MODULE_USAGE("profile=<a2dp|hsp|hfgw> "
+                "sco_sink=<name of sink> "
                 "sco_source=<name of source> ");
 PA_MODULE_LOAD_ONCE(true);
 
 static const char* const valid_modargs[] = {
+    "profile",
     "sco_sink",
     "sco_source",
     "async", /* deprecated */
@@ -80,6 +82,15 @@ static pa_hook_result_t load_module_for_device(pa_bluez4_discovery *y, const pa_
             /* Oh, awesome, a new device has shown up and been connected! */
 
             args = pa_sprintf_malloc("address=\"%s\" path=\"%s\"", d->address, d->path);
+
+            if (pa_modargs_get_value(u->modargs, "profile", NULL)) {
+                char *profile;
+
+                profile = pa_sprintf_malloc("%s profile=\"%s\"", args,
+                                        pa_modargs_get_value(u->modargs, "profile", NULL));
+                pa_xfree(args);
+                args = profile;
+            }
 
             if (pa_modargs_get_value(u->modargs, "sco_sink", NULL) &&
                 pa_modargs_get_value(u->modargs, "sco_source", NULL)) {
