@@ -73,6 +73,7 @@
 #include <pulsecore/core-rtclock.h>
 #include <pulsecore/core-scache.h>
 #include <pulsecore/core.h>
+#include <pulsecore/inotify-wrapper.h>
 #include <pulsecore/module.h>
 #include <pulsecore/cli-command.h>
 #include <pulsecore/log.h>
@@ -332,6 +333,15 @@ static char *check_configured_address(void) {
     return default_server;
 }
 
+static bool valid_pid_file = false;
+static void pid_file_deleted(void *userdata)
+{
+    pa_core *c = userdata;
+    pa_log_info("Our pid file has been deleted (probably due to session logout), quitting...");
+    valid_pid_file = false;
+    pa_core_exit(c, true, 0);
+}
+
 #ifdef HAVE_DBUS
 static pa_dbus_connection *register_dbus_name(pa_core *c, DBusBusType bus, const char* name) {
     DBusError error;
@@ -374,7 +384,6 @@ int main(int argc, char *argv[]) {
     char *s;
     char *configured_address;
     int r = 0, retval = 1, d = 0;
-    bool valid_pid_file = false;
     bool ltdl_init = false;
     int n_fds = 0, *passed_fds = NULL;
     const char *e;
@@ -382,6 +391,7 @@ int main(int argc, char *argv[]) {
     int daemon_pipe[2] = { -1, -1 };
     int daemon_pipe2[2] = { -1, -1 };
 #endif
+    pa_inotify *pid_monitor = NULL;
     int autospawn_fd = -1;
     bool autospawn_locked = false;
 #ifdef HAVE_DBUS
@@ -1023,6 +1033,9 @@ int main(int argc, char *argv[]) {
         goto finish;
     }
 
+    if (valid_pid_file)
+        pid_monitor = pa_inotify_start(pa_pid_file_name(), c, pid_file_deleted, c);
+
     c->default_sample_spec = conf->default_sample_spec;
     c->alternate_sample_rate = conf->alternate_sample_rate;
     c->default_channel_map = conf->default_channel_map;
@@ -1162,6 +1175,9 @@ finish:
 
         pa_autospawn_lock_done(false);
     }
+
+    if (pid_monitor)
+        pa_inotify_stop(pid_monitor);
 
     if (c) {
         /* Ensure all the modules/samples are unloaded when the core is still ref'ed,

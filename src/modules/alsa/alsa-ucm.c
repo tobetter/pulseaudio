@@ -1617,7 +1617,8 @@ pa_alsa_profile_set* pa_alsa_ucm_add_profile_set(pa_alsa_ucm_config *ucm, pa_cha
         ucm_create_profile(ucm, ps, verb, verb_name, verb_desc);
     }
 
-    ucm_probe_profile_set(ucm, ps);
+/*  Just trust that the person writing the UCM file knows what (s)he was doing, right? */
+/*    ucm_probe_profile_set(ucm, ps); */
     ps->probed = true;
 
     return ps;
