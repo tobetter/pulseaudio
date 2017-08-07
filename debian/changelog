@@ -1,3 +1,10 @@
+pulseaudio (1:10.0-2ubuntu2) artful; urgency=medium
+
+  * Drop Android support (used for Ubuntu Touch). This removes most of the
+    delta to upstream and Debian.
+
+ -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Mon, 07 Aug 2017 17:16:23 +0800
+
 pulseaudio (1:10.0-2ubuntu1) artful; urgency=medium
 
   * Cherrypick fixes for common crashes from upstream:

@@ -308,8 +308,6 @@ int pa_card_set_profile(pa_card *c, pa_card_profile *profile, bool save) {
         return 0;
     }
 
-    pa_hook_fire(&c->core->hooks[PA_CORE_HOOK_CARD_PROFILE_CHANGING], profile);
-
     /* If we're setting the initial profile, we shouldn't call set_profile(),
      * because the implementations don't expect that (for historical reasons).
      * We should just set c->active_profile, and the implementations will
