@@ -1,3 +1,10 @@
+pulseaudio (1:10.0-2ubuntu3) artful; urgency=medium
+
+  * Drop build-dependency on libhardware, was left in error by the
+    previous upload - all usage of libhardware was removed.
+
+ -- Dimitri John Ledkov <xnox@ubuntu.com>  Mon, 18 Sep 2017 20:40:57 +0100
+
 pulseaudio (1:10.0-2ubuntu2) artful; urgency=medium
 
   * Drop Android support (used for Ubuntu Touch). This removes most of the
