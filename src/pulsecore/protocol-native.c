@@ -2668,6 +2668,13 @@ static void command_auth(pa_pdispatch *pd, uint32_t command, uint32_t tag, pa_ta
             do_shm = false;
 
 #ifdef HAVE_CREDS
+    {
+        const pa_creds *creds;
+        if ((creds = pa_pdispatch_creds(pd))) {
+            c->client->creds = *creds;
+            c->client->creds_valid = true;
+        }
+    }
     if (do_shm) {
         /* Only enable SHM if both sides are owned by the same
          * user. This is a security measure because otherwise data
@@ -5632,6 +5639,7 @@ typedef struct pa_protocol_native_access_data {
 } pa_protocol_native_access_data;
 
 static void check_access_finish_cb(pa_access_data *data, bool res) {
+    uint32_t command, tag;
     pa_protocol_native_access_data *d = (pa_protocol_native_access_data *) data;
     pa_native_connection *c = PA_NATIVE_CONNECTION(d->userdata);
 
@@ -5639,6 +5647,11 @@ static void check_access_finish_cb(pa_access_data *data, bool res) {
         pa_pstream_send_error(c->pstream, d->tag, PA_ERR_ACCESS); \
         goto finish;
     }
+
+    pa_assert_se(pa_tagstruct_getu32(d->tc, &command) >= 0);
+    pa_assert_se(pa_tagstruct_getu32(d->tc, &tag) >= 0);
+    pa_assert(command == d->command);
+    pa_assert(tag == d->tag);
 
     /* call the dispatcher again, hopefully this time, the access check will
      * fail or succeed immediately */
