@@ -828,6 +828,9 @@ int pa__init(pa_module *m) {
     u->card_data.module_id = pa_xstrdup(module_id);
     u->card_data.userdata = u;
 
+    pa_card_choose_initial_profile(u->card);
+    pa_card_put(u->card);
+
     if (combine) {
         char *tmp;
         pa_strlist *o = NULL;
