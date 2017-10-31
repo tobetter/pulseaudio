@@ -642,7 +642,7 @@ int pa__init(pa_module *m) {
     struct userdata *u;
     pa_reserve_wrapper *reserve = NULL;
     const char *description;
-    const char *profile = NULL;
+    const char *profile_str = NULL;
     char *fn = NULL;
     bool namereg_fail = false;
 
@@ -770,9 +770,6 @@ int pa__init(pa_module *m) {
         goto fail;
     }
 
-    if ((profile = pa_modargs_get_value(u->modargs, "profile", NULL)))
-        pa_card_new_data_set_profile(&data, profile);
-
     u->card = pa_card_new(m->core, &data);
     pa_card_new_data_done(&data);
 
@@ -783,6 +780,26 @@ int pa__init(pa_module *m) {
     u->card->set_profile = card_set_profile;
 
     init_jacks(u);
+
+    pa_card_choose_initial_profile(u->card);
+
+    /* If the "profile" modarg is given, we have to override whatever the usual
+     * policy chose in pa_card_choose_initial_profile(). */
+    profile_str = pa_modargs_get_value(u->modargs, "profile", NULL);
+    if (profile_str) {
+        pa_card_profile *profile;
+
+        profile = pa_hashmap_get(u->card->profiles, profile_str);
+        if (!profile) {
+            pa_log("No such profile: %s", profile_str);
+            goto fail;
+        }
+
+        pa_card_set_profile(u->card, profile, false);
+    }
+
+    pa_card_put(u->card);
+
     init_profile(u);
     init_eld_ctls(u);
 
