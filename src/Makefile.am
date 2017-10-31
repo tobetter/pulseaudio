@@ -2138,7 +2138,7 @@ libtruststore_util_la_LIBADD = libpulsecore-@PA_MAJORMINOR@.la $(TRUST_STORE_LIB
 libtruststore_util_la_LDFLAGS = -avoid-version
 
 module_trust_store_la_SOURCES = modules/trust-store/module-trust-store.c
-module_trust_store_la_LDFLAGS = $(MODULE_LDFLAGS)
+module_trust_store_la_LDFLAGS = $(MODULE_LDFLAGS) -lapparmor
 module_trust_store_la_LIBADD = $(MODULE_LIBADD) libtruststore-util.la
 module_trust_store_la_CFLAGS = $(AM_CFLAGS) -DHAVE_TRUST_STORE=1
 endif
