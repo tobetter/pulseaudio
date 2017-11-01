@@ -656,6 +656,7 @@ commonlib_LTLIBRARIES = \
 # to the existing libpulse being linked to libpulsecommon). Duplicating the
 # code allows us to prevent this circular linking.
 libpulsecommon_@PA_MAJORMINOR@_la_SOURCES = \
+		pulsecore/access.h \
 		pulse/client-conf.c pulse/client-conf.h \
 		pulse/fork-detect.c pulse/fork-detect.h \
 		pulse/format.c pulse/format.h \
@@ -958,6 +959,7 @@ libpulsecore_@PA_MAJORMINOR@_la_SOURCES = \
 		pulsecore/core-subscribe.c pulsecore/core-subscribe.h \
 		pulsecore/core.c pulsecore/core.h \
 		pulsecore/hook-list.c pulsecore/hook-list.h \
+		pulsecore/inotify-wrapper.c pulsecore/inotify-wrapper.h \
 		pulsecore/ltdl-helper.c pulsecore/ltdl-helper.h \
 		pulsecore/modargs.c pulsecore/modargs.h \
 		pulsecore/modinfo.c pulsecore/modinfo.h \
@@ -1095,6 +1097,10 @@ if HAVE_WEBRTC
 modlibexec_LTLIBRARIES += libwebrtc-util.la
 endif
 
+if HAVE_TRUST_STORE
+modlibexec_LTLIBRARIES += libtruststore-util.la
+endif
+
 if HAVE_ESOUND
 modlibexec_LTLIBRARIES += \
 		libprotocol-esound.la
@@ -1224,10 +1230,20 @@ modlibexec_LTLIBRARIES += \
 		module-role-ducking.la \
 		module-allow-passthrough.la
 
+if HAVE_TRUST_STORE
+modlibexec_LTLIBRARIES += \
+		module-trust-store.la
+endif
+
 if HAVE_ESOUND
 modlibexec_LTLIBRARIES += \
 		module-esound-protocol-tcp.la \
 		module-esound-sink.la
+endif
+
+if HAVE_APPARMOR
+modlibexec_LTLIBRARIES += \
+		module-snappy-policy.la
 endif
 
 # See comment at librtp.la above
@@ -1533,6 +1549,7 @@ SYMDEF_FILES = \
 		module-intended-roles-symdef.h \
 		module-suspend-on-idle-symdef.h \
 		module-echo-cancel-symdef.h \
+		module-trust-store-symdef.h \
 		module-hal-detect-symdef.h \
 		module-udev-detect-symdef.h \
 		module-systemd-login-symdef.h \
@@ -1568,6 +1585,11 @@ SYMDEF_FILES += \
 		module-esound-compat-spawnfd-symdef.h \
 		module-esound-compat-spawnpid-symdef.h \
 		module-esound-sink-symdef.h
+endif
+
+if HAVE_APPARMOR
+SYMDEF_FILES += \
+		module-snappy-policy-symdef.h
 endif
 
 EXTRA_DIST += $(SYMDEF_FILES)
@@ -2073,6 +2095,28 @@ libwebrtc_util_la_LDFLAGS = -avoid-version
 
 module_echo_cancel_la_CFLAGS += -DHAVE_WEBRTC=1
 module_echo_cancel_la_LIBADD += libwebrtc-util.la
+endif
+
+if HAVE_TRUST_STORE
+# Separate helper library to keep C and C++ code apart, like we do for webrtc
+libtruststore_util_la_SOURCES = modules/trust-store/truststore.cc
+libtruststore_util_la_CXXFLAGS = $(AM_CXXFLAGS) -std=c++11 $(SERVER_CFLAGS) $(TRUST_STORE_CFLAGS) \
+	$(DBUS_CFLAGS) -DHAVE_TRUST_STORE=1
+libtruststore_util_la_LIBADD = libpulsecore-@PA_MAJORMINOR@.la $(TRUST_STORE_LIBS) $(DBUS_LIBS)
+libtruststore_util_la_LDFLAGS = -avoid-version
+
+module_trust_store_la_SOURCES = modules/trust-store/module-trust-store.c
+module_trust_store_la_LDFLAGS = $(MODULE_LDFLAGS) -lapparmor
+module_trust_store_la_LIBADD = $(MODULE_LIBADD) libtruststore-util.la
+module_trust_store_la_CFLAGS = $(AM_CFLAGS) -DHAVE_TRUST_STORE=1
+endif
+
+# Snappy
+if HAVE_APPARMOR
+module_snappy_policy_la_SOURCES = modules/module-snappy-policy.c
+module_snappy_policy_la_LDFLAGS = $(MODULE_LDFLAGS) -lapparmor
+module_snappy_policy_la_LIBADD = $(MODULE_LIBADD)
+module_snappy_policy_la_CFLAGS = $(AM_CFLAGS) -DHAVE_SNAPPY=1
 endif
 
 # RTP modules

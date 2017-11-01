@@ -1,7 +1,8 @@
 Source: pulseaudio
 Section: sound
 Priority: optional
-Maintainer: Pulseaudio maintenance team <pkg-pulseaudio-devel@lists.alioth.debian.org>
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+XSBC-Original-Maintainer: Pulseaudio maintenance team <pkg-pulseaudio-devel@lists.alioth.debian.org>
 Uploaders: Sjoerd Simons <sjoerd@debian.org>,
     Felipe Sateler <fsateler@debian.org>
 Build-Depends: debhelper (>= 10),
@@ -9,6 +10,7 @@ Build-Depends: debhelper (>= 10),
     dh-exec,
     dpkg-dev (>= 1.17.14),
     intltool,
+    libapparmor-dev [linux-any],
     libasound2-dev (>= 1.0.24) [linux-any],
     libasyncns-dev,
     libatomic-ops-dev,
@@ -16,6 +18,7 @@ Build-Depends: debhelper (>= 10),
     libbluetooth-dev (>= 4.99) [linux-any] <!stage1>,
     libsbc-dev [linux-any],
     libcap-dev [linux-any],
+    libdbus-cpp-dev [armhf i386 amd64],
     libfftw3-dev,
     libgconf2-dev,
     libglib2.0-dev,
@@ -23,16 +26,16 @@ Build-Depends: debhelper (>= 10),
     libice-dev,
     libjack-dev,
     libjson-c-dev (>= 0.11),
-    liblircclient-dev,
+    liblirc-dev,
     libltdl-dev (>= 2.2.6a-2),
     liborc-0.4-dev (>= 1:0.4.11),
     libsamplerate0-dev,
     libsndfile1-dev (>= 1.0.20),
-    libsoxr-dev (>= 0.1.1),
     libspeexdsp-dev (>= 1.2~rc1),
     libssl-dev,
     libsystemd-dev [linux-any],
     libtdb-dev [!hurd-any],
+    libtrust-store-dev [armhf i386 amd64],
     libudev-dev (>= 143) [linux-any],
     libwebrtc-audio-processing-dev (>= 0.2) [linux-any],
     libwrap0-dev,
@@ -40,8 +43,8 @@ Build-Depends: debhelper (>= 10),
     libxcb1-dev (>= 1.6),
     libxtst-dev
 Standards-Version: 4.1.0
-Vcs-Git: https://anonscm.debian.org/git/pkg-pulseaudio/pulseaudio.git
-Vcs-Browser: https://anonscm.debian.org/cgit/pkg-pulseaudio/pulseaudio.git
+Vcs-Git: https://git.launchpad.net/~ubuntu-audio-dev/pulseaudio
+Vcs-Browser: https://git.launchpad.net/~ubuntu-audio-dev/pulseaudio
 Homepage: http://www.pulseaudio.org
 
 Package: pulseaudio
@@ -53,7 +56,7 @@ Depends: ${shlibs:Depends}, ${misc:Depends}, adduser,
   libpulse0 (= ${binary:Version}),
   pulseaudio-utils
 Recommends: rtkit
-Suggests: udev [linux-any], pavumeter, pavucontrol, paman, paprefs
+Suggests: udev [linux-any], pavumeter, pavucontrol, paman, paprefs, ubuntu-sounds
 Description: PulseAudio sound server
  PulseAudio, previously known as Polypaudio, is a sound server for POSIX and
  WIN32 systems. It is a drop in replacement for the ESD sound server with
@@ -179,6 +182,20 @@ Description: RAOP module for PulseAudio sound server
  much better latency, mixing/re-sampling quality and overall architecture.
  .
  This module enables PulseAudio to stream audio to an Apple Airport Express.
+
+Package: pulseaudio-module-trust-store
+Architecture: armhf i386 amd64
+Priority: extra
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Conflicts: pulseaudio (<< 0.9.14-2)
+Description: trust-store module for PulseAudio sound server
+ PulseAudio, previously known as Polypaudio, is a sound server for POSIX and
+ WIN32 systems. It is a drop in replacement for the ESD sound server with
+ much better latency, mixing/re-sampling quality and overall architecture.
+ .
+ This module enables PulseAudio to use the trust-store in Ubuntu touch systems.
+ .
+ The module is called module-trust-store.
 
 Package: pulseaudio-module-bluetooth
 Build-Profiles: <!stage1>
