@@ -84,6 +84,8 @@ struct pa_card {
 
     bool save_profile:1;
 
+    bool linked;
+
     void *userdata;
 
     int (*set_profile)(pa_card *c, pa_card_profile *profile);
@@ -126,6 +128,13 @@ void pa_card_new_data_set_preferred_port(pa_card_new_data *data, pa_direction_t 
 void pa_card_new_data_done(pa_card_new_data *data);
 
 pa_card *pa_card_new(pa_core *c, pa_card_new_data *data);
+
+/* Select the initial card profile acording to the configured policies. This
+ * must be called between pa_card_new() and pa_card_put(), after the port and
+ * profile availabilities have been initialized. */
+void pa_card_choose_initial_profile(pa_card *card);
+
+void pa_card_put(pa_card *c);
 void pa_card_free(pa_card *c);
 
 void pa_card_add_profile(pa_card *c, pa_card_profile *profile);
