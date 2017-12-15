@@ -1,3 +1,10 @@
+pulseaudio (1:11.1-1ubuntu2) bionic; urgency=medium
+
+  * Add 0800-fix-lp1720684.patch to ensure the default Bluetooth audio
+    profile is the higher quality A2DP rather than HSP/HFP. (LP: #1720684)
+
+ -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Fri, 15 Dec 2017 09:49:25 +0100
+
 pulseaudio (1:11.1-1ubuntu1) bionic; urgency=medium
 
   * Drop upstreamed patches:

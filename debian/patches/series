@@ -16,3 +16,5 @@
 # Ubuntu Snappy
 0700-modules-add-snappy-policy-module.patch
 
+# Bug fixes backported from PulseAudio 12
+0800-fix-lp1720684.patch
