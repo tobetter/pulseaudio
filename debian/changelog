@@ -1,3 +1,11 @@
+pulseaudio (1:10.0-2ubuntu3.1) artful; urgency=medium
+
+  * Cherrypick fixes for supporting audio on Dell dock TB16:
+    - 60c0edd5: Add support for usb audio on the Dell dock TB16 (LP: #1718824)
+    - 2f1dcea3: build-sys: add the Dell dock TB16 configuration (LP: #1718824)
+
+ -- Hui Wang <hui.wang@canonical.com>  Tue, 19 Dec 2017 15:16:57 +0800
+
 pulseaudio (1:10.0-2ubuntu3) artful; urgency=medium
 
   * Drop build-dependency on libhardware, was left in error by the
