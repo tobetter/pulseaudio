@@ -1,3 +1,14 @@
+pulseaudio (1:11.1-1ubuntu3) bionic; urgency=medium
+
+  * 0802-alsa-mixer-Add-support-for-usb-audio-in-the-Dell-doc.patch: Restore
+    patch that was accidentally dropped in the upgrade to 11.1 (LP: #1718824)
+  * 0030-load-module-switch-on-connect.patch: Modify module load order to
+    improve device switching reliability (LP: #1732629)
+  * 0803-build-sys-add-the-Dell-dock-TB16-configuration.patch: add the Dell
+    dock TB16 configuration (LP: #1718824)
+
+ -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Thu, 11 Jan 2018 17:25:38 +0800
+
 pulseaudio (1:11.1-1ubuntu2) bionic; urgency=medium
 
   * Add 0800-fix-lp1720684.patch to ensure the default Bluetooth audio
