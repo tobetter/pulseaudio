@@ -18,22 +18,21 @@ Signed-off-by: Hui Wang <hui.wang@canonical.com>
  2 files changed, 56 insertions(+)
  create mode 100644 src/modules/alsa/mixer/profile-sets/dell-dock-tb16-usb-audio.conf
 
-diff --git a/src/modules/alsa/mixer/profile-sets/90-pulseaudio.rules b/src/modules/alsa/mixer/profile-sets/90-pulseaudio.rules
-index 70e34e6..805a05b 100644
---- a/src/modules/alsa/mixer/profile-sets/90-pulseaudio.rules
-+++ b/src/modules/alsa/mixer/profile-sets/90-pulseaudio.rules
-@@ -98,5 +98,6 @@ ATTRS{idVendor}=="17cc", ATTRS{idProduct}=="1021", ENV{PULSE_PROFILE_SET}="nativ
+Index: pulseaudio/src/modules/alsa/mixer/profile-sets/90-pulseaudio.rules
+===================================================================
+--- pulseaudio.orig/src/modules/alsa/mixer/profile-sets/90-pulseaudio.rules
++++ pulseaudio/src/modules/alsa/mixer/profile-sets/90-pulseaudio.rules
+@@ -98,5 +98,6 @@ ATTRS{idVendor}=="17cc", ATTRS{idProduct
  ATTRS{idVendor}=="0763", ATTRS{idProduct}=="2012", ENV{PULSE_PROFILE_SET}="maudio-fasttrack-pro.conf"
  ATTRS{idVendor}=="045e", ATTRS{idProduct}=="02bb", ENV{PULSE_PROFILE_SET}="kinect-audio.conf"
  ATTRS{idVendor}=="041e", ATTRS{idProduct}=="322c", ENV{PULSE_PROFILE_SET}="sb-omni-surround-5.1.conf"
 +ATTRS{idVendor}=="0bda", ATTRS{idProduct}=="4014", ENV{PULSE_PROFILE_SET}="dell-dock-tb16-usb-audio.conf"
  
  LABEL="pulseaudio_end"
-diff --git a/src/modules/alsa/mixer/profile-sets/dell-dock-tb16-usb-audio.conf b/src/modules/alsa/mixer/profile-sets/dell-dock-tb16-usb-audio.conf
-new file mode 100644
-index 0000000..1186552
+Index: pulseaudio/src/modules/alsa/mixer/profile-sets/dell-dock-tb16-usb-audio.conf
+===================================================================
 --- /dev/null
-+++ b/src/modules/alsa/mixer/profile-sets/dell-dock-tb16-usb-audio.conf
++++ pulseaudio/src/modules/alsa/mixer/profile-sets/dell-dock-tb16-usb-audio.conf
 @@ -0,0 +1,55 @@
 +# This file is part of PulseAudio.
 +#
@@ -90,6 +89,3 @@ index 0000000..1186552
 +input-mappings = analog-stereo-mic
 +priority = 80
 +skip-probe = yes
--- 
-1.9.1
-
