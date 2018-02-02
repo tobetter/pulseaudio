@@ -35,7 +35,6 @@ Build-Depends: debhelper (>= 10),
     libssl-dev,
     libsystemd-dev [linux-any],
     libtdb-dev [!hurd-any],
-    libtrust-store-dev [armhf i386 amd64],
     libudev-dev (>= 143) [linux-any],
     libwebrtc-audio-processing-dev (>= 0.2) [linux-any],
     libwrap0-dev,
@@ -182,20 +181,6 @@ Description: RAOP module for PulseAudio sound server
  much better latency, mixing/re-sampling quality and overall architecture.
  .
  This module enables PulseAudio to stream audio to an Apple Airport Express.
-
-Package: pulseaudio-module-trust-store
-Architecture: armhf i386 amd64
-Priority: extra
-Depends: ${shlibs:Depends}, ${misc:Depends}
-Conflicts: pulseaudio (<< 0.9.14-2)
-Description: trust-store module for PulseAudio sound server
- PulseAudio, previously known as Polypaudio, is a sound server for POSIX and
- WIN32 systems. It is a drop in replacement for the ESD sound server with
- much better latency, mixing/re-sampling quality and overall architecture.
- .
- This module enables PulseAudio to use the trust-store in Ubuntu touch systems.
- .
- The module is called module-trust-store.
 
 Package: pulseaudio-module-bluetooth
 Build-Profiles: <!stage1>
