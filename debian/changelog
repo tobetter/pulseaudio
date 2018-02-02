@@ -1,3 +1,10 @@
+pulseaudio (1:11.1-1ubuntu5) bionic; urgency=medium
+
+  * Drop use of trust-store, which is unmaintained and fails to build.
+    LP: #1739469.
+
+ -- Steve Langasek <steve.langasek@ubuntu.com>  Thu, 01 Feb 2018 16:12:47 -0800
+
 pulseaudio (1:11.1-1ubuntu4) bionic; urgency=high
 
   * 0030-load-module-switch-on-connect.patch: Correct typo in default.pa
