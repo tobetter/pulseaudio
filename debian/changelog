@@ -1,3 +1,9 @@
+pulseaudio (1:11.1-1ubuntu6) bionic; urgency=high
+
+  * No change rebuild against openssl1.1.
+
+ -- Dimitri John Ledkov <xnox@ubuntu.com>  Mon, 05 Feb 2018 16:52:12 +0000
+
 pulseaudio (1:11.1-1ubuntu5) bionic; urgency=medium
 
   * Drop use of trust-store, which is unmaintained and fails to build.
