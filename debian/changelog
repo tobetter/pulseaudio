@@ -1,3 +1,10 @@
+pulseaudio (1:8.0-0ubuntu3.9) xenial; urgency=medium
+
+  * Cherrypick fixes for checking profile availabilities (LP: #1750947)
+	- a222a079: set availability for (some) unavailable profiles
+
+ -- Hui Wang <hui.wang@canonical.com>  Thu, 08 Mar 2018 10:38:56 +0800
+
 pulseaudio (1:8.0-0ubuntu3.8) xenial; urgency=medium
 
   [Hui Wang]
