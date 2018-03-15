@@ -1,3 +1,12 @@
+pulseaudio (1:11.1-1ubuntu7) bionic; urgency=medium
+
+  * Drop build-dependency on dbus-cpp, which is not actually used and is to
+    be removed.
+  * debian/patches/memfd-glibc2.27.patch: fix build failure with glibc
+    2.27.
+
+ -- Steve Langasek <steve.langasek@ubuntu.com>  Wed, 14 Mar 2018 17:06:53 -0700
+
 pulseaudio (1:11.1-1ubuntu6) bionic; urgency=high
 
   * No change rebuild against openssl1.1.
