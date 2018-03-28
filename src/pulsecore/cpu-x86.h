@@ -18,9 +18,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #include <stdint.h>
@@ -41,7 +39,7 @@ typedef enum pa_cpu_x86_flag {
 } pa_cpu_x86_flag_t;
 
 void pa_cpu_get_x86_flags(pa_cpu_x86_flag_t *flags);
-pa_bool_t pa_cpu_init_x86 (pa_cpu_x86_flag_t *flags);
+bool pa_cpu_init_x86 (pa_cpu_x86_flag_t *flags);
 
 #if defined (__i386__)
 typedef int32_t pa_reg_x86;

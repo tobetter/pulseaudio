@@ -15,9 +15,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #ifdef HAVE_CONFIG_H
@@ -113,7 +111,7 @@ size_t pa_frame_align(size_t l, const pa_sample_spec *ss) {
     return (l/fs) * fs;
 }
 
-pa_bool_t pa_frame_aligned(size_t l, const pa_sample_spec *ss) {
+bool pa_frame_aligned(size_t l, const pa_sample_spec *ss) {
     size_t fs;
 
     pa_assert(ss);
@@ -194,7 +192,7 @@ static pa_memblock *silence_memblock_new(pa_mempool *pool, uint8_t c) {
     memset(data, c, length);
     pa_memblock_release(b);
 
-    pa_memblock_set_is_silence(b, TRUE);
+    pa_memblock_set_is_silence(b, true);
 
     return b;
 }
@@ -296,9 +294,9 @@ void pa_sample_clamp(pa_sample_format_t format, void *dst, size_t dstr, const vo
         for (; n > 0; n--) {
             float f;
 
-            f = PA_FLOAT32_SWAP(*s);
+            f = PA_READ_FLOAT32RE(s);
             f = PA_CLAMP_UNLIKELY(f, -1.0f, 1.0f);
-            *d = PA_FLOAT32_SWAP(f);
+            PA_WRITE_FLOAT32RE(d, f);
 
             s = (const float*) ((const uint8_t*) s + sstr);
             d = (float*) ((uint8_t*) d + dstr);

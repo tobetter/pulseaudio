@@ -16,9 +16,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #ifdef HAVE_CONFIG_H
@@ -50,7 +48,7 @@ PA_MODULE_USAGE(
         "access=local|remote|local,remote "
         "tcp_port=<port number> "
         "tcp_listen=<hostname>");
-PA_MODULE_LOAD_ONCE(TRUE);
+PA_MODULE_LOAD_ONCE(true);
 PA_MODULE_AUTHOR("Tanu Kaskinen");
 PA_MODULE_VERSION(PACKAGE_VERSION);
 
@@ -64,8 +62,8 @@ struct connection;
 
 struct userdata {
     pa_module *module;
-    pa_bool_t local_access;
-    pa_bool_t remote_access;
+    bool local_access;
+    bool remote_access;
     uint32_t tcp_port;
     char *tcp_listen;
 
@@ -138,8 +136,8 @@ static void client_send_event_cb(pa_client *c, const char *name, pa_proplist *da
     conn = c->userdata;
 
     pa_assert_se(signal_msg = dbus_message_new_signal(pa_dbusiface_core_get_client_path(conn->server->userdata->core_iface, c),
-						      PA_DBUSIFACE_CLIENT_INTERFACE,
-						      "ClientEvent"));
+                                                      PA_DBUSIFACE_CLIENT_INTERFACE,
+                                                      "ClientEvent"));
     dbus_message_iter_init_append(signal_msg, &msg_iter);
     pa_assert_se(dbus_message_iter_append_basic(&msg_iter, DBUS_TYPE_STRING, &name));
     pa_dbus_append_proplist(&msg_iter, data);
@@ -203,7 +201,7 @@ static void connection_new_cb(DBusServer *dbus_server, DBusConnection *new_conne
 
     c = pa_xnew(struct connection, 1);
     c->server = s;
-    c->wrap_conn = pa_dbus_wrap_connection_new_from_existing(s->userdata->module->core->mainloop, TRUE, new_connection);
+    c->wrap_conn = pa_dbus_wrap_connection_new_from_existing(s->userdata->module->core->mainloop, true, new_connection);
     c->client = client;
 
     c->client->kill = client_kill_cb;
@@ -482,7 +480,7 @@ static struct server *start_tcp_server(struct userdata *u) {
     return s;
 }
 
-static int get_access_arg(pa_modargs *ma, pa_bool_t *local_access, pa_bool_t *remote_access) {
+static int get_access_arg(pa_modargs *ma, bool *local_access, bool *remote_access) {
     const char *value = NULL;
 
     pa_assert(ma);
@@ -493,14 +491,14 @@ static int get_access_arg(pa_modargs *ma, pa_bool_t *local_access, pa_bool_t *re
         return 0;
 
     if (pa_streq(value, "local")) {
-        *local_access = TRUE;
-        *remote_access = FALSE;
+        *local_access = true;
+        *remote_access = false;
     } else if (pa_streq(value, "remote")) {
-        *local_access = FALSE;
-        *remote_access = TRUE;
+        *local_access = false;
+        *remote_access = true;
     } else if (pa_streq(value, "local,remote")) {
-        *local_access = TRUE;
-        *remote_access = TRUE;
+        *local_access = true;
+        *remote_access = true;
     } else
         return -1;
 
@@ -529,6 +527,11 @@ int pa__init(pa_module *m) {
 
     pa_assert(m);
 
+    pa_log_warn("module-dbus-protocol is currently unsupported, and can sometimes cause PulseAudio crashes.");
+    pa_log_warn("The most popular use cases for module-dbus-protocol are related to changing "
+                "equalizer settings and LADSPA plugin parameters at runtime.");
+    pa_log_warn("If you don't use such functionality, it's possible that you don't actually need this module.");
+
     if (!(ma = pa_modargs_new(m->argument, valid_modargs))) {
         pa_log("Failed to parse module arguments.");
         goto fail;
@@ -536,8 +539,8 @@ int pa__init(pa_module *m) {
 
     m->userdata = u = pa_xnew0(struct userdata, 1);
     u->module = m;
-    u->local_access = TRUE;
-    u->remote_access = FALSE;
+    u->local_access = true;
+    u->remote_access = false;
     u->tcp_port = PA_DBUS_DEFAULT_PORT;
 
     if (get_access_arg(ma, &u->local_access, &u->remote_access) < 0) {

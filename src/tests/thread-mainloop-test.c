@@ -12,9 +12,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #ifdef HAVE_CONFIG_H
@@ -58,7 +56,7 @@ START_TEST (thread_mainloop_test) {
 
     fail_unless(!pa_threaded_mainloop_in_thread(m));
 
-    a->time_new(a, pa_timeval_rtstore(&tv, pa_rtclock_now() + 5 * PA_USEC_PER_SEC, TRUE), tcb, m);
+    a->time_new(a, pa_timeval_rtstore(&tv, pa_rtclock_now() + 5 * PA_USEC_PER_SEC, true), tcb, m);
 
     fprintf(stderr, "waiting 5s (signal)\n");
     pa_threaded_mainloop_wait(m);

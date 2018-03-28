@@ -17,9 +17,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public
-  License along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  License along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #include <pulsecore/atomic.h>
@@ -58,13 +56,13 @@
     do {                                        \
         pa_atomic_store(&(p)->_ref, 1);         \
         pa_log("REF: Init %p", p);              \
-    } while (FALSE)
+    } while (false)
 
 #define PA_REFCNT_INC(p)                        \
     do {                                        \
         pa_atomic_inc(&(p)->_ref);              \
         pa_log("REF: Inc %p", p);               \
-    } while (FALSE)                             \
+    } while (false)                             \
 
 #define PA_REFCNT_DEC(p)                        \
     ({                                          \

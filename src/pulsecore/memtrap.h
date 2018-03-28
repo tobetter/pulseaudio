@@ -17,9 +17,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public
-  License along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  License along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #include <sys/types.h>
@@ -44,7 +42,7 @@ pa_memtrap *pa_memtrap_update(pa_memtrap *m, const void *start, size_t size);
 
 void pa_memtrap_remove(pa_memtrap *m);
 
-pa_bool_t pa_memtrap_is_good(pa_memtrap *m);
+bool pa_memtrap_is_good(pa_memtrap *m);
 
 void pa_memtrap_install(void);
 

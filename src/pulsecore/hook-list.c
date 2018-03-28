@@ -14,9 +14,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public
-  License along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  License along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #ifdef HAVE_CONFIG_H
@@ -63,7 +61,7 @@ pa_hook_slot* pa_hook_connect(pa_hook *hook, pa_hook_priority_t prio, pa_hook_cb
 
     slot = pa_xnew(pa_hook_slot, 1);
     slot->hook = hook;
-    slot->dead = FALSE;
+    slot->dead = false;
     slot->callback = cb;
     slot->data = data;
     slot->priority = prio;
@@ -85,7 +83,7 @@ void pa_hook_slot_free(pa_hook_slot *slot) {
     pa_assert(!slot->dead);
 
     if (slot->hook->n_firing > 0) {
-        slot->dead = TRUE;
+        slot->dead = true;
         slot->hook->n_dead++;
     } else
         slot_free(slot->hook, slot);
@@ -124,7 +122,7 @@ pa_hook_result_t pa_hook_fire(pa_hook *hook, void *data) {
     return result;
 }
 
-pa_bool_t pa_hook_is_firing(pa_hook *hook) {
+bool pa_hook_is_firing(pa_hook *hook) {
     pa_assert(hook);
 
     return hook->n_firing > 0;

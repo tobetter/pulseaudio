@@ -14,9 +14,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public
-  License along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  License along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #ifdef HAVE_CONFIG_H
@@ -80,7 +78,7 @@ static pa_io_event *io_event = NULL;
 static struct sigaction sigaction_prev;
 
 /* Nonzero after pa_cpu_limit_init() */
-static pa_bool_t installed = FALSE;
+static bool installed = false;
 
 /* The current state of operation */
 static enum {
@@ -209,7 +207,7 @@ int pa_cpu_limit_init(pa_mainloop_api *m) {
         return -1;
     }
 
-    installed = TRUE;
+    installed = true;
 
     reset_cpu_time(CPUTIME_INTERVAL_SOFT);
 
@@ -230,7 +228,7 @@ void pa_cpu_limit_done(void) {
 
     if (installed) {
         pa_assert_se(sigaction(SIGXCPU, &sigaction_prev, NULL) >= 0);
-        installed = FALSE;
+        installed = false;
     }
 }
 

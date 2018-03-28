@@ -15,9 +15,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #ifdef HAVE_CONFIG_H
@@ -50,6 +48,8 @@ struct pa_threaded_mainloop {
     pa_thread* thread;
     pa_mutex* mutex;
     pa_cond* cond, *accept_cond;
+
+    char *name;
 };
 
 static inline int in_worker(pa_threaded_mainloop *m) {
@@ -95,22 +95,18 @@ pa_threaded_mainloop *pa_threaded_mainloop_new(void) {
 
     pa_init_i18n();
 
-    m = pa_xnew(pa_threaded_mainloop, 1);
+    m = pa_xnew0(pa_threaded_mainloop, 1);
 
     if (!(m->real_mainloop = pa_mainloop_new())) {
         pa_xfree(m);
         return NULL;
     }
 
-    m->mutex = pa_mutex_new(TRUE, TRUE);
+    m->mutex = pa_mutex_new(true, true);
     m->cond = pa_cond_new();
     m->accept_cond = pa_cond_new();
-    m->thread = NULL;
 
     pa_mainloop_set_poll_func(m->real_mainloop, poll_func, m->mutex);
-
-    m->n_waiting = 0;
-    m->n_waiting_for_accept = 0;
 
     return m;
 }
@@ -132,6 +128,7 @@ void pa_threaded_mainloop_free(pa_threaded_mainloop* m) {
     pa_cond_free(m->cond);
     pa_cond_free(m->accept_cond);
 
+    pa_xfree(m->name);
     pa_xfree(m);
 }
 
@@ -140,7 +137,7 @@ int pa_threaded_mainloop_start(pa_threaded_mainloop *m) {
 
     pa_assert(!m->thread || !pa_thread_is_running(m->thread));
 
-    if (!(m->thread = pa_thread_new("threaded-ml", thread, m)))
+    if (!(m->thread = pa_thread_new(m->name ? m->name : "threaded-ml", thread, m)))
         return -1;
 
     return 0;
@@ -238,4 +235,14 @@ int pa_threaded_mainloop_in_thread(pa_threaded_mainloop *m) {
     pa_assert(m);
 
     return m->thread && pa_thread_self() == m->thread;
+}
+
+void pa_threaded_mainloop_set_name(pa_threaded_mainloop *m, const char *name) {
+    pa_assert(m);
+    pa_assert(name);
+
+    m->name = pa_xstrdup(name);
+
+    if (m->thread)
+        pa_thread_set_name(m->thread, m->name);
 }

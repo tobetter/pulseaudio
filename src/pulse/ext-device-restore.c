@@ -15,9 +15,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #ifdef HAVE_CONFIG_H
@@ -59,7 +57,7 @@ static void ext_device_restore_test_cb(pa_pdispatch *pd, uint32_t command, uint3
         goto finish;
 
     if (command != PA_COMMAND_REPLY) {
-        if (pa_context_handle_error(o->context, command, t, FALSE) < 0)
+        if (pa_context_handle_error(o->context, command, t, false) < 0)
             goto finish;
 
     } else if (pa_tagstruct_getu32(t, &version) < 0 ||
@@ -164,7 +162,7 @@ static void ext_device_restore_read_device_formats_cb(pa_pdispatch *pd, uint32_t
         goto finish;
 
     if (command != PA_COMMAND_REPLY) {
-        if (pa_context_handle_error(o->context, command, t, FALSE) < 0)
+        if (pa_context_handle_error(o->context, command, t, false) < 0)
             goto finish;
 
         eol = -1;

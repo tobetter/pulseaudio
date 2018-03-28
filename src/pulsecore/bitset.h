@@ -17,9 +17,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #include <inttypes.h>
@@ -30,8 +28,8 @@
 
 typedef uint32_t pa_bitset_t;
 
-void pa_bitset_set(pa_bitset_t *b, unsigned k, pa_bool_t v);
-pa_bool_t pa_bitset_get(const pa_bitset_t *b, unsigned k);
-pa_bool_t pa_bitset_equals(const pa_bitset_t *b, unsigned n, ...);
+void pa_bitset_set(pa_bitset_t *b, unsigned k, bool v);
+bool pa_bitset_get(const pa_bitset_t *b, unsigned k);
+bool pa_bitset_equals(const pa_bitset_t *b, unsigned n, ...);
 
 #endif

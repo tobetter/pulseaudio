@@ -14,9 +14,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #ifdef HAVE_CONFIG_H
@@ -72,7 +70,7 @@ void pa_sap_context_destroy(pa_sap_context *c) {
     pa_xfree(c->sdp_data);
 }
 
-int pa_sap_send(pa_sap_context *c, pa_bool_t goodbye) {
+int pa_sap_send(pa_sap_context *c, bool goodbye) {
     uint32_t header;
     struct sockaddr_storage sa_buf;
     struct sockaddr *sa = (struct sockaddr*) &sa_buf;
@@ -141,7 +139,7 @@ pa_sap_context* pa_sap_context_init_recv(pa_sap_context *c, int fd) {
     return c;
 }
 
-int pa_sap_recv(pa_sap_context *c, pa_bool_t *goodbye) {
+int pa_sap_recv(pa_sap_context *c, bool *goodbye) {
     struct msghdr m;
     struct iovec iov;
     int size;

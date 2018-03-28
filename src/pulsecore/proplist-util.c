@@ -14,9 +14,7 @@
   Lesser General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public
-  License along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  License along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #ifdef HAVE_CONFIG_H
@@ -121,14 +119,14 @@ void pa_init_proplist(pa_proplist *p) {
             if (pa_startswith(*e, "PULSE_PROP_")) {
                 size_t kl, skip;
                 char *k;
-                pa_bool_t override;
+                bool override;
 
                 if (pa_startswith(*e, "PULSE_PROP_OVERRIDE_")) {
                     skip = 20;
-                    override = TRUE;
+                    override = true;
                 } else {
                     skip = 11;
-                    override = FALSE;
+                    override = false;
                 }
 
                 kl = strcspn(*e+skip, "=");

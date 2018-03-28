@@ -15,9 +15,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #ifdef HAVE_CONFIG_H
@@ -58,7 +56,7 @@ static void ext_device_manager_test_cb(pa_pdispatch *pd, uint32_t command, uint3
         goto finish;
 
     if (command != PA_COMMAND_REPLY) {
-        if (pa_context_handle_error(o->context, command, t, FALSE) < 0)
+        if (pa_context_handle_error(o->context, command, t, false) < 0)
             goto finish;
 
     } else if (pa_tagstruct_getu32(t, &version) < 0 ||
@@ -118,7 +116,7 @@ static void ext_device_manager_read_cb(pa_pdispatch *pd, uint32_t command, uint3
         goto finish;
 
     if (command != PA_COMMAND_REPLY) {
-        if (pa_context_handle_error(o->context, command, t, FALSE) < 0)
+        if (pa_context_handle_error(o->context, command, t, false) < 0)
             goto finish;
 
         eol = -1;
@@ -225,6 +223,7 @@ pa_operation *pa_ext_device_manager_set_device_description(
     PA_CHECK_VALIDITY_RETURN_NULL(c, !pa_detect_fork(), PA_ERR_FORKED);
     PA_CHECK_VALIDITY_RETURN_NULL(c, c->state == PA_CONTEXT_READY, PA_ERR_BADSTATE);
     PA_CHECK_VALIDITY_RETURN_NULL(c, c->version >= 14, PA_ERR_NOTSUPPORTED);
+    PA_CHECK_VALIDITY_RETURN_NULL(c, *description, PA_ERR_INVALID);
 
     o = pa_operation_new(c, NULL, (pa_operation_cb_t) cb, userdata);
 

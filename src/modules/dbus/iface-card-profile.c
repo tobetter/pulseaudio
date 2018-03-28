@@ -14,9 +14,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #ifdef HAVE_CONFIG_H
@@ -225,4 +223,10 @@ const char *pa_dbusiface_card_profile_get_name(pa_dbusiface_card_profile *p) {
     pa_assert(p);
 
     return p->profile->name;
+}
+
+pa_card_profile *pa_dbusiface_card_profile_get_profile(pa_dbusiface_card_profile *p) {
+    pa_assert(p);
+
+    return p->profile;
 }

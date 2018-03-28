@@ -14,9 +14,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #ifdef HAVE_CONFIG_H
@@ -44,7 +42,7 @@
 PA_MODULE_AUTHOR("Lennart Poettering");
 PA_MODULE_DESCRIPTION("Position event sounds between L and R depending on the position on screen of the widget triggering them.");
 PA_MODULE_VERSION(PACKAGE_VERSION);
-PA_MODULE_LOAD_ONCE(TRUE);
+PA_MODULE_LOAD_ONCE(true);
 
 static const char* const valid_modargs[] = {
     NULL
@@ -74,7 +72,7 @@ static int parse_pos(const char *pos, double *f) {
 static pa_hook_result_t sink_input_fixate_hook_callback(pa_core *core, pa_sink_input_new_data *data, struct userdata *u) {
     const char *hpos, *vpos, *role, *id;
     double f;
-    char t[PA_CVOLUME_SNPRINT_MAX];
+    char t[PA_CVOLUME_SNPRINT_VERBOSE_MAX];
     pa_cvolume v;
 
     pa_assert(data);
@@ -132,14 +130,19 @@ static pa_hook_result_t sink_input_fixate_hook_callback(pa_core *core, pa_sink_i
         }
     }
 
-    pa_log_debug("Final volume factor %s.", pa_cvolume_snprint(t, sizeof(t), &v));
+    pa_log_debug("Final volume factor %s.",
+                 pa_cvolume_snprint_verbose(t,
+                                            sizeof(t),
+                                            &v,
+                                            &data->sink->channel_map,
+                                            data->sink->flags & PA_SINK_DECIBEL_VOLUME));
     pa_sink_input_new_data_add_volume_factor_sink(data, u->name, &v);
 
     return PA_HOOK_OK;
 }
 
 int pa__init(pa_module*m) {
-    pa_modargs *ma = NULL;
+    pa_modargs *ma;
     struct userdata *u;
 
     pa_assert(m);
@@ -159,9 +162,6 @@ int pa__init(pa_module*m) {
 
 fail:
     pa__done(m);
-
-    if (ma)
-        pa_modargs_free(ma);
 
     return -1;
 }

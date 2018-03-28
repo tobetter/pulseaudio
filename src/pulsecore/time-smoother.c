@@ -14,9 +14,7 @@
   Lesser General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public
-  License along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  License along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #ifdef HAVE_CONFIG_H
@@ -54,7 +52,7 @@
  * The larger 'adjust_time' is chosen the smoother our estimation
  * function will be -- but we'll adjust to clock skew slower, too.
  *
- * If 'monotonic' is TRUE the resulting estimation function is
+ * If 'monotonic' is true the resulting estimation function is
  * guaranteed to be monotonic.
  */
 
@@ -79,11 +77,11 @@ struct pa_smoother {
 
     /* Cached parameters for our interpolation polynomial y=ax^3+b^2+cx */
     double a, b, c;
-    pa_bool_t abc_valid:1;
+    bool abc_valid:1;
 
-    pa_bool_t monotonic:1;
-    pa_bool_t paused:1;
-    pa_bool_t smoothing:1; /* If FALSE we skip the polynomial interpolation step */
+    bool monotonic:1;
+    bool paused:1;
+    bool smoothing:1; /* If false we skip the polynomial interpolation step */
 
     pa_usec_t pause_time;
 
@@ -93,11 +91,11 @@ struct pa_smoother {
 pa_smoother* pa_smoother_new(
         pa_usec_t adjust_time,
         pa_usec_t history_time,
-        pa_bool_t monotonic,
-        pa_bool_t smoothing,
+        bool monotonic,
+        bool smoothing,
         unsigned min_history,
         pa_usec_t time_offset,
-        pa_bool_t paused) {
+        bool paused) {
 
     pa_smoother *s;
 
@@ -127,13 +125,12 @@ void pa_smoother_free(pa_smoother* s) {
 #define REDUCE(x)                               \
     do {                                        \
         x = (x) % HISTORY_MAX;                  \
-    } while(FALSE)
+    } while(false)
 
 #define REDUCE_INC(x)                           \
     do {                                        \
         x = ((x)+1) % HISTORY_MAX;              \
-    } while(FALSE)
-
+    } while(false)
 
 static void drop_old(pa_smoother *s, pa_usec_t x) {
 
@@ -274,7 +271,7 @@ static void calc_abc(pa_smoother *s) {
     s->b = (((double) (3*ky)/ (double) kx - dp - (double) (2*de))) / (double) kx;
     s->a = (dp/(double) kx - 2*s->b - de/(double) kx) / (double) (3*kx);
 
-    s->abc_valid = TRUE;
+    s->abc_valid = true;
 }
 
 static void estimate(pa_smoother *s, pa_usec_t x, pa_usec_t *y, double *deriv) {
@@ -348,7 +345,7 @@ static void estimate(pa_smoother *s, pa_usec_t x, pa_usec_t *y, double *deriv) {
 void pa_smoother_put(pa_smoother *s, pa_usec_t x, pa_usec_t y) {
     pa_usec_t ney;
     double nde;
-    pa_bool_t is_new;
+    bool is_new;
 
     pa_assert(s);
 
@@ -383,7 +380,7 @@ void pa_smoother_put(pa_smoother *s, pa_usec_t x, pa_usec_t y) {
         s->py = s->ry;
     }
 
-    s->abc_valid = FALSE;
+    s->abc_valid = false;
 
 #ifdef DEBUG_DATA
     pa_log_debug("%p, put(%llu | %llu) = %llu", s, (unsigned long long) (x + s->time_offset), (unsigned long long) x, (unsigned long long) y);
@@ -445,11 +442,11 @@ void pa_smoother_pause(pa_smoother *s, pa_usec_t x) {
     pa_log_debug("pause(%llu)", (unsigned long long) x);
 #endif
 
-    s->paused = TRUE;
+    s->paused = true;
     s->pause_time = x;
 }
 
-void pa_smoother_resume(pa_smoother *s, pa_usec_t x, pa_bool_t fix_now) {
+void pa_smoother_resume(pa_smoother *s, pa_usec_t x, bool fix_now) {
     pa_assert(s);
 
     if (!s->paused)
@@ -462,7 +459,7 @@ void pa_smoother_resume(pa_smoother *s, pa_usec_t x, pa_bool_t fix_now) {
     pa_log_debug("resume(%llu)", (unsigned long long) x);
 #endif
 
-    s->paused = FALSE;
+    s->paused = false;
     s->time_offset += x - s->pause_time;
 
     if (fix_now)
@@ -502,7 +499,7 @@ pa_usec_t pa_smoother_translate(pa_smoother *s, pa_usec_t x, pa_usec_t y_delay) 
     return (pa_usec_t) llrint((double) y_delay / nde);
 }
 
-void pa_smoother_reset(pa_smoother *s, pa_usec_t time_offset, pa_bool_t paused) {
+void pa_smoother_reset(pa_smoother *s, pa_usec_t time_offset, bool paused) {
     pa_assert(s);
 
     s->px = s->py = 0;
@@ -516,7 +513,7 @@ void pa_smoother_reset(pa_smoother *s, pa_usec_t time_offset, pa_bool_t paused) 
 
     s->last_y = s->last_x = 0;
 
-    s->abc_valid = FALSE;
+    s->abc_valid = false;
 
     s->paused = paused;
     s->time_offset = s->pause_time = time_offset;

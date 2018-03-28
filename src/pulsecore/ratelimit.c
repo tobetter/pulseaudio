@@ -14,9 +14,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public
-  License along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  License along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #ifdef HAVE_CONFIG_H
@@ -35,13 +33,13 @@ static pa_static_mutex mutex = PA_STATIC_MUTEX_INIT;
 /* Modelled after Linux' lib/ratelimit.c by Dave Young
  * <hidave.darkstar@gmail.com>, which is licensed GPLv2. */
 
-pa_bool_t pa_ratelimit_test(pa_ratelimit *r, pa_log_level_t t) {
+bool pa_ratelimit_test(pa_ratelimit *r, pa_log_level_t t) {
     pa_usec_t now;
     pa_mutex *m;
 
     now = pa_rtclock_now();
 
-    m = pa_static_mutex_get(&mutex, FALSE, FALSE);
+    m = pa_static_mutex_get(&mutex, false, false);
     pa_mutex_lock(m);
 
     pa_assert(r);
@@ -67,10 +65,10 @@ pa_bool_t pa_ratelimit_test(pa_ratelimit *r, pa_log_level_t t) {
 
     r->n_missed++;
     pa_mutex_unlock(m);
-    return FALSE;
+    return false;
 
 good:
     r->n_printed++;
     pa_mutex_unlock(m);
-    return TRUE;
+    return true;
 }

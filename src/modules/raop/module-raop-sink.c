@@ -15,9 +15,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #ifdef HAVE_CONFIG_H
@@ -63,7 +61,7 @@
 PA_MODULE_AUTHOR("Colin Guthrie");
 PA_MODULE_DESCRIPTION("RAOP Sink");
 PA_MODULE_VERSION(PACKAGE_VERSION);
-PA_MODULE_LOAD_ONCE(FALSE);
+PA_MODULE_LOAD_ONCE(false);
 PA_MODULE_USAGE(
         "sink_name=<name for the sink> "
         "sink_properties=<properties for the sink> "
@@ -186,7 +184,7 @@ static int sink_process_msg(pa_msgobject *o, int code, void *data, int64_t offse
                 case PA_SINK_RUNNING:
 
                     if (u->sink->thread_info.state == PA_SINK_SUSPENDED) {
-                        pa_smoother_resume(u->smoother, pa_rtclock_now(), TRUE);
+                        pa_smoother_resume(u->smoother, pa_rtclock_now(), true);
 
                         /* The connection can be closed when idle, so check to
                            see if we need to reestablish it */
@@ -253,7 +251,7 @@ static int sink_process_msg(pa_msgobject *o, int code, void *data, int64_t offse
                 /* Question: is this valid here: or should we do some sort of:
                    return pa_sink_process_msg(PA_MSGOBJECT(u->core), PA_CORE_MESSAGE_UNLOAD_MODULE, u->module, 0, NULL);
                    ?? */
-                pa_module_unload_request(u->module, TRUE);
+                pa_module_unload_request(u->module, true);
             }
             return 0;
         }
@@ -266,7 +264,7 @@ static void sink_set_volume_cb(pa_sink *s) {
     struct userdata *u = s->userdata;
     pa_cvolume hw;
     pa_volume_t v;
-    char t[PA_CVOLUME_SNPRINT_MAX];
+    char t[PA_CVOLUME_SNPRINT_VERBOSE_MAX];
 
     pa_assert(u);
 
@@ -285,9 +283,10 @@ static void sink_set_volume_cb(pa_sink *s) {
     /* Perform any software manipulation of the volume needed */
     pa_sw_cvolume_divide(&s->soft_volume, &s->real_volume, &hw);
 
-    pa_log_debug("Requested volume: %s", pa_cvolume_snprint(t, sizeof(t), &s->real_volume));
-    pa_log_debug("Got hardware volume: %s", pa_cvolume_snprint(t, sizeof(t), &hw));
-    pa_log_debug("Calculated software volume: %s", pa_cvolume_snprint(t, sizeof(t), &s->soft_volume));
+    pa_log_debug("Requested volume: %s", pa_cvolume_snprint_verbose(t, sizeof(t), &s->real_volume, &s->channel_map, false));
+    pa_log_debug("Got hardware volume: %s", pa_cvolume_snprint_verbose(t, sizeof(t), &hw, &s->channel_map, false));
+    pa_log_debug("Calculated software volume: %s",
+                 pa_cvolume_snprint_verbose(t, sizeof(t), &s->soft_volume, &s->channel_map, true));
 
     /* Any necessary software volume manipulation is done so set
        our hw volume (or v as a single value) on the device */
@@ -465,7 +464,7 @@ static void thread_func(void *userdata) {
             pollfd->events = POLLOUT; /*PA_SINK_IS_OPENED(u->sink->thread_info.state)  ? POLLOUT : 0;*/
         }
 
-        if ((ret = pa_rtpoll_run(u->rtpoll, TRUE)) < 0)
+        if ((ret = pa_rtpoll_run(u->rtpoll)) < 0)
             goto fail;
 
         if (ret == 0)
@@ -517,15 +516,17 @@ int pa__init(pa_module*m) {
         goto fail;
     }
 
-    ss = m->core->default_sample_spec;
+    ss.format = PA_SAMPLE_S16NE;
+    ss.channels = 2;
+    ss.rate = m->core->default_sample_spec.rate;
     if (pa_modargs_get_sample_spec(ma, &ss) < 0) {
         pa_log("invalid sample format specification");
         goto fail;
     }
 
-    if ((/*ss.format != PA_SAMPLE_U8 &&*/ ss.format != PA_SAMPLE_S16NE) ||
+    if ((ss.format != PA_SAMPLE_S16NE) ||
         (ss.channels > 2)) {
-        pa_log("sample type support is limited to mono/stereo and U8 or S16NE sample data");
+        pa_log("sample type support is limited to mono/stereo and S16NE sample data");
         goto fail;
     }
 
@@ -537,11 +538,11 @@ int pa__init(pa_module*m) {
     u->smoother = pa_smoother_new(
             PA_USEC_PER_SEC,
             PA_USEC_PER_SEC*2,
-            TRUE,
-            TRUE,
+            true,
+            true,
             10,
             0,
-            FALSE);
+            false);
     pa_memchunk_reset(&u->raw_memchunk);
     pa_memchunk_reset(&u->encoded_memchunk);
     u->offset = 0;

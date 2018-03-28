@@ -18,9 +18,7 @@
   Lesser General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public
-  License along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  License along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #ifndef PACKAGE
@@ -48,24 +46,27 @@ channel specify -1 for the other direction. */
 pa_iochannel* pa_iochannel_new(pa_mainloop_api*m, int ifd, int ofd);
 void pa_iochannel_free(pa_iochannel*io);
 
+/* Returns: length written on success, 0 if a retry is needed, negative value
+ * on error. */
 ssize_t pa_iochannel_write(pa_iochannel*io, const void*data, size_t l);
 ssize_t pa_iochannel_read(pa_iochannel*io, void*data, size_t l);
 
 #ifdef HAVE_CREDS
-pa_bool_t pa_iochannel_creds_supported(pa_iochannel *io);
+bool pa_iochannel_creds_supported(pa_iochannel *io);
 int pa_iochannel_creds_enable(pa_iochannel *io);
 
+ssize_t pa_iochannel_write_with_fds(pa_iochannel*io, const void*data, size_t l, int nfd, const int *fds);
 ssize_t pa_iochannel_write_with_creds(pa_iochannel*io, const void*data, size_t l, const pa_creds *ucred);
-ssize_t pa_iochannel_read_with_creds(pa_iochannel*io, void*data, size_t l, pa_creds *ucred, pa_bool_t *creds_valid);
+ssize_t pa_iochannel_read_with_ancil_data(pa_iochannel*io, void*data, size_t l, pa_cmsg_ancil_data *ancil_data);
 #endif
 
-pa_bool_t pa_iochannel_is_readable(pa_iochannel*io);
-pa_bool_t pa_iochannel_is_writable(pa_iochannel*io);
-pa_bool_t pa_iochannel_is_hungup(pa_iochannel*io);
+bool pa_iochannel_is_readable(pa_iochannel*io);
+bool pa_iochannel_is_writable(pa_iochannel*io);
+bool pa_iochannel_is_hungup(pa_iochannel*io);
 
 /* Don't close the file descriptors when the io channel is freed. By
  * default the file descriptors are closed. */
-void pa_iochannel_set_noclose(pa_iochannel*io, pa_bool_t b);
+void pa_iochannel_set_noclose(pa_iochannel*io, bool b);
 
 /* Set the callback function that is called whenever data becomes available for read or write */
 typedef void (*pa_iochannel_cb_t)(pa_iochannel*io, void *userdata);
@@ -78,7 +79,7 @@ void pa_iochannel_socket_peer_to_string(pa_iochannel*io, char*s, size_t l);
 int pa_iochannel_socket_set_rcvbuf(pa_iochannel*io, size_t l);
 int pa_iochannel_socket_set_sndbuf(pa_iochannel*io, size_t l);
 
-pa_bool_t pa_iochannel_socket_is_local(pa_iochannel *io);
+bool pa_iochannel_socket_is_local(pa_iochannel *io);
 
 pa_mainloop_api* pa_iochannel_get_mainloop_api(pa_iochannel *io);
 

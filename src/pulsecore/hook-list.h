@@ -17,9 +17,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public
-  License along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  License along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #include <pulsecore/llist.h>
@@ -45,7 +43,7 @@ typedef pa_hook_result_t (*pa_hook_cb_t)(
         void *slot_data);
 
 struct pa_hook_slot {
-    pa_bool_t dead;
+    bool dead;
     pa_hook *hook;
     pa_hook_priority_t priority;
     pa_hook_cb_t callback;
@@ -68,6 +66,6 @@ void pa_hook_slot_free(pa_hook_slot *slot);
 
 pa_hook_result_t pa_hook_fire(pa_hook *hook, void *data);
 
-pa_bool_t pa_hook_is_firing(pa_hook *hook);
+bool pa_hook_is_firing(pa_hook *hook);
 
 #endif

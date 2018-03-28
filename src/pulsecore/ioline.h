@@ -17,9 +17,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #include <pulse/gccmacro.h>
@@ -55,8 +53,8 @@ void pa_ioline_set_drain_callback(pa_ioline*io, pa_ioline_drain_cb_t callback, v
 /* Make sure to close the ioline object as soon as the send buffer is emptied */
 void pa_ioline_defer_close(pa_ioline *io);
 
-/* Returns TRUE when everything was written */
-pa_bool_t pa_ioline_is_drained(pa_ioline *io);
+/* Returns true when everything was written */
+bool pa_ioline_is_drained(pa_ioline *io);
 
 /* Detaches from the iochannel and returns it. Data that has already
  * been read will not be available in the detached iochannel */

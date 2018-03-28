@@ -17,9 +17,7 @@
   Lesser General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public
-  License along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  License along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #include <sys/types.h>
@@ -41,7 +39,7 @@
  * 3) It allows arbitrary functions to be run before entering the
  * actual poll() and after it.
  *
- * Only a single interval timer is supported..*/
+ * Only a single interval timer is supported. */
 
 typedef struct pa_rtpoll pa_rtpoll;
 typedef struct pa_rtpoll_item pa_rtpoll_item;
@@ -57,19 +55,18 @@ pa_rtpoll *pa_rtpoll_new(void);
 void pa_rtpoll_free(pa_rtpoll *p);
 
 /* Sleep on the rtpoll until the time event, or any of the fd events
- * is triggered. If "wait" is 0 we don't sleep but only update the
- * struct pollfd. Returns negative on error, positive if the loop
+ * is triggered. Returns negative on error, positive if the loop
  * should continue to run, 0 when the loop should be terminated
  * cleanly. */
-int pa_rtpoll_run(pa_rtpoll *f, pa_bool_t wait);
+int pa_rtpoll_run(pa_rtpoll *f);
 
 void pa_rtpoll_set_timer_absolute(pa_rtpoll *p, pa_usec_t usec);
 void pa_rtpoll_set_timer_relative(pa_rtpoll *p, pa_usec_t usec);
 void pa_rtpoll_set_timer_disabled(pa_rtpoll *p);
 
-/* Return TRUE when the elapsed timer was the reason for
+/* Return true when the elapsed timer was the reason for
  * the last pa_rtpoll_run() invocation to finish */
-pa_bool_t pa_rtpoll_timer_elapsed(pa_rtpoll *p);
+bool pa_rtpoll_timer_elapsed(pa_rtpoll *p);
 
 /* A new fd wakeup item for pa_rtpoll */
 pa_rtpoll_item *pa_rtpoll_item_new(pa_rtpoll *p, pa_rtpoll_priority_t prio, unsigned n_fds);

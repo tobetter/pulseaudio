@@ -14,9 +14,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #ifdef HAVE_CONFIG_H
@@ -105,6 +103,13 @@ void pa_thread_free(pa_thread *t) {
     assert(t);
 
     pa_thread_join(t);
+    CloseHandle(t->thread);
+    pa_xfree(t);
+}
+
+void pa_thread_free_nojoin(pa_thread *t) {
+    pa_assert(t);
+
     CloseHandle(t->thread);
     pa_xfree(t);
 }

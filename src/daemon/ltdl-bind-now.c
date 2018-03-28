@@ -15,9 +15,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #ifdef HAVE_CONFIG_H
@@ -86,7 +84,7 @@ static int bind_now_close(lt_user_data d, lt_module m) {
 
     pa_assert(m);
 
-    if (dlclose(m) != 0){
+    if (dlclose(m) != 0) {
         lt_dlseterror(LT_ERROR_CANNOT_CLOSE);
         return 1;
     }

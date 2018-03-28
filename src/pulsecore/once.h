@@ -17,9 +17,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public
-  License along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  License along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #include <pulsecore/atomic.h>
@@ -37,7 +35,7 @@ typedef struct pa_once {
     }
 
 /* Not to be called directly, use the macros defined below instead */
-pa_bool_t pa_once_begin(pa_once *o);
+bool pa_once_begin(pa_once *o);
 void pa_once_end(pa_once *o);
 
 #define PA_ONCE_BEGIN                                                   \

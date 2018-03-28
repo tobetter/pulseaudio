@@ -14,9 +14,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #ifdef HAVE_CONFIG_H
@@ -46,7 +44,7 @@
 PA_MODULE_AUTHOR("Lennart Poettering");
 PA_MODULE_DESCRIPTION("Sine wave generator source");
 PA_MODULE_VERSION(PACKAGE_VERSION);
-PA_MODULE_LOAD_ONCE(FALSE);
+PA_MODULE_LOAD_ONCE(false);
 PA_MODULE_USAGE(
         "source_name=<name for the source> "
         "source_properties=<properties for the source> "
@@ -178,7 +176,7 @@ static void thread_func(void *userdata) {
             pa_rtpoll_set_timer_disabled(u->rtpoll);
 
         /* Hmm, nothing to do. Let's sleep */
-        if ((ret = pa_rtpoll_run(u->rtpoll, TRUE)) < 0)
+        if ((ret = pa_rtpoll_run(u->rtpoll)) < 0)
             goto fail;
 
         if (ret == 0)
@@ -213,7 +211,7 @@ int pa__init(pa_module*m) {
     ss.channels = 1;
     ss.rate = 44100;
 
-    if (pa_modargs_get_value_u32(ma, "rate", &ss.rate) < 0 || ss.rate <= 1) {
+    if (pa_modargs_get_sample_rate(ma, &ss.rate) < 0) {
         pa_log("Invalid rate specification");
         goto fail;
     }

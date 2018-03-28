@@ -14,9 +14,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #ifdef HAVE_CONFIG_H
@@ -69,7 +67,6 @@
 #define VOLUME_MAX 0
 
 #define RAOP_PORT 5000
-
 
 struct pa_raop_client {
     pa_core *core;
@@ -222,7 +219,7 @@ static void on_connection(pa_socket_client *sc, pa_iochannel *io, void *userdata
 
     c->fd = pa_iochannel_get_send_fd(io);
 
-    pa_iochannel_set_noclose(io, TRUE);
+    pa_iochannel_set_noclose(io, true);
     pa_iochannel_free(io);
 
     pa_make_tcp_socket_low_delay(c->fd);
@@ -324,7 +321,7 @@ static void rtsp_cb(pa_rtsp_client *rtsp, pa_rtsp_state state, pa_headerlist* he
             uint32_t port = pa_rtsp_serverport(c->rtsp);
             pa_log_debug("RAOP: RECORDED");
 
-            if (!(c->sc = pa_socket_client_new_string(c->core->mainloop, TRUE, c->host, port))) {
+            if (!(c->sc = pa_socket_client_new_string(c->core->mainloop, true, c->host, port))) {
                 pa_log("failed to connect to server '%s:%d'", c->host, port);
                 return;
             }
@@ -368,18 +365,24 @@ static void rtsp_cb(pa_rtsp_client *rtsp, pa_rtsp_state state, pa_headerlist* he
 
 pa_raop_client* pa_raop_client_new(pa_core *core, const char* host) {
     pa_parsed_address a;
-    pa_raop_client* c = pa_xnew0(pa_raop_client, 1);
+    pa_raop_client* c;
 
     pa_assert(core);
     pa_assert(host);
 
-    if (pa_parse_address(host, &a) < 0 || a.type == PA_PARSED_ADDRESS_UNIX)
+    if (pa_parse_address(host, &a) < 0)
         return NULL;
 
+    if (a.type == PA_PARSED_ADDRESS_UNIX) {
+        pa_xfree(a.path_or_host);
+        return NULL;
+    }
+
+    c = pa_xnew0(pa_raop_client, 1);
     c->core = core;
     c->fd = -1;
 
-    c->host = pa_xstrdup(a.path_or_host);
+    c->host = a.path_or_host;
     if (a.port)
         c->port = a.port;
     else
@@ -392,7 +395,6 @@ pa_raop_client* pa_raop_client_new(pa_core *core, const char* host) {
     return c;
 }
 
-
 void pa_raop_client_free(pa_raop_client* c) {
     pa_assert(c);
 
@@ -403,7 +405,6 @@ void pa_raop_client_free(pa_raop_client* c) {
     pa_xfree(c->host);
     pa_xfree(c);
 }
-
 
 int pa_raop_connect(pa_raop_client* c) {
     char *sci;
@@ -438,14 +439,12 @@ int pa_raop_connect(pa_raop_client* c) {
     return pa_rtsp_connect(c->rtsp);
 }
 
-
 int pa_raop_flush(pa_raop_client* c) {
     pa_assert(c);
 
     pa_rtsp_flush(c->rtsp, c->seq, c->rtptime);
     return 0;
 }
-
 
 int pa_raop_client_set_volume(pa_raop_client* c, pa_volume_t volume) {
     int rv;
@@ -467,7 +466,6 @@ int pa_raop_client_set_volume(pa_raop_client* c, pa_volume_t volume) {
     pa_xfree(param);
     return rv;
 }
-
 
 int pa_raop_client_encode_sample(pa_raop_client* c, pa_memchunk* raw, pa_memchunk* encoded) {
     uint16_t len;
@@ -549,7 +547,6 @@ int pa_raop_client_encode_sample(pa_raop_client* c, pa_memchunk* raw, pa_memchun
 
     return 0;
 }
-
 
 void pa_raop_client_set_callback(pa_raop_client* c, pa_raop_client_cb_t callback, void *userdata) {
     pa_assert(c);

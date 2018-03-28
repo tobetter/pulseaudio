@@ -17,9 +17,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #include <dbus/dbus.h>
@@ -109,7 +107,6 @@ typedef struct pa_dbus_interface_info {
     const pa_dbus_signal_info *signals; /* NULL, if the interface has no signals. */
     unsigned n_signals;
 } pa_dbus_interface_info;
-
 
 /* The following functions may only be called from the main thread. */
 

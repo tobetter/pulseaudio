@@ -17,16 +17,14 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #include <pulsecore/cpu.h>
 
 /* Orc-optimised bits */
 
-pa_bool_t pa_cpu_init_orc(pa_cpu_info cpu_info);
+bool pa_cpu_init_orc(pa_cpu_info cpu_info);
 
 void pa_volume_func_init_orc(void);
 

@@ -18,9 +18,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #include <pulsecore/core.h>
@@ -36,14 +34,14 @@ typedef struct pa_scache_entry {
     char *name;
 
     pa_cvolume volume;
-    pa_bool_t volume_is_set;
+    bool volume_is_set;
     pa_sample_spec sample_spec;
     pa_channel_map channel_map;
     pa_memchunk memchunk;
 
     char *filename;
 
-    pa_bool_t lazy;
+    bool lazy;
     time_t last_used_time;
 
     pa_proplist *proplist;

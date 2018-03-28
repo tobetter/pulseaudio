@@ -17,9 +17,7 @@
   Lesser General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public
-  License along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  License along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #include <inttypes.h>
@@ -41,6 +39,6 @@ typedef struct pa_parsed_address {
 
 int pa_parse_address(const char *a, pa_parsed_address *ret_p);
 
-pa_bool_t pa_is_ip_address(const char *a);
+bool pa_is_ip_address(const char *a);
 
 #endif

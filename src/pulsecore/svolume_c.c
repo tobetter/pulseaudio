@@ -15,9 +15,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #ifdef HAVE_CONFIG_H
@@ -117,7 +115,7 @@ static void pa_volume_float32ne_c(float *samples, const float *volumes, unsigned
     }
 }
 
-static void pa_volume_float32re_c(float *samples, float *volumes, unsigned channels, unsigned length) {
+static void pa_volume_float32re_c(float *samples, const float *volumes, unsigned channels, unsigned length) {
     unsigned channel;
 
     length /= sizeof(float);
@@ -125,9 +123,9 @@ static void pa_volume_float32re_c(float *samples, float *volumes, unsigned chann
     for (channel = 0; length; length--) {
         float t;
 
-        t = PA_FLOAT32_SWAP(*samples);
+        t = PA_READ_FLOAT32RE(samples);
         t *= volumes[channel];
-        *samples++ = PA_FLOAT32_SWAP(t);
+        PA_WRITE_FLOAT32RE(samples++, t);
 
         if (PA_UNLIKELY(++channel >= channels))
             channel = 0;
@@ -261,15 +259,13 @@ static pa_do_volume_func_t do_volume_table[] = {
 };
 
 pa_do_volume_func_t pa_get_volume_func(pa_sample_format_t f) {
-    pa_assert(f >= 0);
-    pa_assert(f < PA_SAMPLE_MAX);
+    pa_assert(pa_sample_format_valid(f));
 
     return do_volume_table[f];
 }
 
 void pa_set_volume_func(pa_sample_format_t f, pa_do_volume_func_t func) {
-    pa_assert(f >= 0);
-    pa_assert(f < PA_SAMPLE_MAX);
+    pa_assert(pa_sample_format_valid(f));
 
     do_volume_table[f] = func;
 }

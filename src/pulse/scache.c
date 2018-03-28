@@ -14,9 +14,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #ifdef HAVE_CONFIG_H
@@ -114,7 +112,7 @@ static void play_sample_ack_callback(pa_pdispatch *pd, uint32_t command, uint32_
         goto finish;
 
     if (command != PA_COMMAND_REPLY) {
-        if (pa_context_handle_error(o->context, command, t, FALSE) < 0)
+        if (pa_context_handle_error(o->context, command, t, false) < 0)
             goto finish;
 
         success = 0;
@@ -147,7 +145,7 @@ static void play_sample_with_proplist_ack_callback(pa_pdispatch *pd, uint32_t co
         goto finish;
 
     if (command != PA_COMMAND_REPLY) {
-        if (pa_context_handle_error(o->context, command, t, FALSE) < 0)
+        if (pa_context_handle_error(o->context, command, t, false) < 0)
             goto finish;
 
         idx = PA_INVALID_INDEX;
@@ -166,7 +164,6 @@ finish:
     pa_operation_done(o);
     pa_operation_unref(o);
 }
-
 
 pa_operation *pa_context_play_sample(pa_context *c, const char *name, const char *dev, pa_volume_t volume, pa_context_success_cb_t cb, void *userdata) {
     pa_operation *o;

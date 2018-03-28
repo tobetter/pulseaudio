@@ -14,9 +14,7 @@
     General Public License for more details.
 
     You should have received a copy of the GNU Lesser General Public License
-    along with PulseAudio; if not, write to the Free Software
-    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-    USA.
+    along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #ifdef HAVE_CONFIG_H
@@ -44,7 +42,7 @@
 PA_MODULE_AUTHOR("Lennart Poettering");
 PA_MODULE_DESCRIPTION("Create a client for each ConsoleKit session of this user");
 PA_MODULE_VERSION(PACKAGE_VERSION);
-PA_MODULE_LOAD_ONCE(TRUE);
+PA_MODULE_LOAD_ONCE(true);
 
 static const char* const valid_modargs[] = {
     NULL
@@ -60,7 +58,7 @@ struct userdata {
     pa_core *core;
     pa_dbus_connection *connection;
     pa_hashmap *sessions;
-    pa_bool_t filter_added;
+    bool filter_added;
 };
 
 static void add_session(struct userdata *u, const char *id) {
@@ -144,12 +142,10 @@ static void free_session(struct session *session) {
 }
 
 static void remove_session(struct userdata *u, const char *id) {
-    struct session *session;
+    pa_assert(u);
+    pa_assert(id);
 
-    if (!(session = pa_hashmap_remove(u->sessions, id)))
-        return;
-
-    free_session(session);
+    pa_hashmap_remove_and_free(u->sessions, id);
 }
 
 static DBusHandlerResult filter_cb(DBusConnection *bus, DBusMessage *message, void *userdata) {
@@ -162,11 +158,6 @@ static DBusHandlerResult filter_cb(DBusConnection *bus, DBusMessage *message, vo
     pa_assert(u);
 
     dbus_error_init(&error);
-
-    pa_log_debug("dbus: interface=%s, path=%s, member=%s\n",
-                 dbus_message_get_interface(message),
-                 dbus_message_get_path(message),
-                 dbus_message_get_member(message));
 
     if (dbus_message_is_signal(message, "org.freedesktop.ConsoleKit.Seat", "SessionAdded")) {
 
@@ -247,7 +238,7 @@ static int get_session_list(struct userdata *u) {
         if ((at = dbus_message_iter_get_arg_type(&sub)) == DBUS_TYPE_INVALID)
             break;
 
-        assert(at == DBUS_TYPE_OBJECT_PATH);
+        pa_assert(at == DBUS_TYPE_OBJECT_PATH);
         dbus_message_iter_get_basic(&sub, &id);
 
         add_session(u, id);
@@ -303,14 +294,14 @@ int pa__init(pa_module*m) {
     u->core = m->core;
     u->module = m;
     u->connection = connection;
-    u->sessions = pa_hashmap_new(pa_idxset_string_hash_func, pa_idxset_string_compare_func);
+    u->sessions = pa_hashmap_new_full(pa_idxset_string_hash_func, pa_idxset_string_compare_func, NULL, (pa_free_cb_t) free_session);
 
     if (!dbus_connection_add_filter(pa_dbus_connection_get(connection), filter_cb, u, NULL)) {
         pa_log_error("Failed to add filter function");
         goto fail;
     }
 
-    u->filter_added = TRUE;
+    u->filter_added = true;
 
     if (pa_dbus_add_matches(
                 pa_dbus_connection_get(connection), &error,
@@ -337,7 +328,6 @@ fail:
     return -1;
 }
 
-
 void pa__done(pa_module *m) {
     struct userdata *u;
 
@@ -347,7 +337,7 @@ void pa__done(pa_module *m) {
         return;
 
     if (u->sessions)
-        pa_hashmap_free(u->sessions, (pa_free_cb_t) free_session);
+        pa_hashmap_free(u->sessions);
 
     if (u->connection) {
         pa_dbus_remove_matches(

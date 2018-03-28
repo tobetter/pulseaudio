@@ -15,9 +15,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #ifdef HAVE_CONFIG_H
@@ -28,7 +26,7 @@
 
 const char pa_object_type_id[] = "pa_object";
 
-pa_object *pa_object_new_internal(size_t size, const char *type_id, pa_bool_t (*check_type)(const char *type_id)) {
+pa_object *pa_object_new_internal(size_t size, const char *type_id, bool (*check_type)(const char *type_id)) {
     pa_object *o;
 
     pa_assert(size > sizeof(pa_object));
@@ -40,7 +38,7 @@ pa_object *pa_object_new_internal(size_t size, const char *type_id, pa_bool_t (*
     pa_assert(check_type(type_id));
     pa_assert(check_type(pa_object_type_id));
 
-    o = pa_xmalloc(size);
+    o = pa_xmalloc0(size);
     PA_REFCNT_INIT(o);
     o->type_id = type_id;
     o->free = pa_object_free;
@@ -65,7 +63,7 @@ void pa_object_unref(pa_object *o) {
     }
 }
 
-pa_bool_t pa_object_check_type(const char *type_id) {
+bool pa_object_check_type(const char *type_id) {
     pa_assert(type_id);
 
     return type_id == pa_object_type_id;

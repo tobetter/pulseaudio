@@ -17,9 +17,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #include <dbus/dbus.h>
@@ -33,10 +31,10 @@
 /* A wrap connection is not shared or refcounted, it is available in client side */
 typedef struct pa_dbus_wrap_connection pa_dbus_wrap_connection;
 
-pa_dbus_wrap_connection* pa_dbus_wrap_connection_new(pa_mainloop_api *mainloop, pa_bool_t use_rtclock, DBusBusType type, DBusError *error);
+pa_dbus_wrap_connection* pa_dbus_wrap_connection_new(pa_mainloop_api *mainloop, bool use_rtclock, DBusBusType type, DBusError *error);
 pa_dbus_wrap_connection* pa_dbus_wrap_connection_new_from_existing(
         pa_mainloop_api *mainloop,
-        pa_bool_t use_rtclock,
+        bool use_rtclock,
         DBusConnection *conn);
 void pa_dbus_wrap_connection_free(pa_dbus_wrap_connection* conn);
 

@@ -18,9 +18,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #include <pulsecore/core.h>
@@ -37,7 +35,7 @@ typedef struct pa_esound_options {
 
     pa_module *module;
 
-    pa_bool_t auth_anonymous;
+    bool auth_anonymous;
     pa_ip_acl *auth_ip_acl;
     pa_auth_cookie *auth_cookie;
 

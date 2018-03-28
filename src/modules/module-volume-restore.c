@@ -14,9 +14,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #ifdef HAVE_CONFIG_H
@@ -35,7 +33,7 @@
 PA_MODULE_AUTHOR("Lennart Poettering");
 PA_MODULE_DESCRIPTION("Compatibility module");
 PA_MODULE_VERSION(PACKAGE_VERSION);
-PA_MODULE_LOAD_ONCE(TRUE);
+PA_MODULE_LOAD_ONCE(true);
 PA_MODULE_DEPRECATED("Please use module-stream-restore instead of module-volume-restore!");
 
 static const char* const valid_modargs[] = {
@@ -47,7 +45,7 @@ static const char* const valid_modargs[] = {
 
 int pa__init(pa_module*m) {
     pa_modargs *ma = NULL;
-    pa_bool_t restore_device = TRUE, restore_volume = TRUE;
+    bool restore_device = true, restore_volume = true;
     pa_module *n;
     char *t;
 
@@ -71,7 +69,7 @@ int pa__init(pa_module*m) {
     pa_xfree(t);
 
     if (n)
-        pa_module_unload_request(m, TRUE);
+        pa_module_unload_request(m, true);
 
     pa_modargs_free(ma);
 

@@ -15,9 +15,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #ifdef HAVE_CONFIG_H
@@ -38,7 +36,7 @@
 PA_MODULE_AUTHOR("Lennart Poettering");
 PA_MODULE_DESCRIPTION("ESOUND compatibility module: -spawnpid emulation");
 PA_MODULE_VERSION(PACKAGE_VERSION);
-PA_MODULE_LOAD_ONCE(TRUE);
+PA_MODULE_LOAD_ONCE(true);
 PA_MODULE_USAGE("pid=<process id>");
 
 static const char* const valid_modargs[] = {
@@ -63,7 +61,7 @@ int pa__init(pa_module*m) {
     if (kill((pid_t) pid, SIGUSR1) < 0)
         pa_log_warn("kill(%u) failed: %s", pid, pa_cstrerror(errno));
 
-    pa_module_unload_request(m, TRUE);
+    pa_module_unload_request(m, true);
 
     ret = 0;
 

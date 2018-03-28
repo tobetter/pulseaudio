@@ -17,9 +17,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public
-  License along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  License along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #include <pulse/sample.h>
@@ -50,8 +48,8 @@ typedef struct pa_ratelimit {
         r->n_printed = 0;                               \
         r->n_missed = 0;                                \
         r->begin = 0;                                   \
-    } while (FALSE);
+    } while (false);
 
-pa_bool_t pa_ratelimit_test(pa_ratelimit *r, pa_log_level_t t);
+bool pa_ratelimit_test(pa_ratelimit *r, pa_log_level_t t);
 
 #endif

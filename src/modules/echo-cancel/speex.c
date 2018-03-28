@@ -16,9 +16,7 @@
     General Public License for more details.
 
     You should have received a copy of the GNU Lesser General Public License
-    along with PulseAudio; if not, write to the Free Software
-    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-    USA.
+    along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #ifdef HAVE_CONFIG_H
@@ -33,9 +31,9 @@
 #define DEFAULT_FRAME_SIZE_MS 20
 /* should be between 100-500 ms */
 #define DEFAULT_FILTER_SIZE_MS 200
-#define DEFAULT_AGC_ENABLED TRUE
-#define DEFAULT_DENOISE_ENABLED TRUE
-#define DEFAULT_ECHO_SUPPRESS_ENABLED TRUE
+#define DEFAULT_AGC_ENABLED true
+#define DEFAULT_DENOISE_ENABLED true
+#define DEFAULT_ECHO_SUPPRESS_ENABLED true
 #define DEFAULT_ECHO_SUPPRESS_ATTENUATION 0
 
 static const char* const valid_modargs[] = {
@@ -51,8 +49,7 @@ static const char* const valid_modargs[] = {
 
 static void pa_speex_ec_fixate_spec(pa_sample_spec *rec_ss, pa_channel_map *rec_map,
                                     pa_sample_spec *play_ss, pa_channel_map *play_map,
-                                    pa_sample_spec *out_ss, pa_channel_map *out_map)
-{
+                                    pa_sample_spec *out_ss, pa_channel_map *out_map) {
     out_ss->format = PA_SAMPLE_S16NE;
 
     *play_ss = *out_ss;
@@ -61,10 +58,10 @@ static void pa_speex_ec_fixate_spec(pa_sample_spec *rec_ss, pa_channel_map *rec_
     *rec_map = *out_map;
 }
 
-static pa_bool_t pa_speex_ec_preprocessor_init(pa_echo_canceller *ec, pa_sample_spec *out_ss, uint32_t nframes, pa_modargs *ma) {
-    pa_bool_t agc;
-    pa_bool_t denoise;
-    pa_bool_t echo_suppress;
+static bool pa_speex_ec_preprocessor_init(pa_echo_canceller *ec, pa_sample_spec *out_ss, uint32_t nframes, pa_modargs *ma) {
+    bool agc;
+    bool denoise;
+    bool echo_suppress;
     int32_t echo_suppress_attenuation;
     int32_t echo_suppress_attenuation_active;
 
@@ -141,19 +138,17 @@ static pa_bool_t pa_speex_ec_preprocessor_init(pa_echo_canceller *ec, pa_sample_
     } else
         pa_log_info("All preprocessing options are disabled");
 
-    return TRUE;
+    return true;
 
 fail:
-    return FALSE;
+    return false;
 }
 
-
-pa_bool_t pa_speex_ec_init(pa_core *c, pa_echo_canceller *ec,
-                           pa_sample_spec *rec_ss, pa_channel_map *rec_map,
-                           pa_sample_spec *play_ss, pa_channel_map *play_map,
-                           pa_sample_spec *out_ss, pa_channel_map *out_map,
-                           uint32_t *nframes, const char *args)
-{
+bool pa_speex_ec_init(pa_core *c, pa_echo_canceller *ec,
+                      pa_sample_spec *rec_ss, pa_channel_map *rec_map,
+                      pa_sample_spec *play_ss, pa_channel_map *play_map,
+                      pa_sample_spec *out_ss, pa_channel_map *out_map,
+                      uint32_t *nframes, const char *args) {
     int rate;
     uint32_t frame_size_ms, filter_size_ms;
     pa_modargs *ma;
@@ -192,7 +187,7 @@ pa_bool_t pa_speex_ec_init(pa_core *c, pa_echo_canceller *ec,
         goto fail;
 
     pa_modargs_free(ma);
-    return TRUE;
+    return true;
 
 fail:
     if (ma)
@@ -205,7 +200,7 @@ fail:
         speex_echo_state_destroy(ec->params.priv.speex.state);
         ec->params.priv.speex.state = NULL;
     }
-    return FALSE;
+    return false;
 }
 
 void pa_speex_ec_run(pa_echo_canceller *ec, const uint8_t *rec, const uint8_t *play, uint8_t *out) {

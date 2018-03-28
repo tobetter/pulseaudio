@@ -14,9 +14,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #ifdef HAVE_CONFIG_H
@@ -38,7 +36,7 @@ static void thread_func(void*k) {
 
     pa_log("%i, Trying to acquire lock.", PA_PTR_TO_INT(k));
 
-    fail_unless(pa_autospawn_lock_acquire(TRUE) > 0);
+    fail_unless(pa_autospawn_lock_acquire(true) > 0);
 
     pa_log("%i, Got the lock!, Sleeping for 5s", PA_PTR_TO_INT(k));
 
@@ -48,7 +46,7 @@ static void thread_func(void*k) {
 
     pa_autospawn_lock_release();
 
-    pa_autospawn_lock_done(FALSE);
+    pa_autospawn_lock_done(false);
 }
 
 static void thread_func2(void *k) {
@@ -62,7 +60,7 @@ static void thread_func2(void *k) {
         struct pollfd pollfd;
         int j;
 
-        if ((j = pa_autospawn_lock_acquire(FALSE)) > 0)
+        if ((j = pa_autospawn_lock_acquire(false)) > 0)
             break;
 
         fail_unless(j == 0);
@@ -84,7 +82,7 @@ static void thread_func2(void *k) {
 
     pa_autospawn_lock_release();
 
-    pa_autospawn_lock_done(FALSE);
+    pa_autospawn_lock_done(false);
 }
 
 START_TEST (lockautospawn_test) {

@@ -14,9 +14,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #ifdef HAVE_CONFIG_H
@@ -42,7 +40,7 @@
 PA_MODULE_AUTHOR("Lennart Poettering");
 PA_MODULE_DESCRIPTION("Command line interface");
 PA_MODULE_VERSION(PACKAGE_VERSION);
-PA_MODULE_LOAD_ONCE(TRUE);
+PA_MODULE_LOAD_ONCE(true);
 PA_MODULE_USAGE("exit_on_eof=<exit daemon after EOF?>");
 
 static const char* const valid_modargs[] = {
@@ -56,7 +54,7 @@ static void eof_and_unload_cb(pa_cli*c, void *userdata) {
     pa_assert(c);
     pa_assert(m);
 
-    pa_module_unload_request(m, TRUE);
+    pa_module_unload_request(m, true);
 }
 
 static void eof_and_exit_cb(pa_cli*c, void *userdata) {
@@ -65,13 +63,13 @@ static void eof_and_exit_cb(pa_cli*c, void *userdata) {
     pa_assert(c);
     pa_assert(m);
 
-    pa_core_exit(m->core, FALSE, 0);
+    pa_core_exit(m->core, false, 0);
 }
 
 int pa__init(pa_module*m) {
     pa_iochannel *io;
     pa_modargs *ma;
-    pa_bool_t exit_on_eof = FALSE;
+    bool exit_on_eof = false;
 #ifndef OS_IS_WIN32
     int fd;
 #endif
@@ -115,7 +113,7 @@ int pa__init(pa_module*m) {
 #endif
     {
         io = pa_iochannel_new(m->core->mainloop, STDIN_FILENO, STDOUT_FILENO);
-        pa_iochannel_set_noclose(io, TRUE);
+        pa_iochannel_set_noclose(io, true);
         pa_log_debug("Failed to open /dev/tty, using stdin/stdout fds instead.");
     }
 

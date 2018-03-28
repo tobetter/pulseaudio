@@ -15,9 +15,7 @@
     Lesser General Public License for more details.
 
     You should have received a copy of the GNU Lesser General Public
-    License along with PulseAudio; if not, write to the Free Software
-    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-    USA.
+    License along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #ifdef HAVE_CONFIG_H
@@ -78,7 +76,7 @@ struct pa_socket_client {
     pa_socket_client_cb_t callback;
     void *userdata;
 
-    pa_bool_t local;
+    bool local;
 
 #ifdef HAVE_LIBASYNCNS
     asyncns_t *asyncns;
@@ -225,7 +223,6 @@ pa_socket_client* pa_socket_client_new_ipv4(pa_mainloop_api *m, uint32_t address
 
     return pa_socket_client_new_sockaddr(m, (struct sockaddr*) &sa, sizeof(sa));
 }
-
 
 pa_socket_client* pa_socket_client_new_unix(pa_mainloop_api *m, const char *filename) {
 #ifdef HAVE_SYS_UN_H
@@ -419,7 +416,7 @@ static void timeout_cb(pa_mainloop_api *m, pa_time_event *e, const struct timeva
     do_call(c);
 }
 
-static void start_timeout(pa_socket_client *c, pa_bool_t use_rtclock) {
+static void start_timeout(pa_socket_client *c, bool use_rtclock) {
     struct timeval tv;
 
     pa_assert(c);
@@ -428,7 +425,7 @@ static void start_timeout(pa_socket_client *c, pa_bool_t use_rtclock) {
     c->timeout_event = c->mainloop->time_new(c->mainloop, pa_timeval_rtstore(&tv, pa_rtclock_now() + CONNECT_TIMEOUT * PA_USEC_PER_SEC, use_rtclock), timeout_cb, c);
 }
 
-pa_socket_client* pa_socket_client_new_string(pa_mainloop_api *m, pa_bool_t use_rtclock, const char*name, uint16_t default_port) {
+pa_socket_client* pa_socket_client_new_string(pa_mainloop_api *m, bool use_rtclock, const char*name, uint16_t default_port) {
     pa_socket_client *c = NULL;
     pa_parsed_address a;
 
@@ -541,7 +538,7 @@ finish:
 /* Return non-zero when the target sockaddr is considered
    local. "local" means UNIX socket or TCP socket on localhost. Other
    local IP addresses are not considered local. */
-pa_bool_t pa_socket_client_is_local(pa_socket_client *c) {
+bool pa_socket_client_is_local(pa_socket_client *c) {
     pa_assert(c);
     pa_assert(PA_REFCNT_VALUE(c) >= 1);
 

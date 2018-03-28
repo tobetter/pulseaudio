@@ -18,9 +18,7 @@
   Lesser General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public
-  License along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  License along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #include <inttypes.h>
@@ -49,6 +47,7 @@ int pa_idxset_string_compare_func(const void *a, const void *b);
 
 typedef unsigned (*pa_hash_func_t)(const void *p);
 typedef int (*pa_compare_func_t)(const void *a, const void *b);
+typedef void *(*pa_copy_func_t)(const void *p);
 
 typedef struct pa_idxset pa_idxset;
 
@@ -102,11 +101,13 @@ void *pa_idxset_next(pa_idxset *s, uint32_t *idx);
 /* Return the current number of entries in the idxset */
 unsigned pa_idxset_size(pa_idxset*s);
 
-/* Return TRUE of the idxset is empty */
-pa_bool_t pa_idxset_isempty(pa_idxset *s);
+/* Return true of the idxset is empty */
+bool pa_idxset_isempty(pa_idxset *s);
 
-/* Duplicate the idxset. This will not copy the actual indexes */
-pa_idxset *pa_idxset_copy(pa_idxset *s);
+/* Duplicate the idxset. This will not copy the actual indexes. If copy_func is
+ * set, each entry is copied using the provided function, otherwise a shallow
+ * copy will be made. */
+pa_idxset *pa_idxset_copy(pa_idxset *s, pa_copy_func_t copy_func);
 
 /* A macro to ease iteration through all entries */
 #define PA_IDXSET_FOREACH(e, s, idx) \

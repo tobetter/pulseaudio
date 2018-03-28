@@ -12,9 +12,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #ifdef HAVE_CONFIG_H
@@ -110,7 +108,7 @@ START_TEST (memblockq_test) {
 
     pa_log_set_level(PA_LOG_DEBUG);
 
-    p = pa_mempool_new(FALSE, 0);
+    p = pa_mempool_new(false, 0);
 
     silence.memblock = pa_memblock_new_fixed(p, (char*) "__", 2, 1);
     fail_unless(silence.memblock != NULL);
@@ -157,45 +155,45 @@ START_TEST (memblockq_test) {
     ret = pa_memblockq_push(bq, &chunk4);
     fail_unless(ret == 0);
 
-    pa_memblockq_seek(bq, -6, 0, TRUE);
+    pa_memblockq_seek(bq, -6, 0, true);
     ret = pa_memblockq_push(bq, &chunk3);
     fail_unless(ret == 0);
 
-    pa_memblockq_seek(bq, -2, 0, TRUE);
+    pa_memblockq_seek(bq, -2, 0, true);
     ret = pa_memblockq_push(bq, &chunk1);
     fail_unless(ret == 0);
 
-    pa_memblockq_seek(bq, -10, 0, TRUE);
+    pa_memblockq_seek(bq, -10, 0, true);
     ret = pa_memblockq_push(bq, &chunk4);
     fail_unless(ret == 0);
 
-    pa_memblockq_seek(bq, 10, 0, TRUE);
+    pa_memblockq_seek(bq, 10, 0, true);
 
     ret = pa_memblockq_push(bq, &chunk1);
     fail_unless(ret == 0);
 
-    pa_memblockq_seek(bq, -6, 0, TRUE);
+    pa_memblockq_seek(bq, -6, 0, true);
     ret = pa_memblockq_push(bq, &chunk2);
     fail_unless(ret == 0);
 
     /* Test splitting */
-    pa_memblockq_seek(bq, -12, 0, TRUE);
+    pa_memblockq_seek(bq, -12, 0, true);
     ret = pa_memblockq_push(bq, &chunk1);
     fail_unless(ret == 0);
 
-    pa_memblockq_seek(bq, 20, 0, TRUE);
+    pa_memblockq_seek(bq, 20, 0, true);
 
     /* Test merging */
     ret = pa_memblockq_push(bq, &chunk3);
     fail_unless(ret == 0);
-    pa_memblockq_seek(bq, -2, 0, TRUE);
+    pa_memblockq_seek(bq, -2, 0, true);
 
     chunk3.index += 2;
     chunk3.length -= 2;
     ret = pa_memblockq_push(bq, &chunk3);
     fail_unless(ret == 0);
 
-    pa_memblockq_seek(bq, 30, PA_SEEK_RELATIVE, TRUE);
+    pa_memblockq_seek(bq, 30, PA_SEEK_RELATIVE, true);
 
     dump(bq, 0);
 

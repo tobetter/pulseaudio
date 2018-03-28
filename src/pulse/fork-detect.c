@@ -14,9 +14,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #ifdef HAVE_CONFIG_H
@@ -46,14 +44,14 @@ int pa_detect_fork(void) {
 
         /* First let's check whether the current pid matches the stored one */
         if (stored_pid == getpid())
-            return FALSE;
+            return false;
 
         /* Does it contain a different PID than ours? Then the process got forked. */
         if ((int) stored_pid != (int) -1)
-            return TRUE;
+            return true;
 
         /* Ok, it still contains no PID, then store it */
         if (pa_atomic_cmpxchg(&pid, (int) -1, (int) getpid()))
-            return FALSE;
+            return false;
     }
 }

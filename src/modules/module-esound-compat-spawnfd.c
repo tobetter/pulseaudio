@@ -14,9 +14,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #ifdef HAVE_CONFIG_H
@@ -36,7 +34,7 @@
 
 PA_MODULE_AUTHOR("Lennart Poettering");
 PA_MODULE_DESCRIPTION("ESOUND compatibility module: -spawnfd emulation");
-PA_MODULE_LOAD_ONCE(TRUE);
+PA_MODULE_LOAD_ONCE(true);
 PA_MODULE_VERSION(PACKAGE_VERSION);
 PA_MODULE_USAGE("fd=<file descriptor>");
 
@@ -66,7 +64,7 @@ int pa__init(pa_module*m) {
 
     pa_assert_se(pa_close(fd) == 0);
 
-    pa_module_unload_request(m, TRUE);
+    pa_module_unload_request(m, true);
 
     ret = 0;
 

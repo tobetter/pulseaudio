@@ -14,9 +14,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public
-  License along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  License along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #ifdef HAVE_CONFIG_H
@@ -61,7 +59,7 @@ static void allocate_aupdate(void) {
     } PA_ONCE_END;
 }
 
-pa_bool_t pa_memtrap_is_good(pa_memtrap *m) {
+bool pa_memtrap_is_good(pa_memtrap *m) {
     pa_assert(m);
 
     return !pa_atomic_load(&m->bad);
@@ -150,7 +148,7 @@ pa_memtrap* pa_memtrap_add(const void *start, size_t size) {
 
     allocate_aupdate();
 
-    mx = pa_static_mutex_get(&mutex, FALSE, TRUE);
+    mx = pa_static_mutex_get(&mutex, false, true);
     pa_mutex_lock(mx);
 
     j = pa_aupdate_write_begin(aupdate);
@@ -172,7 +170,7 @@ void pa_memtrap_remove(pa_memtrap *m) {
 
     allocate_aupdate();
 
-    mx = pa_static_mutex_get(&mutex, FALSE, TRUE);
+    mx = pa_static_mutex_get(&mutex, false, true);
     pa_mutex_lock(mx);
 
     j = pa_aupdate_write_begin(aupdate);
@@ -200,7 +198,7 @@ pa_memtrap *pa_memtrap_update(pa_memtrap *m, const void *start, size_t size) {
 
     allocate_aupdate();
 
-    mx = pa_static_mutex_get(&mutex, FALSE, TRUE);
+    mx = pa_static_mutex_get(&mutex, false, true);
     pa_mutex_lock(mx);
 
     j = pa_aupdate_write_begin(aupdate);
@@ -237,5 +235,8 @@ void pa_memtrap_install(void) {
     sa.sa_flags = SA_RESTART|SA_SIGINFO;
 
     pa_assert_se(sigaction(SIGBUS, &sa, NULL) == 0);
+#ifdef __FreeBSD_kernel__
+    pa_assert_se(sigaction(SIGSEGV, &sa, NULL) == 0);
+#endif
 #endif
 }

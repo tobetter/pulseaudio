@@ -17,9 +17,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #include <pulse/gccmacro.h>
@@ -37,6 +35,6 @@ void pa_strbuf_puts(pa_strbuf *sb, const char *t);
 void pa_strbuf_putsn(pa_strbuf *sb, const char *t, size_t m);
 void pa_strbuf_putc(pa_strbuf *sb, char c);
 
-pa_bool_t pa_strbuf_isempty(pa_strbuf *sb);
+bool pa_strbuf_isempty(pa_strbuf *sb);
 
 #endif

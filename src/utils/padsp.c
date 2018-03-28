@@ -15,9 +15,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #ifdef HAVE_CONFIG_H
@@ -1526,7 +1524,7 @@ int open(const char *filename, int flags, ...) {
     return real_open(filename, flags, mode);
 }
 
-static pa_bool_t is_audio_device_node(const char *path) {
+static bool is_audio_device_node(const char *path) {
     return
         pa_streq(path, "/dev/dsp") ||
         pa_streq(path, "/dev/adsp") ||

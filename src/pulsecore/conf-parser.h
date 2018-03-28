@@ -17,9 +17,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #include <stdio.h>
@@ -54,7 +52,7 @@ struct pa_config_parser_state {
     const pa_config_item *item_table;
     char buf[4096];
     pa_proplist *proplist;
-    pa_bool_t in_proplist;
+    bool in_proplist;
 };
 
 /* The configuration file parsing routine. Expects a table of

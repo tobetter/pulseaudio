@@ -17,9 +17,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #include <pulsecore/socket-server.h>
@@ -39,8 +37,8 @@ typedef struct pa_simple_options {
     pa_sample_spec sample_spec;
     pa_channel_map channel_map;
 
-    pa_bool_t record:1;
-    pa_bool_t playback:1;
+    bool record:1;
+    bool playback:1;
 } pa_simple_options;
 
 pa_simple_protocol* pa_simple_protocol_get(pa_core*core);

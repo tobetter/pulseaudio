@@ -18,9 +18,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #include <pulse/sample.h>
@@ -52,14 +50,14 @@ typedef enum pa_daemon_conf_cmd {
 #ifdef HAVE_SYS_RESOURCE_H
 typedef struct pa_rlimit {
     rlim_t value;
-    pa_bool_t is_set;
+    bool is_set;
 } pa_rlimit;
 #endif
 
 /* A structure containing configuration data for the PulseAudio server . */
 typedef struct pa_daemon_conf {
     pa_daemon_conf_cmd_t cmd;
-    pa_bool_t daemonize,
+    bool daemonize,
         fail,
         high_priority,
         realtime_scheduling,
@@ -80,12 +78,11 @@ typedef struct pa_daemon_conf {
     pa_server_type_t local_server_type;
     int exit_idle_time,
         scache_idle_time,
-        auto_log_target,
         realtime_priority,
         nice_level,
         resample_method;
     char *script_commands, *dl_search_path, *default_script_file;
-    pa_log_target_t log_target;
+    pa_log_target *log_target;
     pa_log_level_t log_level;
     unsigned log_backtrace;
     char *config_file;

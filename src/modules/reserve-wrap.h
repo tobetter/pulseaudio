@@ -17,9 +17,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #include <pulsecore/core.h>
@@ -40,6 +38,6 @@ pa_reserve_monitor_wrapper* pa_reserve_monitor_wrapper_get(pa_core *c, const cha
 void pa_reserve_monitor_wrapper_unref(pa_reserve_monitor_wrapper *m);
 
 pa_hook* pa_reserve_monitor_wrapper_hook(pa_reserve_monitor_wrapper *m);
-pa_bool_t pa_reserve_monitor_wrapper_busy(pa_reserve_monitor_wrapper *m);
+bool pa_reserve_monitor_wrapper_busy(pa_reserve_monitor_wrapper *m);
 
 #endif

@@ -18,9 +18,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #include <inttypes.h>
@@ -49,7 +47,7 @@ pa_memchunk* pa_silence_memchunk_get(pa_silence_cache *cache, pa_mempool *pool, 
 
 size_t pa_frame_align(size_t l, const pa_sample_spec *ss) PA_GCC_PURE;
 
-pa_bool_t pa_frame_aligned(size_t l, const pa_sample_spec *ss) PA_GCC_PURE;
+bool pa_frame_aligned(size_t l, const pa_sample_spec *ss) PA_GCC_PURE;
 
 void pa_interleave(const void *src[], unsigned channels, void *dst, size_t ss, unsigned n);
 void pa_deinterleave(const void *src, void *dst[], unsigned channels, size_t ss, unsigned n);

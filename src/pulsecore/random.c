@@ -15,9 +15,7 @@
   Lesser General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public
-  License along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  License along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #ifdef HAVE_CONFIG_H
@@ -41,7 +39,7 @@
 
 #include "random.h"
 
-static pa_bool_t has_whined = FALSE;
+static bool has_whined = false;
 
 static const char * const devices[] = { "/dev/urandom", "/dev/random", NULL };
 
@@ -55,7 +53,7 @@ static int random_proper(void *ret_data, size_t length) {
     pa_assert(length > 0);
 
     if (CryptAcquireContext(&hCryptProv, NULL, NULL, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT | CRYPT_SILENT)) {
-        if(CryptGenRandom(hCryptProv, length, ret_data))
+        if (CryptGenRandom(hCryptProv, length, ret_data))
             ret = 0;
         CryptReleaseContext(hCryptProv, 0);
     }
@@ -102,7 +100,7 @@ void pa_random_seed(void) {
 
         if (!has_whined) {
             pa_log_warn("Failed to get proper entropy. Falling back to seeding with current time.");
-            has_whined = TRUE;
+            has_whined = true;
         }
 
         seed = (unsigned int) time(NULL);
@@ -123,7 +121,7 @@ void pa_random(void *ret_data, size_t length) {
 
     if (!has_whined) {
         pa_log_warn("Failed to get proper entropy. Falling back to unsecure pseudo RNG.");
-        has_whined = TRUE;
+        has_whined = true;
     }
 
     for (p = ret_data, l = length; l > 0; p++, l--)

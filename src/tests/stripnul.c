@@ -12,9 +12,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #ifdef HAVE_CONFIG_H
@@ -31,7 +29,7 @@
 int main(int argc, char *argv[]) {
     FILE *i, *o;
     size_t granularity;
-    pa_bool_t found = FALSE;
+    bool found = false;
     uint8_t *zero;
 
     pa_assert_se(argc >= 2);
@@ -56,7 +54,7 @@ int main(int argc, char *argv[]) {
             for (p = buffer; ((size_t) (p-buffer)/granularity) < k; p += granularity)
                 if (memcmp(p, zero, granularity)) {
                     size_t left;
-                    found = TRUE;
+                    found = true;
                     left = (size_t) (k - (size_t) (p-buffer)/granularity);
                     pa_assert_se(fwrite(p, granularity, left, o) == left);
                     break;

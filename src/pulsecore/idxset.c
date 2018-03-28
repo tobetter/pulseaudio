@@ -15,9 +15,7 @@
   Lesser General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public
-  License along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  License along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #ifdef HAVE_CONFIG_H
@@ -452,13 +450,13 @@ unsigned pa_idxset_size(pa_idxset*s) {
     return s->n_entries;
 }
 
-pa_bool_t pa_idxset_isempty(pa_idxset *s) {
+bool pa_idxset_isempty(pa_idxset *s) {
     pa_assert(s);
 
     return s->n_entries == 0;
 }
 
-pa_idxset *pa_idxset_copy(pa_idxset *s) {
+pa_idxset *pa_idxset_copy(pa_idxset *s, pa_copy_func_t copy_func) {
     pa_idxset *copy;
     struct idxset_entry *i;
 
@@ -467,7 +465,7 @@ pa_idxset *pa_idxset_copy(pa_idxset *s) {
     copy = pa_idxset_new(s->hash_func, s->compare_func);
 
     for (i = s->iterate_list_head; i; i = i->iterate_next)
-        pa_idxset_put(copy, i->data, NULL);
+        pa_idxset_put(copy, copy_func ? copy_func(i->data) : i->data, NULL);
 
     return copy;
 }

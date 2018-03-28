@@ -15,9 +15,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #ifdef HAVE_CONFIG_H
@@ -184,24 +182,25 @@ static int set_buffer_size(snd_pcm_t *pcm_handle, snd_pcm_hw_params_t *hwparams,
 }
 
 /* Set the hardware parameters of the given ALSA device. Returns the
- * selected fragment settings in *buffer_size and *period_size. If tsched mode can be enabled */
+ * selected fragment settings in *buffer_size and *period_size. Determine
+ * whether mmap and tsched mode can be enabled. */
 int pa_alsa_set_hw_params(
         snd_pcm_t *pcm_handle,
         pa_sample_spec *ss,
         snd_pcm_uframes_t *period_size,
         snd_pcm_uframes_t *buffer_size,
         snd_pcm_uframes_t tsched_size,
-        pa_bool_t *use_mmap,
-        pa_bool_t *use_tsched,
-        pa_bool_t require_exact_channel_number) {
+        bool *use_mmap,
+        bool *use_tsched,
+        bool require_exact_channel_number) {
 
     int ret = -1;
     snd_pcm_hw_params_t *hwparams, *hwparams_copy;
     int dir;
     snd_pcm_uframes_t _period_size = period_size ? *period_size : 0;
     snd_pcm_uframes_t _buffer_size = buffer_size ? *buffer_size : 0;
-    pa_bool_t _use_mmap = use_mmap && *use_mmap;
-    pa_bool_t _use_tsched = use_tsched && *use_tsched;
+    bool _use_mmap = use_mmap && *use_mmap;
+    bool _use_tsched = use_tsched && *use_tsched;
     pa_sample_spec _ss = *ss;
 
     pa_assert(pcm_handle);
@@ -231,7 +230,7 @@ int pa_alsa_set_hw_params(
                 goto finish;
             }
 
-            _use_mmap = FALSE;
+            _use_mmap = false;
         }
 
     } else if ((ret = snd_pcm_hw_params_set_access(pcm_handle, hwparams, SND_PCM_ACCESS_RW_INTERLEAVED)) < 0) {
@@ -240,10 +239,16 @@ int pa_alsa_set_hw_params(
     }
 
     if (!_use_mmap)
-        _use_tsched = FALSE;
+        _use_tsched = false;
 
     if (!pa_alsa_pcm_is_hw(pcm_handle))
-        _use_tsched = FALSE;
+        _use_tsched = false;
+
+    /* The PCM pointer is only updated with period granularity */
+    if (snd_pcm_hw_params_is_batch(hwparams)) {
+        pa_log_info("Disabling tsched mode since BATCH flag is set");
+        _use_tsched = false;
+    }
 
 #if (SND_LIB_VERSION >= ((1<<16)|(0<<8)|24)) /* API additions in 1.0.24 */
     if (_use_tsched) {
@@ -251,13 +256,13 @@ int pa_alsa_set_hw_params(
         /* try to disable period wakeups if hardware can do so */
         if (snd_pcm_hw_params_can_disable_period_wakeup(hwparams)) {
 
-            if ((ret = snd_pcm_hw_params_set_period_wakeup(pcm_handle, hwparams, FALSE)) < 0)
+            if ((ret = snd_pcm_hw_params_set_period_wakeup(pcm_handle, hwparams, false)) < 0)
                 /* don't bail, keep going with default mode with period wakeups */
                 pa_log_debug("snd_pcm_hw_params_set_period_wakeup() failed: %s", pa_alsa_strerror(ret));
             else
                 pa_log_info("Trying to disable ALSA period wakeups, using timers only");
         } else
-            pa_log_info("cannot disable ALSA period wakeups");
+            pa_log_info("Cannot disable ALSA period wakeups");
     }
 #endif
 
@@ -321,6 +326,7 @@ int pa_alsa_set_hw_params(
                 goto success;
             }
 
+            snd_pcm_hw_params_copy(hwparams_copy, hwparams);
             /* Second try: set period size first, followed by buffer size */
             if (set_period_size(pcm_handle, hwparams_copy, _period_size) >= 0 &&
                 set_buffer_size(pcm_handle, hwparams_copy, _buffer_size) >= 0 &&
@@ -426,7 +432,7 @@ finish:
     return ret;
 }
 
-int pa_alsa_set_sw_params(snd_pcm_t *pcm, snd_pcm_uframes_t avail_min, pa_bool_t period_event) {
+int pa_alsa_set_sw_params(snd_pcm_t *pcm, snd_pcm_uframes_t avail_min, bool period_event) {
     snd_pcm_sw_params_t *swparams;
     snd_pcm_uframes_t boundary;
     int err;
@@ -435,7 +441,7 @@ int pa_alsa_set_sw_params(snd_pcm_t *pcm, snd_pcm_uframes_t avail_min, pa_bool_t
 
     snd_pcm_sw_params_alloca(&swparams);
 
-    if ((err = snd_pcm_sw_params_current(pcm, swparams) < 0)) {
+    if ((err = snd_pcm_sw_params_current(pcm, swparams)) < 0) {
         pa_log_warn("Unable to determine current swparams: %s\n", pa_alsa_strerror(err));
         return err;
     }
@@ -487,8 +493,8 @@ snd_pcm_t *pa_alsa_open_by_device_id_auto(
         snd_pcm_uframes_t *period_size,
         snd_pcm_uframes_t *buffer_size,
         snd_pcm_uframes_t tsched_size,
-        pa_bool_t *use_mmap,
-        pa_bool_t *use_tsched,
+        bool *use_mmap,
+        bool *use_tsched,
         pa_alsa_profile_set *ps,
         pa_alsa_mapping **mapping) {
 
@@ -578,7 +584,7 @@ snd_pcm_t *pa_alsa_open_by_device_id_auto(
             tsched_size,
             use_mmap,
             use_tsched,
-            FALSE);
+            false);
     pa_xfree(d);
 
     if (pcm_handle && mapping)
@@ -596,8 +602,8 @@ snd_pcm_t *pa_alsa_open_by_device_id_mapping(
         snd_pcm_uframes_t *period_size,
         snd_pcm_uframes_t *buffer_size,
         snd_pcm_uframes_t tsched_size,
-        pa_bool_t *use_mmap,
-        pa_bool_t *use_tsched,
+        bool *use_mmap,
+        bool *use_tsched,
         pa_alsa_mapping *m) {
 
     snd_pcm_t *pcm_handle;
@@ -648,14 +654,14 @@ snd_pcm_t *pa_alsa_open_by_device_string(
         snd_pcm_uframes_t *period_size,
         snd_pcm_uframes_t *buffer_size,
         snd_pcm_uframes_t tsched_size,
-        pa_bool_t *use_mmap,
-        pa_bool_t *use_tsched,
-        pa_bool_t require_exact_channel_number) {
+        bool *use_mmap,
+        bool *use_tsched,
+        bool require_exact_channel_number) {
 
     int err;
     char *d;
     snd_pcm_t *pcm_handle;
-    pa_bool_t reformat = FALSE;
+    bool reformat = false;
 
     pa_assert(device);
     pa_assert(ss);
@@ -688,7 +694,7 @@ snd_pcm_t *pa_alsa_open_by_device_string(
                      require_exact_channel_number)) < 0) {
 
             if (!reformat) {
-                reformat = TRUE;
+                reformat = true;
 
                 snd_pcm_close(pcm_handle);
                 continue;
@@ -702,7 +708,7 @@ snd_pcm_t *pa_alsa_open_by_device_string(
                 pa_xfree(d);
                 d = t;
 
-                reformat = FALSE;
+                reformat = false;
 
                 snd_pcm_close(pcm_handle);
                 continue;
@@ -741,9 +747,9 @@ snd_pcm_t *pa_alsa_open_by_template(
         snd_pcm_uframes_t *period_size,
         snd_pcm_uframes_t *buffer_size,
         snd_pcm_uframes_t tsched_size,
-        pa_bool_t *use_mmap,
-        pa_bool_t *use_tsched,
-        pa_bool_t require_exact_channel_number) {
+        bool *use_mmap,
+        bool *use_tsched,
+        bool require_exact_channel_number) {
 
     snd_pcm_t *pcm_handle;
     char **i;
@@ -862,18 +868,18 @@ void pa_alsa_refcnt_dec(void) {
     }
 }
 
-pa_bool_t pa_alsa_init_description(pa_proplist *p) {
+bool pa_alsa_init_description(pa_proplist *p, pa_card *card) {
     const char *d, *k;
     pa_assert(p);
 
-    if (pa_device_init_description(p))
-        return TRUE;
+    if (pa_device_init_description(p, card))
+        return true;
 
     if (!(d = pa_proplist_gets(p, "alsa.card_name")))
         d = pa_proplist_gets(p, "alsa.name");
 
     if (!d)
-        return FALSE;
+        return false;
 
     k = pa_proplist_gets(p, PA_PROP_DEVICE_PROFILE_DESCRIPTION);
 
@@ -882,7 +888,7 @@ pa_bool_t pa_alsa_init_description(pa_proplist *p) {
     else if (d)
         pa_proplist_sets(p, PA_PROP_DEVICE_DESCRIPTION, d);
 
-    return FALSE;
+    return false;
 }
 
 void pa_alsa_init_proplist_card(pa_core *c, pa_proplist *p, int card) {
@@ -1142,7 +1148,7 @@ snd_pcm_sframes_t pa_alsa_safe_avail(snd_pcm_t *pcm, size_t hwbuf_size, const pa
 }
 
 int pa_alsa_safe_delay(snd_pcm_t *pcm, snd_pcm_status_t *status, snd_pcm_sframes_t *delay, size_t hwbuf_size, const pa_sample_spec *ss,
-                       pa_bool_t capture) {
+                       bool capture) {
     ssize_t k;
     size_t abs_k;
     int err;
@@ -1333,7 +1339,7 @@ unsigned int *pa_alsa_get_supported_rates(snd_pcm_t *pcm, unsigned int fallback_
                                         64000, 88200, 96000,
                                         128000, 176400, 192000,
                                         384000 };
-    pa_bool_t supported[PA_ELEMENTSOF(all_rates)] = { FALSE, };
+    bool supported[PA_ELEMENTSOF(all_rates)] = { false, };
     snd_pcm_hw_params_t *hwparams;
     unsigned int i, j, n, *rates = NULL;
     int ret;
@@ -1347,7 +1353,7 @@ unsigned int *pa_alsa_get_supported_rates(snd_pcm_t *pcm, unsigned int fallback_
 
     for (i = 0, n = 0; i < PA_ELEMENTSOF(all_rates); i++) {
         if (snd_pcm_hw_params_test_rate(pcm, hwparams, all_rates[i], 0) == 0) {
-            supported[i] = TRUE;
+            supported[i] = true;
             n++;
         }
     }
@@ -1377,26 +1383,26 @@ unsigned int *pa_alsa_get_supported_rates(snd_pcm_t *pcm, unsigned int fallback_
     return rates;
 }
 
-pa_bool_t pa_alsa_pcm_is_hw(snd_pcm_t *pcm) {
+bool pa_alsa_pcm_is_hw(snd_pcm_t *pcm) {
     snd_pcm_info_t* info;
     snd_pcm_info_alloca(&info);
 
     pa_assert(pcm);
 
     if (snd_pcm_info(pcm, info) < 0)
-        return FALSE;
+        return false;
 
     return snd_pcm_info_get_card(info) >= 0;
 }
 
-pa_bool_t pa_alsa_pcm_is_modem(snd_pcm_t *pcm) {
+bool pa_alsa_pcm_is_modem(snd_pcm_t *pcm) {
     snd_pcm_info_t* info;
     snd_pcm_info_alloca(&info);
 
     pa_assert(pcm);
 
     if (snd_pcm_info(pcm, info) < 0)
-        return FALSE;
+        return false;
 
     return snd_pcm_info_get_class(info) == SND_PCM_CLASS_MODEM;
 }
@@ -1428,56 +1434,94 @@ const char* pa_alsa_strerror(int errnum) {
     return translated;
 }
 
-pa_bool_t pa_alsa_may_tsched(pa_bool_t want) {
+bool pa_alsa_may_tsched(bool want) {
 
     if (!want)
-        return FALSE;
+        return false;
 
     if (!pa_rtclock_hrtimer()) {
         /* We cannot depend on being woken up in time when the timers
         are inaccurate, so let's fallback to classic IO based playback
         then. */
         pa_log_notice("Disabling timer-based scheduling because high-resolution timers are not available from the kernel.");
-        return FALSE; }
+        return false; }
 
     if (pa_running_in_vm()) {
         /* We cannot depend on being woken up when we ask for in a VM,
          * so let's fallback to classic IO based playback then. */
         pa_log_notice("Disabling timer-based scheduling because running inside a VM.");
-        return FALSE;
+        return false;
     }
 
-    return TRUE;
+    return true;
 }
 
-snd_hctl_elem_t* pa_alsa_find_jack(snd_hctl_t *hctl, const char* jack_name)
+#define SND_MIXER_ELEM_PULSEAUDIO (SND_MIXER_ELEM_LAST + 10)
+
+snd_mixer_elem_t *pa_alsa_mixer_find(snd_mixer_t *mixer, const char *name, unsigned int device) {
+    snd_mixer_elem_t *elem;
+
+    for (elem = snd_mixer_first_elem(mixer); elem; elem = snd_mixer_elem_next(elem)) {
+        snd_hctl_elem_t *helem;
+        if (snd_mixer_elem_get_type(elem) != SND_MIXER_ELEM_PULSEAUDIO)
+            continue;
+        helem = snd_mixer_elem_get_private(elem);
+        if (!pa_streq(snd_hctl_elem_get_name(helem), name))
+            continue;
+        if (snd_hctl_elem_get_device(helem) != device)
+            continue;
+        return elem;
+    }
+    return NULL;
+}
+
+static int mixer_class_compare(const snd_mixer_elem_t *c1, const snd_mixer_elem_t *c2)
 {
-    snd_ctl_elem_id_t *id;
-
-    snd_ctl_elem_id_alloca(&id);
-    snd_ctl_elem_id_clear(id);
-    snd_ctl_elem_id_set_interface(id, SND_CTL_ELEM_IFACE_CARD);
-    snd_ctl_elem_id_set_name(id, jack_name);
-
-    return snd_hctl_find_elem(hctl, id);
+    /* Dummy compare function */
+    return c1 == c2 ? 0 : (c1 > c2 ? 1 : -1);
 }
 
-snd_hctl_elem_t* pa_alsa_find_eld_ctl(snd_hctl_t *hctl, int device) {
-    snd_ctl_elem_id_t *id;
-
-    /* See if we can find the ELD control */
-    snd_ctl_elem_id_alloca(&id);
-    snd_ctl_elem_id_clear(id);
-    snd_ctl_elem_id_set_interface(id, SND_CTL_ELEM_IFACE_PCM);
-    snd_ctl_elem_id_set_name(id, "ELD");
-    snd_ctl_elem_id_set_device(id, device);
-
-    return snd_hctl_find_elem(hctl, id);
-}
-
-
-static int prepare_mixer(snd_mixer_t *mixer, const char *dev, snd_hctl_t **hctl) {
+static int mixer_class_event(snd_mixer_class_t *class, unsigned int mask,
+			snd_hctl_elem_t *helem, snd_mixer_elem_t *melem)
+{
     int err;
+    const char *name = snd_hctl_elem_get_name(helem);
+    if (mask & SND_CTL_EVENT_MASK_ADD) {
+        snd_ctl_elem_iface_t iface = snd_hctl_elem_get_interface(helem);
+        if (iface == SND_CTL_ELEM_IFACE_CARD || iface == SND_CTL_ELEM_IFACE_PCM) {
+            snd_mixer_elem_t *new_melem;
+
+            /* Put the hctl pointer as our private data - it will be useful for callbacks */
+            if ((err = snd_mixer_elem_new(&new_melem, SND_MIXER_ELEM_PULSEAUDIO, 0, helem, NULL)) < 0) {
+                pa_log_warn("snd_mixer_elem_new failed: %s", pa_alsa_strerror(err));
+                return 0;
+            }
+
+            if ((err = snd_mixer_elem_attach(new_melem, helem)) < 0) {
+                pa_log_warn("snd_mixer_elem_attach failed: %s", pa_alsa_strerror(err));
+		snd_mixer_elem_free(melem);
+                return 0;
+            }
+
+            if ((err = snd_mixer_elem_add(new_melem, class)) < 0) {
+                pa_log_warn("snd_mixer_elem_add failed: %s", pa_alsa_strerror(err));
+                return 0;
+            }
+        }
+    }
+    else if (mask & SND_CTL_EVENT_MASK_VALUE) {
+        snd_mixer_elem_value(melem); /* Calls the element callback */
+        return 0;
+    }
+    else
+        pa_log_info("Got an unknown mixer class event for %s: mask 0x%x\n", name, mask);
+
+    return 0;
+}
+
+static int prepare_mixer(snd_mixer_t *mixer, const char *dev) {
+    int err;
+    snd_mixer_class_t *class;
 
     pa_assert(mixer);
     pa_assert(dev);
@@ -1487,12 +1531,18 @@ static int prepare_mixer(snd_mixer_t *mixer, const char *dev, snd_hctl_t **hctl)
         return -1;
     }
 
-    /* Note: The hctl handle returned should not be freed.
-       It is closed/freed by alsa-lib on snd_mixer_close/free */
-    if (hctl && (err = snd_mixer_get_hctl(mixer, dev, hctl)) < 0) {
-        pa_log_info("Unable to get hctl of mixer %s: %s", dev, pa_alsa_strerror(err));
+    if (snd_mixer_class_malloc(&class)) {
+        pa_log_info("Failed to allocate mixer class for %s", dev);
         return -1;
     }
+    snd_mixer_class_set_event(class, mixer_class_event);
+    snd_mixer_class_set_compare(class, mixer_class_compare);
+    if ((err = snd_mixer_class_register(class, mixer)) < 0) {
+        pa_log_info("Unable register mixer class for %s: %s", dev, pa_alsa_strerror(err));
+        snd_mixer_class_free(class);
+        return -1;
+    }
+    /* From here on, the mixer class is deallocated by alsa on snd_mixer_close/free. */
 
     if ((err = snd_mixer_selem_register(mixer, NULL, NULL)) < 0) {
         pa_log_warn("Unable to register mixer: %s", pa_alsa_strerror(err));
@@ -1508,7 +1558,7 @@ static int prepare_mixer(snd_mixer_t *mixer, const char *dev, snd_hctl_t **hctl)
     return 0;
 }
 
-snd_mixer_t *pa_alsa_open_mixer(int alsa_card_index, char **ctl_device, snd_hctl_t **hctl) {
+snd_mixer_t *pa_alsa_open_mixer(int alsa_card_index, char **ctl_device) {
     int err;
     snd_mixer_t *m;
     char *md;
@@ -1522,7 +1572,7 @@ snd_mixer_t *pa_alsa_open_mixer(int alsa_card_index, char **ctl_device, snd_hctl
 
     /* Then, try by card index */
     md = pa_sprintf_malloc("hw:%i", alsa_card_index);
-    if (prepare_mixer(m, md, hctl) >= 0) {
+    if (prepare_mixer(m, md) >= 0) {
 
         if (ctl_device)
             *ctl_device = md;
@@ -1538,7 +1588,7 @@ snd_mixer_t *pa_alsa_open_mixer(int alsa_card_index, char **ctl_device, snd_hctl
     return NULL;
 }
 
-snd_mixer_t *pa_alsa_open_mixer_for_pcm(snd_pcm_t *pcm, char **ctl_device, snd_hctl_t **hctl) {
+snd_mixer_t *pa_alsa_open_mixer_for_pcm(snd_pcm_t *pcm, char **ctl_device) {
     int err;
     snd_mixer_t *m;
     const char *dev;
@@ -1554,7 +1604,7 @@ snd_mixer_t *pa_alsa_open_mixer_for_pcm(snd_pcm_t *pcm, char **ctl_device, snd_h
 
     /* First, try by name */
     if ((dev = snd_pcm_name(pcm)))
-        if (prepare_mixer(m, dev, hctl) >= 0) {
+        if (prepare_mixer(m, dev) >= 0) {
             if (ctl_device)
                 *ctl_device = pa_xstrdup(dev);
 
@@ -1571,7 +1621,7 @@ snd_mixer_t *pa_alsa_open_mixer_for_pcm(snd_pcm_t *pcm, char **ctl_device, snd_h
             md = pa_sprintf_malloc("hw:%i", card_idx);
 
             if (!dev || !pa_streq(dev, md))
-                if (prepare_mixer(m, md, hctl) >= 0) {
+                if (prepare_mixer(m, md) >= 0) {
 
                     if (ctl_device)
                         *ctl_device = md;
@@ -1589,25 +1639,19 @@ snd_mixer_t *pa_alsa_open_mixer_for_pcm(snd_pcm_t *pcm, char **ctl_device, snd_h
     return NULL;
 }
 
-int pa_alsa_get_hdmi_eld(snd_hctl_t *hctl, int device, pa_hdmi_eld *eld) {
+int pa_alsa_get_hdmi_eld(snd_hctl_elem_t *elem, pa_hdmi_eld *eld) {
 
     /* The ELD format is specific to HDA Intel sound cards and defined in the
        HDA specification: http://www.intel.com/content/www/us/en/standards/high-definition-audio-specification.html */
     int err;
-    snd_hctl_elem_t *elem;
     snd_ctl_elem_info_t *info;
     snd_ctl_elem_value_t *value;
     uint8_t *elddata;
     unsigned int eldsize, mnl;
+    unsigned int device;
 
     pa_assert(eld != NULL);
-
-    /* See if we can find the ELD control */
-    elem = pa_alsa_find_eld_ctl(hctl, device);
-    if (elem == NULL) {
-        pa_log_debug("No ELD info control found (for device=%d)", device);
-        return -1;
-    }
+    pa_assert(elem != NULL);
 
     /* Does it have any contents? */
     snd_ctl_elem_info_alloca(&info);
@@ -1618,6 +1662,7 @@ int pa_alsa_get_hdmi_eld(snd_hctl_t *hctl, int device, pa_hdmi_eld *eld) {
         return -1;
     }
 
+    device = snd_hctl_elem_get_device(elem);
     eldsize = snd_ctl_elem_info_get_count(info);
     elddata = (unsigned char *) snd_ctl_elem_value_get_bytes(value);
     if (elddata == NULL || eldsize == 0) {

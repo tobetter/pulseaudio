@@ -14,9 +14,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #ifdef HAVE_CONFIG_H
@@ -469,8 +467,8 @@ static void subscription_cb(pa_core *c, pa_subscription_event_type_t t, uint32_t
         pa_proplist_update(s->proplist, PA_UPDATE_SET, s->sample->proplist);
 
         pa_assert_se(signal_msg = dbus_message_new_signal(s->path,
-							  PA_DBUSIFACE_SAMPLE_INTERFACE,
-							  signals[SIGNAL_PROPERTY_LIST_UPDATED].name));
+                                                          PA_DBUSIFACE_SAMPLE_INTERFACE,
+                                                          signals[SIGNAL_PROPERTY_LIST_UPDATED].name));
         dbus_message_iter_init_append(signal_msg, &msg_iter);
         pa_dbus_append_proplist(&msg_iter, s->proplist);
 

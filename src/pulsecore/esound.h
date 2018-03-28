@@ -17,13 +17,10 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 /* Most of the following is blatantly stolen from esound. */
-
 
 /* path and name of the default EsounD domain socket */
 #define ESD_UNIX_SOCKET_DIR     "/tmp/.esd"
@@ -34,7 +31,7 @@
 /* maximum size we can write().  Otherwise we might overflow */
 #define ESD_MAX_WRITE_SIZE (21 * 4096)
 
-/* length of the authorization key, octets */
+/* length of the authentication key, octets */
 #define ESD_KEY_LEN (16)
 
 /* default port for the EsounD server */
@@ -50,7 +47,6 @@
 #define ESD_ENDIAN_KEY ((uint32_t) (('E' << 24) + ('N' << 16) + ('D' << 8) + ('N')))
 
 #define ESD_VOLUME_BASE (256)
-
 
 /*************************************/
 /* what can we do to/with the EsounD */
@@ -204,6 +200,5 @@ typedef int esd_client_state_t;
 /* and matches ESD_ENDIAN_KEY (ENDN), then the endianness of the */
 /* server and the client match; if it's SWAP_ENDIAN_KEY, swap data */
 #define ESD_SWAP_ENDIAN_KEY (PA_UINT32_SWAP(ESD_ENDIAN_KEY))
-
 
 #endif

@@ -14,9 +14,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #ifdef HAVE_CONFIG_H
@@ -40,7 +38,7 @@
 PA_MODULE_AUTHOR("Colin Guthrie");
 PA_MODULE_DESCRIPTION("Detect when various filters are desirable");
 PA_MODULE_VERSION(PACKAGE_VERSION);
-PA_MODULE_LOAD_ONCE(TRUE);
+PA_MODULE_LOAD_ONCE(true);
 
 static const char* const valid_modargs[] = {
     NULL
@@ -55,7 +53,7 @@ struct userdata {
         *source_output_move_finish_slot;
 };
 
-static pa_hook_result_t process(struct userdata *u, pa_object *o, pa_bool_t is_sink_input) {
+static pa_hook_result_t process(struct userdata *u, pa_object *o, bool is_sink_input) {
     const char *want;
     pa_proplist *pl, *parent_pl;
 
@@ -99,7 +97,7 @@ static pa_hook_result_t sink_input_put_cb(pa_core *core, pa_sink_input *i, struc
     pa_sink_input_assert_ref(i);
     pa_assert(u);
 
-    return process(u, PA_OBJECT(i), TRUE);
+    return process(u, PA_OBJECT(i), true);
 }
 
 static pa_hook_result_t sink_input_move_finish_cb(pa_core *core, pa_sink_input *i, struct userdata *u) {
@@ -111,7 +109,7 @@ static pa_hook_result_t sink_input_move_finish_cb(pa_core *core, pa_sink_input *
     if (pa_proplist_gets(i->proplist, PA_PROP_FILTER_APPLY_MOVING))
         return PA_HOOK_OK;
 
-    return process(u, PA_OBJECT(i), TRUE);
+    return process(u, PA_OBJECT(i), true);
 }
 
 static pa_hook_result_t source_output_put_cb(pa_core *core, pa_source_output *i, struct userdata *u) {
@@ -119,7 +117,7 @@ static pa_hook_result_t source_output_put_cb(pa_core *core, pa_source_output *i,
     pa_source_output_assert_ref(i);
     pa_assert(u);
 
-    return process(u, PA_OBJECT(i), FALSE);
+    return process(u, PA_OBJECT(i), false);
 }
 
 static pa_hook_result_t source_output_move_finish_cb(pa_core *core, pa_source_output *i, struct userdata *u) {
@@ -131,7 +129,7 @@ static pa_hook_result_t source_output_move_finish_cb(pa_core *core, pa_source_ou
     if (pa_proplist_gets(i->proplist, PA_PROP_FILTER_APPLY_MOVING))
         return PA_HOOK_OK;
 
-    return process(u, PA_OBJECT(i), FALSE);
+    return process(u, PA_OBJECT(i), false);
 }
 
 int pa__init(pa_module *m) {
@@ -165,7 +163,6 @@ fail:
         pa_modargs_free(ma);
 
     return -1;
-
 
 }
 

@@ -14,9 +14,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #ifdef HAVE_CONFIG_H
@@ -47,7 +45,7 @@
 PA_MODULE_AUTHOR("Lennart Poettering");
 PA_MODULE_DESCRIPTION("Multimedia keyboard support via Linux evdev");
 PA_MODULE_VERSION(PACKAGE_VERSION);
-PA_MODULE_LOAD_ONCE(FALSE);
+PA_MODULE_LOAD_ONCE(false);
 PA_MODULE_USAGE("device=<evdev device> sink=<sink name> volume_limit=<volume limit> volume_step=<volume change step>");
 
 #define DEFAULT_DEVICE "/dev/input/event0"
@@ -118,21 +116,21 @@ static void io_callback(pa_mainloop_api *io, pa_io_event *e, int fd, pa_io_event
                 if (!(s = pa_namereg_get(u->module->core, u->sink_name, PA_NAMEREG_SINK)))
                     pa_log("Failed to get sink '%s'", u->sink_name);
                 else {
-                    pa_cvolume cv = *pa_sink_get_volume(s, FALSE);
+                    pa_cvolume cv = *pa_sink_get_volume(s, false);
 
                     switch (volchange) {
                         case UP:
                             pa_cvolume_inc_clamp(&cv, u->volume_step, u->volume_limit);
-                            pa_sink_set_volume(s, &cv, TRUE, TRUE);
+                            pa_sink_set_volume(s, &cv, true, true);
                             break;
 
                         case DOWN:
                             pa_cvolume_dec(&cv, u->volume_step);
-                            pa_sink_set_volume(s, &cv, TRUE, TRUE);
+                            pa_sink_set_volume(s, &cv, true, true);
                             break;
 
                         case MUTE_TOGGLE:
-                            pa_sink_set_mute(s, !pa_sink_get_mute(s, FALSE), TRUE);
+                            pa_sink_set_mute(s, !pa_sink_get_mute(s, false), true);
                             break;
 
                         case INVALID:
@@ -149,7 +147,7 @@ fail:
     u->module->core->mainloop->io_free(u->io);
     u->io = NULL;
 
-    pa_module_unload_request(u->module, TRUE);
+    pa_module_unload_request(u->module, true);
 }
 
 #define test_bit(bit, array) (array[bit/8] & (1<<(bit%8)))
@@ -203,7 +201,7 @@ int pa__init(pa_module*m) {
 
     pa_log_info("evdev driver version %i.%i.%i", version >> 16, (version >> 8) & 0xff, version & 0xff);
 
-    if(ioctl(u->fd, EVIOCGID, &input_id)) {
+    if (ioctl(u->fd, EVIOCGID, &input_id)) {
         pa_log("EVIOCGID failed: %s", pa_cstrerror(errno));
         goto fail;
     }
@@ -256,8 +254,11 @@ void pa__done(pa_module*m) {
     if (u->io)
         m->core->mainloop->io_free(u->io);
 
-    if (u->fd >= 0)
-        pa_assert_se(pa_close(u->fd) == 0);
+    if (u->fd >= 0) {
+        int r = pa_close(u->fd);
+        if (r < 0) /* https://bugs.freedesktop.org/show_bug.cgi?id=80867 */
+            pa_log("Closing fd failed: %s", pa_cstrerror(errno));
+    }
 
     pa_xfree(u->sink_name);
     pa_xfree(u);

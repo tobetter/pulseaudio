@@ -17,9 +17,7 @@
   Lesser General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public
-  License along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  License along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #include <sys/types.h>
@@ -45,8 +43,8 @@ typedef struct pa_asyncq pa_asyncq;
 pa_asyncq* pa_asyncq_new(unsigned size);
 void pa_asyncq_free(pa_asyncq* q, pa_free_cb_t free_cb);
 
-void* pa_asyncq_pop(pa_asyncq *q, pa_bool_t wait);
-int pa_asyncq_push(pa_asyncq *q, void *p, pa_bool_t wait);
+void* pa_asyncq_pop(pa_asyncq *q, bool wait);
+int pa_asyncq_push(pa_asyncq *q, void *p, bool wait);
 
 /* Similar to pa_asyncq_push(), but if the queue is full, postpone the
  * appending of the item locally and delay until

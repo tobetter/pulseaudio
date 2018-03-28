@@ -14,9 +14,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public
-  License along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  License along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #ifdef HAVE_CONFIG_H
@@ -43,7 +41,7 @@
 pa_modinfo *pa_modinfo_get_by_handle(lt_dlhandle dl, const char *module_name) {
     pa_modinfo *i;
     const char* (*func)(void);
-    pa_bool_t (*func2) (void);
+    bool (*func2) (void);
 
     pa_assert(dl);
 
@@ -64,7 +62,7 @@ pa_modinfo *pa_modinfo_get_by_handle(lt_dlhandle dl, const char *module_name) {
     if ((func = (const char* (*)(void)) pa_load_sym(dl, module_name, PA_SYMBOL_DEPRECATED)))
         i->deprecated = pa_xstrdup(func());
 
-    if ((func2 = (pa_bool_t (*)(void)) pa_load_sym(dl, module_name, PA_SYMBOL_LOAD_ONCE)))
+    if ((func2 = (bool (*)(void)) pa_load_sym(dl, module_name, PA_SYMBOL_LOAD_ONCE)))
         i->load_once = func2();
 
     return i;

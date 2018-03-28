@@ -15,9 +15,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #ifdef HAVE_CONFIG_H
@@ -34,7 +32,7 @@
 PA_MODULE_AUTHOR("Colin Guthrie");
 PA_MODULE_DESCRIPTION("Compatibility module (module-combine rename)");
 PA_MODULE_VERSION(PACKAGE_VERSION);
-PA_MODULE_LOAD_ONCE(FALSE);
+PA_MODULE_LOAD_ONCE(false);
 PA_MODULE_DEPRECATED("Please use module-combine-sink instead of module-combine!");
 
 struct userdata {
@@ -56,7 +54,6 @@ int pa__init(pa_module*m) {
     return module ? 0 : -1;
 }
 
-
 void pa__done(pa_module*m) {
     struct userdata *u;
 
@@ -66,7 +63,7 @@ void pa__done(pa_module*m) {
     u = m->userdata;
 
     if (u && PA_INVALID_INDEX != u->module_index)
-        pa_module_unload_by_index(m->core, u->module_index, TRUE);
+        pa_module_unload_by_index(m->core, u->module_index, true);
 
     pa_xfree(u);
 }

@@ -16,9 +16,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #ifdef HAVE_CONFIG_H
@@ -34,8 +32,7 @@
 pa_do_volume_func_t fallback;
 
 static void
-pa_volume_s16ne_orc(int16_t *samples, const int32_t *volumes, unsigned channels, unsigned length)
-{
+pa_volume_s16ne_orc(int16_t *samples, const int32_t *volumes, unsigned channels, unsigned length) {
     if (channels == 2) {
         int64_t v = (int64_t)volumes[1] << 32 | volumes[0];
         pa_volume_s16ne_orc_2ch (samples, v, ((length / (sizeof(int16_t))) / 2));

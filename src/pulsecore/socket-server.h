@@ -18,9 +18,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #include <inttypes.h>
@@ -33,15 +31,15 @@ typedef struct pa_socket_server pa_socket_server;
 
 pa_socket_server* pa_socket_server_new(pa_mainloop_api *m, int fd);
 pa_socket_server* pa_socket_server_new_unix(pa_mainloop_api *m, const char *filename);
-pa_socket_server* pa_socket_server_new_ipv4(pa_mainloop_api *m, uint32_t address, uint16_t port, pa_bool_t fallback, const char *tcpwrap_service);
-pa_socket_server* pa_socket_server_new_ipv4_loopback(pa_mainloop_api *m, uint16_t port, pa_bool_t fallback, const char *tcpwrap_service);
-pa_socket_server* pa_socket_server_new_ipv4_any(pa_mainloop_api *m, uint16_t port, pa_bool_t fallback, const char *tcpwrap_service);
-pa_socket_server* pa_socket_server_new_ipv4_string(pa_mainloop_api *m, const char *name, uint16_t port, pa_bool_t fallback, const char *tcpwrap_service);
+pa_socket_server* pa_socket_server_new_ipv4(pa_mainloop_api *m, uint32_t address, uint16_t port, bool fallback, const char *tcpwrap_service);
+pa_socket_server* pa_socket_server_new_ipv4_loopback(pa_mainloop_api *m, uint16_t port, bool fallback, const char *tcpwrap_service);
+pa_socket_server* pa_socket_server_new_ipv4_any(pa_mainloop_api *m, uint16_t port, bool fallback, const char *tcpwrap_service);
+pa_socket_server* pa_socket_server_new_ipv4_string(pa_mainloop_api *m, const char *name, uint16_t port, bool fallback, const char *tcpwrap_service);
 #ifdef HAVE_IPV6
-pa_socket_server* pa_socket_server_new_ipv6(pa_mainloop_api *m, const uint8_t address[16], uint16_t port, pa_bool_t fallback, const char *tcpwrap_service);
-pa_socket_server* pa_socket_server_new_ipv6_loopback(pa_mainloop_api *m, uint16_t port, pa_bool_t fallback, const char *tcpwrap_service);
-pa_socket_server* pa_socket_server_new_ipv6_any(pa_mainloop_api *m, uint16_t port, pa_bool_t fallback, const char *tcpwrap_service);
-pa_socket_server* pa_socket_server_new_ipv6_string(pa_mainloop_api *m, const char *name, uint16_t port, pa_bool_t fallback, const char *tcpwrap_service);
+pa_socket_server* pa_socket_server_new_ipv6(pa_mainloop_api *m, const uint8_t address[16], uint16_t port, bool fallback, const char *tcpwrap_service);
+pa_socket_server* pa_socket_server_new_ipv6_loopback(pa_mainloop_api *m, uint16_t port, bool fallback, const char *tcpwrap_service);
+pa_socket_server* pa_socket_server_new_ipv6_any(pa_mainloop_api *m, uint16_t port, bool fallback, const char *tcpwrap_service);
+pa_socket_server* pa_socket_server_new_ipv6_string(pa_mainloop_api *m, const char *name, uint16_t port, bool fallback, const char *tcpwrap_service);
 #endif
 
 void pa_socket_server_unref(pa_socket_server*s);

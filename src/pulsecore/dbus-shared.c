@@ -15,9 +15,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #ifdef HAVE_CONFIG_H
@@ -67,13 +65,13 @@ pa_dbus_connection* pa_dbus_bus_get(pa_core *c, DBusBusType type, DBusError *err
     if ((pconn = pa_shared_get(c, prop_name[type])))
         return pa_dbus_connection_ref(pconn);
 
-    if (!(conn = pa_dbus_wrap_connection_new(c->mainloop, TRUE, type, error)))
+    if (!(conn = pa_dbus_wrap_connection_new(c->mainloop, true, type, error)))
         return NULL;
 
     return dbus_connection_new(c, conn, prop_name[type]);
 }
 
-DBusConnection* pa_dbus_connection_get(pa_dbus_connection *c){
+DBusConnection* pa_dbus_connection_get(pa_dbus_connection *c) {
     pa_assert(c);
     pa_assert(PA_REFCNT_VALUE(c) > 0);
     pa_assert(c->connection);

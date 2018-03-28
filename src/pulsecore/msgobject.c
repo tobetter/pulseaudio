@@ -15,9 +15,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #ifdef HAVE_CONFIG_H
@@ -28,10 +26,10 @@
 
 PA_DEFINE_PUBLIC_CLASS(pa_msgobject, pa_object);
 
-pa_msgobject *pa_msgobject_new_internal(size_t size, const char *type_id, pa_bool_t (*check_type)(const char *type_name)) {
+pa_msgobject *pa_msgobject_new_internal(size_t size, const char *type_id, bool (*check_type)(const char *type_name)) {
     pa_msgobject *o;
 
-    pa_assert(size > sizeof(pa_msgobject));
+    pa_assert(size >= sizeof(pa_msgobject));
     pa_assert(type_id);
 
     if (!check_type)

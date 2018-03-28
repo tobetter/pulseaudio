@@ -18,9 +18,7 @@
   Lesser General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public
-  License along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  License along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #include <inttypes.h>
@@ -38,13 +36,13 @@ pa_socket_client* pa_socket_client_new_ipv4(pa_mainloop_api *m, uint32_t address
 pa_socket_client* pa_socket_client_new_ipv6(pa_mainloop_api *m, uint8_t address[16], uint16_t port);
 pa_socket_client* pa_socket_client_new_unix(pa_mainloop_api *m, const char *filename);
 pa_socket_client* pa_socket_client_new_sockaddr(pa_mainloop_api *m, const struct sockaddr *sa, size_t salen);
-pa_socket_client* pa_socket_client_new_string(pa_mainloop_api *m, pa_bool_t use_rtclock, const char *a, uint16_t default_port);
+pa_socket_client* pa_socket_client_new_string(pa_mainloop_api *m, bool use_rtclock, const char *a, uint16_t default_port);
 
 pa_socket_client* pa_socket_client_ref(pa_socket_client *c);
 void pa_socket_client_unref(pa_socket_client *c);
 
 void pa_socket_client_set_callback(pa_socket_client *c, pa_socket_client_cb_t on_connection, void *userdata);
 
-pa_bool_t pa_socket_client_is_local(pa_socket_client *c);
+bool pa_socket_client_is_local(pa_socket_client *c);
 
 #endif

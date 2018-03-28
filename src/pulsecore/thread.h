@@ -18,9 +18,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public
-  License along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  License along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #include <pulse/def.h>
@@ -39,6 +37,7 @@ typedef void (*pa_thread_func_t) (void *userdata);
 
 pa_thread* pa_thread_new(const char *name, pa_thread_func_t thread_func, void *userdata);
 void pa_thread_free(pa_thread *t);
+void pa_thread_free_nojoin(pa_thread *t);
 int pa_thread_join(pa_thread *t);
 int pa_thread_is_running(pa_thread *t);
 pa_thread *pa_thread_self(void);

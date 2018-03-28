@@ -15,9 +15,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #ifdef HAVE_CONFIG_H
@@ -199,8 +197,7 @@ pa_channel_map* pa_channel_map_init_stereo(pa_channel_map *m) {
 
 pa_channel_map* pa_channel_map_init_auto(pa_channel_map *m, unsigned channels, pa_channel_map_def_t def) {
     pa_assert(m);
-    pa_assert(channels > 0);
-    pa_assert(channels <= PA_CHANNELS_MAX);
+    pa_assert(pa_channels_valid(channels));
     pa_assert(def < PA_CHANNEL_MAP_DEF_MAX);
 
     pa_channel_map_init(m);
@@ -392,7 +389,6 @@ pa_channel_map* pa_channel_map_init_auto(pa_channel_map *m, unsigned channels, p
                     return NULL;
             }
 
-
         default:
             pa_assert_not_reached();
     }
@@ -402,8 +398,7 @@ pa_channel_map* pa_channel_map_init_extend(pa_channel_map *m, unsigned channels,
     unsigned c;
 
     pa_assert(m);
-    pa_assert(channels > 0);
-    pa_assert(channels <= PA_CHANNELS_MAX);
+    pa_assert(pa_channels_valid(channels));
     pa_assert(def < PA_CHANNEL_MAP_DEF_MAX);
 
     pa_channel_map_init(m);
@@ -471,7 +466,7 @@ int pa_channel_map_equal(const pa_channel_map *a, const pa_channel_map *b) {
 
 char* pa_channel_map_snprint(char *s, size_t l, const pa_channel_map *map) {
     unsigned channel;
-    pa_bool_t first = TRUE;
+    bool first = true;
     char *e;
 
     pa_assert(s);
@@ -493,7 +488,7 @@ char* pa_channel_map_snprint(char *s, size_t l, const pa_channel_map *map) {
                       pa_channel_position_to_string(map->map[channel]));
 
         e = strchr(e, 0);
-        first = FALSE;
+        first = false;
     }
 
     return s;
@@ -538,6 +533,12 @@ pa_channel_map *pa_channel_map_parse(pa_channel_map *rmap, const char *s) {
         map.channels = 2;
         map.map[0] = PA_CHANNEL_POSITION_LEFT;
         map.map[1] = PA_CHANNEL_POSITION_RIGHT;
+        goto finish;
+    } else if (pa_streq(s, "surround-21")) {
+        map.channels = 3;
+        map.map[0] = PA_CHANNEL_POSITION_FRONT_LEFT;
+        map.map[1] = PA_CHANNEL_POSITION_FRONT_RIGHT;
+        map.map[2] = PA_CHANNEL_POSITION_LFE;
         goto finish;
     } else if (pa_streq(s, "surround-40")) {
         map.channels = 4;
@@ -618,7 +619,7 @@ int pa_channel_map_valid(const pa_channel_map *map) {
 
     pa_assert(map);
 
-    if (map->channels <= 0 || map->channels > PA_CHANNELS_MAX)
+    if (!pa_channels_valid(map->channels))
         return 0;
 
     for (c = 0; c < map->channels; c++)
@@ -694,7 +695,7 @@ const char* pa_channel_map_to_name(const pa_channel_map *map) {
     memset(in_map, 0, sizeof(in_map));
 
     for (c = 0; c < map->channels; c++)
-        pa_bitset_set(in_map, map->map[c], TRUE);
+        pa_bitset_set(in_map, map->map[c], true);
 
     if (pa_bitset_equals(in_map, PA_CHANNEL_POSITION_MAX,
                          PA_CHANNEL_POSITION_MONO, -1))
@@ -748,7 +749,7 @@ const char* pa_channel_map_to_pretty_name(const pa_channel_map *map) {
     memset(in_map, 0, sizeof(in_map));
 
     for (c = 0; c < map->channels; c++)
-        pa_bitset_set(in_map, map->map[c], TRUE);
+        pa_bitset_set(in_map, map->map[c], true);
 
     pa_init_i18n();
 

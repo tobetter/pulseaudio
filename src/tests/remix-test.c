@@ -12,9 +12,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #ifdef HAVE_CONFIG_H
@@ -52,7 +50,7 @@ int main(int argc, char *argv[]) {
 
     pa_log_set_level(PA_LOG_DEBUG);
 
-    pa_assert_se(pool = pa_mempool_new(FALSE, 0));
+    pa_assert_se(pool = pa_mempool_new(false, 0));
 
     for (i = 0; maps[i].channels > 0; i++)
         for (j = 0; maps[j].channels > 0; j++) {
@@ -75,7 +73,6 @@ int main(int argc, char *argv[]) {
 
             pa_resampler_free(r);
         }
-
 
     pa_mempool_free(pool);
 

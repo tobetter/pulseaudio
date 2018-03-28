@@ -12,9 +12,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #ifdef HAVE_CONFIG_H
@@ -98,7 +96,7 @@ static void dump_block(const char *label, const pa_sample_spec *ss, const pa_mem
             float *u = d;
 
             for (i = 0; i < chunk->length / pa_frame_size(ss); i++) {
-                printf("%4.3g ", ss->format == PA_SAMPLE_FLOAT32NE ? *u : PA_FLOAT32_SWAP(*u));
+                printf("%4.3g ", ss->format == PA_SAMPLE_FLOAT32NE ? *u : PA_READ_FLOAT32RE(u));
                 u++;
             }
 
@@ -222,7 +220,7 @@ static pa_memblock* generate_block(pa_mempool *pool, const pa_sample_spec *ss) {
 
             if (ss->format == PA_SAMPLE_FLOAT32RE)
                 for (i = 0; i < 10; i++)
-                    u[i] = PA_FLOAT32_SWAP(u[i]);
+                    PA_WRITE_FLOAT32RE(&u[i], u[i]);
 
             break;
         }
@@ -302,7 +300,7 @@ int main(int argc, char *argv[]) {
     pa_mempool *pool = NULL;
     pa_sample_spec a, b;
     int ret = 1, c;
-    pa_bool_t all_formats = TRUE;
+    bool all_formats = true;
     pa_resample_method_t method;
     int seconds;
 
@@ -331,7 +329,7 @@ int main(int argc, char *argv[]) {
     if (!getenv("MAKE_CHECK"))
         pa_log_set_level(PA_LOG_INFO);
 
-    pa_assert_se(pool = pa_mempool_new(FALSE, 0));
+    pa_assert_se(pool = pa_mempool_new(false, 0));
 
     a.channels = b.channels = 1;
     a.rate = b.rate = 44100;
@@ -368,7 +366,7 @@ int main(int argc, char *argv[]) {
 
             case ARG_FROM_SAMPLEFORMAT:
                 a.format = pa_parse_sample_format(optarg);
-                all_formats = FALSE;
+                all_formats = false;
                 break;
 
             case ARG_FROM_SAMPLERATE:
@@ -381,7 +379,7 @@ int main(int argc, char *argv[]) {
 
             case ARG_TO_SAMPLEFORMAT:
                 b.format = pa_parse_sample_format(optarg);
-                all_formats = FALSE;
+                all_formats = false;
                 break;
 
             case ARG_TO_SAMPLERATE:
@@ -407,7 +405,7 @@ int main(int argc, char *argv[]) {
     }
 
     ret = 0;
-    pa_assert_se(pool = pa_mempool_new(FALSE, 0));
+    pa_assert_se(pool = pa_mempool_new(false, 0));
 
     if (!all_formats) {
 
@@ -415,8 +413,8 @@ int main(int argc, char *argv[]) {
         pa_memchunk i, j;
         pa_usec_t ts;
 
-        pa_log_debug(_("Compilation CFLAGS: %s"), PA_CFLAGS);
-        pa_log_debug(_("=== %d seconds: %d Hz %d ch (%s) -> %d Hz %d ch (%s)"), seconds,
+        pa_log_debug("Compilation CFLAGS: %s", PA_CFLAGS);
+        pa_log_debug("=== %d seconds: %d Hz %d ch (%s) -> %d Hz %d ch (%s)", seconds,
                    a.rate, a.channels, pa_sample_format_to_string(a.format),
                    b.rate, b.channels, pa_sample_format_to_string(b.format));
 
@@ -431,7 +429,8 @@ int main(int argc, char *argv[]) {
         i.index = 0;
         while (seconds--) {
             pa_resampler_run(resampler, &i, &j);
-            pa_memblock_unref(j.memblock);
+            if (j.memblock)
+                pa_memblock_unref(j.memblock);
         }
         pa_log_info("resampling: %llu", (long long unsigned)(pa_rtclock_now() - ts));
         pa_memblock_unref(i.memblock);

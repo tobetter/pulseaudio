@@ -14,9 +14,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #ifdef HAVE_CONFIG_H
@@ -140,7 +138,7 @@ void pa_cmdline_help(const char *argv0) {
            "      --scache-idle-time=SECS           Unload autoloaded samples when idle and\n"
            "                                        this time passed\n"
            "      --log-level[=LEVEL]               Increase or set verbosity level\n"
-           "  -v                                    Increase the verbosity level\n"
+           "  -v  --verbose                         Increase the verbosity level\n"
            "      --log-target={auto,syslog,stderr,file:PATH,newfile:PATH}\n"
            "                                        Specify the log target\n"
            "      --log-meta[=BOOL]                 Include code location in log messages\n"
@@ -215,7 +213,7 @@ int pa_cmdline_parse(pa_daemon_conf *conf, int argc, char *const argv [], int *d
 
             case ARG_START:
                 conf->cmd = PA_CMD_START;
-                conf->daemonize = TRUE;
+                conf->daemonize = true;
                 break;
 
             case ARG_CHECK:
@@ -318,12 +316,16 @@ int pa_cmdline_parse(pa_daemon_conf *conf, int argc, char *const argv [], int *d
                 break;
 
             case 'n':
-                conf->load_default_script_file = FALSE;
+                conf->load_default_script_file = false;
                 break;
 
             case ARG_LOG_TARGET:
                 if (pa_daemon_conf_set_log_target(conf, optarg) < 0) {
+#ifdef HAVE_SYSTEMD_JOURNAL
+                    pa_log(_("Invalid log target: use either 'syslog', 'journal','stderr' or 'auto' or a valid file name 'file:<path>', 'newfile:<path>'."));
+#else
                     pa_log(_("Invalid log target: use either 'syslog', 'stderr' or 'auto' or a valid file name 'file:<path>', 'newfile:<path>'."));
+#endif
                     goto fail;
                 }
                 break;

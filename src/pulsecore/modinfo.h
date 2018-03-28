@@ -17,9 +17,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 /* Some functions for reading module meta data from PulseAudio modules */
@@ -31,7 +29,7 @@ typedef struct pa_modinfo {
     char *usage;
     char *version;
     char *deprecated;
-    pa_bool_t load_once;
+    bool load_once;
 } pa_modinfo;
 
 /* Read meta data from an libtool handle */

@@ -14,9 +14,7 @@
   Lesser General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public
-  License along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  License along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #ifdef HAVE_CONFIG_H
@@ -132,16 +130,16 @@ int pa_parse_address(const char *name, pa_parsed_address *ret_p) {
     return 0;
 }
 
-pa_bool_t pa_is_ip_address(const char *a) {
+bool pa_is_ip_address(const char *a) {
     char buf[INET6_ADDRSTRLEN];
 
     pa_assert(a);
 
     if (inet_pton(AF_INET6, a, buf) >= 1)
-        return TRUE;
+        return true;
 
     if (inet_pton(AF_INET, a, buf) >= 1)
-        return TRUE;
+        return true;
 
-    return FALSE;
+    return false;
 }

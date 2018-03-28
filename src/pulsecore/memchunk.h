@@ -17,9 +17,7 @@
   Lesser General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public
-  License along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  License along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 typedef struct pa_memchunk pa_memchunk;
@@ -52,7 +50,7 @@ pa_memchunk *pa_memchunk_will_need(const pa_memchunk *c);
 /* Copy the data in the src memchunk to the dst memchunk */
 pa_memchunk* pa_memchunk_memcpy(pa_memchunk *dst, pa_memchunk *src);
 
-/* Return TRUE if any field is set != 0 */
-pa_bool_t pa_memchunk_isset(pa_memchunk *c);
+/* Return true if any field is set != 0 */
+bool pa_memchunk_isset(pa_memchunk *c);
 
 #endif

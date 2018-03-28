@@ -15,9 +15,7 @@
   Lesser General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public
-  License along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  License along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #ifdef HAVE_CONFIG_H
@@ -51,13 +49,13 @@ struct pa_rtpoll {
     unsigned n_pollfd_alloc, n_pollfd_used;
 
     struct timeval next_elapse;
-    pa_bool_t timer_enabled:1;
+    bool timer_enabled:1;
 
-    pa_bool_t scan_for_dead:1;
-    pa_bool_t running:1;
-    pa_bool_t rebuild_needed:1;
-    pa_bool_t quit:1;
-    pa_bool_t timer_elapsed:1;
+    bool scan_for_dead:1;
+    bool running:1;
+    bool rebuild_needed:1;
+    bool quit:1;
+    bool timer_elapsed:1;
 
 #ifdef DEBUG_TIMING
     pa_usec_t timestamp;
@@ -69,7 +67,7 @@ struct pa_rtpoll {
 
 struct pa_rtpoll_item {
     pa_rtpoll *rtpoll;
-    pa_bool_t dead;
+    bool dead;
 
     pa_rtpoll_priority_t priority;
 
@@ -110,7 +108,7 @@ static void rtpoll_rebuild(pa_rtpoll *p) {
 
     pa_assert(p);
 
-    p->rebuild_needed = FALSE;
+    p->rebuild_needed = false;
 
     if (p->n_pollfd_used > p->n_pollfd_alloc) {
         /* Hmm, we have to allocate some more space */
@@ -161,7 +159,7 @@ static void rtpoll_item_destroy(pa_rtpoll_item *i) {
     if (pa_flist_push(PA_STATIC_FLIST_GET(items), i) < 0)
         pa_xfree(i);
 
-    p->rebuild_needed = TRUE;
+    p->rebuild_needed = true;
 }
 
 void pa_rtpoll_free(pa_rtpoll *p) {
@@ -203,7 +201,7 @@ static void reset_all_revents(pa_rtpoll *p) {
     }
 }
 
-int pa_rtpoll_run(pa_rtpoll *p, pa_bool_t wait_op) {
+int pa_rtpoll_run(pa_rtpoll *p) {
     pa_rtpoll_item *i;
     int r = 0;
     struct timeval timeout;
@@ -215,8 +213,8 @@ int pa_rtpoll_run(pa_rtpoll *p, pa_bool_t wait_op) {
     pa_log("rtpoll_run");
 #endif
 
-    p->running = TRUE;
-    p->timer_elapsed = FALSE;
+    p->running = true;
+    p->timer_elapsed = false;
 
     /* First, let's do some work */
     for (i = p->items; i && i->priority < PA_RTPOLL_NEVER; i = i->next) {
@@ -285,7 +283,7 @@ int pa_rtpoll_run(pa_rtpoll *p, pa_bool_t wait_op) {
     pa_zero(timeout);
 
     /* Calculate timeout */
-    if (wait_op && !p->quit && p->timer_enabled) {
+    if (!p->quit && p->timer_enabled) {
         struct timeval now;
         pa_rtclock_get(&now);
 
@@ -298,10 +296,12 @@ int pa_rtpoll_run(pa_rtpoll *p, pa_bool_t wait_op) {
         pa_usec_t now = pa_rtclock_now();
         p->awake = now - p->timestamp;
         p->timestamp = now;
-        if (!wait_op || p->quit || p->timer_enabled)
+        if (!p->quit && p->timer_enabled)
             pa_log("poll timeout: %d ms ",(int) ((timeout.tv_sec*1000) + (timeout.tv_usec / 1000)));
-        else
+        else if (q->quit)
             pa_log("poll timeout is ZERO");
+        else
+            pa_log("poll timeout is FOREVER");
     }
 #endif
 
@@ -311,10 +311,10 @@ int pa_rtpoll_run(pa_rtpoll *p, pa_bool_t wait_op) {
         struct timespec ts;
         ts.tv_sec = timeout.tv_sec;
         ts.tv_nsec = timeout.tv_usec * 1000;
-        r = ppoll(p->pollfd, p->n_pollfd_used, (!wait_op || p->quit || p->timer_enabled) ? &ts : NULL, NULL);
+        r = ppoll(p->pollfd, p->n_pollfd_used, (p->quit || p->timer_enabled) ? &ts : NULL, NULL);
     }
 #else
-    r = pa_poll(p->pollfd, p->n_pollfd_used, (!wait_op || p->quit || p->timer_enabled) ? (int) ((timeout.tv_sec*1000) + (timeout.tv_usec / 1000)) : -1);
+    r = pa_poll(p->pollfd, p->n_pollfd_used, (p->quit || p->timer_enabled) ? (int) ((timeout.tv_sec*1000) + (timeout.tv_usec / 1000)) : -1);
 #endif
 
     p->timer_elapsed = r == 0;
@@ -354,12 +354,12 @@ int pa_rtpoll_run(pa_rtpoll *p, pa_bool_t wait_op) {
 
 finish:
 
-    p->running = FALSE;
+    p->running = false;
 
     if (p->scan_for_dead) {
         pa_rtpoll_item *n;
 
-        p->scan_for_dead = FALSE;
+        p->scan_for_dead = false;
 
         for (i = p->items; i; i = n) {
             n = i->next;
@@ -376,7 +376,7 @@ void pa_rtpoll_set_timer_absolute(pa_rtpoll *p, pa_usec_t usec) {
     pa_assert(p);
 
     pa_timeval_store(&p->next_elapse, usec);
-    p->timer_enabled = TRUE;
+    p->timer_enabled = true;
 }
 
 void pa_rtpoll_set_timer_relative(pa_rtpoll *p, pa_usec_t usec) {
@@ -387,14 +387,14 @@ void pa_rtpoll_set_timer_relative(pa_rtpoll *p, pa_usec_t usec) {
 
     pa_rtclock_get(&p->next_elapse);
     pa_timeval_add(&p->next_elapse, usec);
-    p->timer_enabled = TRUE;
+    p->timer_enabled = true;
 }
 
 void pa_rtpoll_set_timer_disabled(pa_rtpoll *p) {
     pa_assert(p);
 
     memset(&p->next_elapse, 0, sizeof(p->next_elapse));
-    p->timer_enabled = FALSE;
+    p->timer_enabled = false;
 }
 
 pa_rtpoll_item *pa_rtpoll_item_new(pa_rtpoll *p, pa_rtpoll_priority_t prio, unsigned n_fds) {
@@ -406,7 +406,7 @@ pa_rtpoll_item *pa_rtpoll_item_new(pa_rtpoll *p, pa_rtpoll_priority_t prio, unsi
         i = pa_xnew(pa_rtpoll_item, 1);
 
     i->rtpoll = p;
-    i->dead = FALSE;
+    i->dead = false;
     i->n_pollfd = n_fds;
     i->pollfd = NULL;
     i->priority = prio;
@@ -437,8 +437,8 @@ void pa_rtpoll_item_free(pa_rtpoll_item *i) {
     pa_assert(i);
 
     if (i->rtpoll->running) {
-        i->dead = TRUE;
-        i->rtpoll->scan_for_dead = TRUE;
+        i->dead = true;
+        i->rtpoll->scan_for_dead = true;
         return;
     }
 
@@ -628,10 +628,10 @@ pa_rtpoll_item *pa_rtpoll_item_new_asyncmsgq_write(pa_rtpoll *p, pa_rtpoll_prior
 void pa_rtpoll_quit(pa_rtpoll *p) {
     pa_assert(p);
 
-    p->quit = TRUE;
+    p->quit = true;
 }
 
-pa_bool_t pa_rtpoll_timer_elapsed(pa_rtpoll *p) {
+bool pa_rtpoll_timer_elapsed(pa_rtpoll *p) {
     pa_assert(p);
 
     return p->timer_elapsed;

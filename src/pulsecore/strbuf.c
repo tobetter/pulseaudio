@@ -14,9 +14,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #ifdef HAVE_CONFIG_H
@@ -188,7 +186,7 @@ size_t pa_strbuf_printf(pa_strbuf *sb, const char *format, ...) {
     }
 }
 
-pa_bool_t pa_strbuf_isempty(pa_strbuf *sb) {
+bool pa_strbuf_isempty(pa_strbuf *sb) {
     pa_assert(sb);
 
     return sb->length <= 0;

@@ -15,9 +15,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #ifdef HAVE_CONFIG_H
@@ -60,7 +58,7 @@
 PA_MODULE_AUTHOR("Giorgos Boutsioukis");
 PA_MODULE_DESCRIPTION("Xen PV audio sink");
 PA_MODULE_VERSION(PACKAGE_VERSION);
-PA_MODULE_LOAD_ONCE(FALSE);
+PA_MODULE_LOAD_ONCE(false);
 PA_MODULE_USAGE(
         "sink_name=<name for the sink> "
         "sink_properties=<properties for the sink> "
@@ -76,15 +74,15 @@ PA_MODULE_USAGE(
 
 int device_id = -1;
 enum xenbus_state {
-	XenbusStateUnknown      = 0,
-	XenbusStateInitialising = 1,
-	XenbusStateInitWait     = 2,
-	XenbusStateInitialised  = 3,
-	XenbusStateConnected    = 4,
-	XenbusStateClosing      = 5,
-	XenbusStateClosed       = 6,
-	XenbusStateReconfiguring = 7,
-	XenbusStateReconfigured  = 8
+    XenbusStateUnknown      = 0,
+    XenbusStateInitialising = 1,
+    XenbusStateInitWait     = 2,
+    XenbusStateInitialised  = 3,
+    XenbusStateConnected    = 4,
+    XenbusStateClosing      = 5,
+    XenbusStateClosed       = 6,
+    XenbusStateReconfiguring = 7,
+    XenbusStateReconfigured  = 8
 };
 
 static const char* xenbus_names[] = {
@@ -278,10 +276,8 @@ static int sink_process_msg(pa_msgobject *o, int code, void *data, int64_t offse
 static int process_render(struct userdata *u) {
     pa_assert(u);
 
-
     if (u->memchunk.length <= 0)
         pa_sink_render(u->sink, ioring->usable_buffer_space, &u->memchunk);
-
 
     pa_assert(u->memchunk.length > 0);
 
@@ -291,7 +287,7 @@ static int process_render(struct userdata *u) {
         void *p;
 
         p = pa_memblock_acquire(u->memchunk.memblock);
-	    /* xen: write data to ring buffer & notify backend */
+        /* xen: write data to ring buffer & notify backend */
         l = ring_write(ioring, (uint8_t*)p + u->memchunk.index, u->memchunk.length);
 
         pa_memblock_release(u->memchunk.memblock);
@@ -332,7 +328,7 @@ static void thread_func(void *userdata) {
 
     pa_thread_mq_install(&u->thread_mq);
 
-    for(;;){
+    for(;;) {
         struct pollfd *pollfd;
         int ret;
 
@@ -355,7 +351,7 @@ static void thread_func(void *userdata) {
 
         pollfd->events = (short) (u->sink->thread_info.state == PA_SINK_RUNNING ? POLLOUT : 0);
 
-        if ((ret = pa_rtpoll_run(u->rtpoll, TRUE)) < 0)
+        if ((ret = pa_rtpoll_run(u->rtpoll)) < 0)
             goto fail;
 
         if (ret == 0)
@@ -583,7 +579,6 @@ void pa__done(pa_module*m) {
 
 }
 
-
 static int alloc_gref(struct ioctl_gntalloc_alloc_gref *gref_, void **addr) {
     int alloc_fd, dev_fd, rv;
 
@@ -701,7 +696,6 @@ static char* read_param(const char *paramname) {
     return xs_read(xsh, 0, keybuf, &len);
 }
 
-
 static int publish_spec(pa_sample_spec *sample_spec) {
     /* Publish spec and set state to XenbusStateInitWait*/
     int ret;
@@ -712,7 +706,6 @@ static int publish_spec(pa_sample_spec *sample_spec) {
 
     return ret;
 }
-
 
 static int read_backend_default_spec(pa_sample_spec *sample_spec) {
     /* Read spec from backend */
@@ -759,7 +752,7 @@ static int wait_for_backend_state_change() {
 
     int xs_fd;
     struct timeval tv;
-	fd_set watch_fdset;
+    fd_set watch_fdset;
     int start, now;
 
     backend_state = STATE_UNDEFINED;
@@ -771,11 +764,11 @@ static int wait_for_backend_state_change() {
 
     /*XXX: hardcoded */
     seconds = 10;
-	do {
-		tv.tv_usec = 0;
-		tv.tv_sec = (start + seconds) - now;
-		FD_ZERO(&watch_fdset);
-		FD_SET(xs_fd, &watch_fdset);
+    do {
+        tv.tv_usec = 0;
+        tv.tv_sec = (start + seconds) - now;
+        FD_ZERO(&watch_fdset);
+        FD_SET(xs_fd, &watch_fdset);
         ret=select(xs_fd + 1, &watch_fdset, NULL, NULL, &tv);
 
         if (ret==-1)
@@ -783,8 +776,8 @@ static int wait_for_backend_state_change() {
             return -1;
         else if (ret) {
 
-			/* Read the watch to drain the buffer */
-			vec = xs_read_watch(xsh, &len);
+            /* Read the watch to drain the buffer */
+            vec = xs_read_watch(xsh, &len);
 
             buf = xs_read(xsh, XBT_NULL, vec[0], &len);
             if (buf == 0) {
@@ -795,9 +788,9 @@ static int wait_for_backend_state_change() {
 
             free(buf);
             free(vec);
-		}
-        /* else: timeout */
-	} while (backend_state == STATE_UNDEFINED && \
+        }
+    /* else: timeout */
+    } while (backend_state == STATE_UNDEFINED && \
             (now = time(NULL)) < start + seconds);
 
     return backend_state;

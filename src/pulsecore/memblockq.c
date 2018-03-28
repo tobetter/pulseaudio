@@ -14,9 +14,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #ifdef HAVE_CONFIG_H
@@ -52,7 +50,7 @@ struct pa_memblockq {
     unsigned n_blocks;
     size_t maxlength, tlength, base, prebuf, minreq, maxrewind;
     int64_t read_index, write_index;
-    pa_bool_t in_prebuf;
+    bool in_prebuf;
     pa_memchunk silence;
     pa_mcalign *mcalign;
     int64_t missing, requested;
@@ -86,7 +84,7 @@ pa_memblockq* pa_memblockq_new(
     pa_log_debug("memblockq requested: maxlength=%lu, tlength=%lu, base=%lu, prebuf=%lu, minreq=%lu maxrewind=%lu",
                  (unsigned long) maxlength, (unsigned long) tlength, (unsigned long) bq->base, (unsigned long) prebuf, (unsigned long) minreq, (unsigned long) maxrewind);
 
-    bq->in_prebuf = TRUE;
+    bq->in_prebuf = true;
 
     pa_memblockq_set_maxlength(bq, maxlength);
     pa_memblockq_set_tlength(bq, tlength);
@@ -222,7 +220,7 @@ static void drop_backlog(pa_memblockq *bq) {
         drop_block(bq, bq->blocks);
 }
 
-static pa_bool_t can_push(pa_memblockq *bq, size_t l) {
+static bool can_push(pa_memblockq *bq, size_t l) {
     int64_t end;
 
     pa_assert(bq);
@@ -233,7 +231,7 @@ static pa_bool_t can_push(pa_memblockq *bq, size_t l) {
         if ((int64_t) l > d)
             l -= (size_t) d;
         else
-            return TRUE;
+            return true;
     }
 
     end = bq->blocks_tail ? bq->blocks_tail->index + (int64_t) bq->blocks_tail->chunk.length : bq->write_index;
@@ -241,12 +239,12 @@ static pa_bool_t can_push(pa_memblockq *bq, size_t l) {
     /* Make sure that the list doesn't get too long */
     if (bq->write_index + (int64_t) l > end)
         if (bq->write_index + (int64_t) l - bq->read_index > (int64_t) bq->maxlength)
-            return FALSE;
+            return false;
 
-    return TRUE;
+    return true;
 }
 
-static void write_index_changed(pa_memblockq *bq, int64_t old_write_index, pa_bool_t account) {
+static void write_index_changed(pa_memblockq *bq, int64_t old_write_index, bool account) {
     int64_t delta;
 
     pa_assert(bq);
@@ -287,7 +285,8 @@ int pa_memblockq_push(pa_memblockq* bq, const pa_memchunk *uchunk) {
     pa_assert(uchunk->length > 0);
     pa_assert(uchunk->index + uchunk->length <= pa_memblock_get_length(uchunk->memblock));
 
-    pa_assert_se(uchunk->length % bq->base == 0);
+    pa_assert(uchunk->length % bq->base == 0);
+    pa_assert(uchunk->index % bq->base == 0);
 
     if (!can_push(bq, uchunk->length))
         return -1;
@@ -438,11 +437,11 @@ int pa_memblockq_push(pa_memblockq* bq, const pa_memchunk *uchunk) {
 
 finish:
 
-    write_index_changed(bq, old, TRUE);
+    write_index_changed(bq, old, true);
     return 0;
 }
 
-pa_bool_t pa_memblockq_prebuf_active(pa_memblockq *bq) {
+bool pa_memblockq_prebuf_active(pa_memblockq *bq) {
     pa_assert(bq);
 
     if (bq->in_prebuf)
@@ -451,24 +450,24 @@ pa_bool_t pa_memblockq_prebuf_active(pa_memblockq *bq) {
         return bq->prebuf > 0 && bq->read_index >= bq->write_index;
 }
 
-static pa_bool_t update_prebuf(pa_memblockq *bq) {
+static bool update_prebuf(pa_memblockq *bq) {
     pa_assert(bq);
 
     if (bq->in_prebuf) {
 
         if (pa_memblockq_get_length(bq) < bq->prebuf)
-            return TRUE;
+            return true;
 
-        bq->in_prebuf = FALSE;
-        return FALSE;
+        bq->in_prebuf = false;
+        return false;
     } else {
 
         if (bq->prebuf > 0 && bq->read_index >= bq->write_index) {
-            bq->in_prebuf = TRUE;
-            return TRUE;
+            bq->in_prebuf = true;
+            return true;
         }
 
-        return FALSE;
+        return false;
     }
 }
 
@@ -657,16 +656,16 @@ void pa_memblockq_rewind(pa_memblockq *bq, size_t length) {
     read_index_changed(bq, old);
 }
 
-pa_bool_t pa_memblockq_is_readable(pa_memblockq *bq) {
+bool pa_memblockq_is_readable(pa_memblockq *bq) {
     pa_assert(bq);
 
     if (pa_memblockq_prebuf_active(bq))
-        return FALSE;
+        return false;
 
     if (pa_memblockq_get_length(bq) <= 0)
-        return FALSE;
+        return false;
 
-    return TRUE;
+    return true;
 }
 
 size_t pa_memblockq_get_length(pa_memblockq *bq) {
@@ -690,7 +689,7 @@ size_t pa_memblockq_missing(pa_memblockq *bq) {
     return l >= bq->minreq ? l : 0;
 }
 
-void pa_memblockq_seek(pa_memblockq *bq, int64_t offset, pa_seek_mode_t seek, pa_bool_t account) {
+void pa_memblockq_seek(pa_memblockq *bq, int64_t offset, pa_seek_mode_t seek, bool account) {
     int64_t old;
     pa_assert(bq);
 
@@ -717,7 +716,7 @@ void pa_memblockq_seek(pa_memblockq *bq, int64_t offset, pa_seek_mode_t seek, pa
     write_index_changed(bq, old, account);
 }
 
-void pa_memblockq_flush_write(pa_memblockq *bq, pa_bool_t account) {
+void pa_memblockq_flush_write(pa_memblockq *bq, bool account) {
     int64_t old;
     pa_assert(bq);
 
@@ -804,14 +803,14 @@ int pa_memblockq_push_align(pa_memblockq* bq, const pa_memchunk *chunk) {
 void pa_memblockq_prebuf_disable(pa_memblockq *bq) {
     pa_assert(bq);
 
-    bq->in_prebuf = FALSE;
+    bq->in_prebuf = false;
 }
 
 void pa_memblockq_prebuf_force(pa_memblockq *bq) {
     pa_assert(bq);
 
     if (bq->prebuf > 0)
-        bq->in_prebuf = TRUE;
+        bq->in_prebuf = true;
 }
 
 size_t pa_memblockq_get_maxlength(pa_memblockq *bq) {
@@ -914,7 +913,7 @@ void pa_memblockq_set_prebuf(pa_memblockq *bq, size_t prebuf) {
         bq->prebuf = bq->tlength+bq->base-bq->minreq;
 
     if (bq->prebuf <= 0 || pa_memblockq_get_length(bq) >= bq->prebuf)
-        bq->in_prebuf = FALSE;
+        bq->in_prebuf = false;
 }
 
 void pa_memblockq_set_maxrewind(pa_memblockq *bq, size_t maxrewind) {
@@ -967,7 +966,7 @@ int pa_memblockq_splice(pa_memblockq *bq, pa_memblockq *source) {
 
             pa_memblock_unref(chunk.memblock);
         } else
-            pa_memblockq_seek(bq, (int64_t) chunk.length, PA_SEEK_RELATIVE, TRUE);
+            pa_memblockq_seek(bq, (int64_t) chunk.length, PA_SEEK_RELATIVE, true);
 
         pa_memblockq_drop(bq, chunk.length);
     }
@@ -997,7 +996,7 @@ void pa_memblockq_set_silence(pa_memblockq *bq, pa_memchunk *silence) {
         pa_memchunk_reset(&bq->silence);
 }
 
-pa_bool_t pa_memblockq_is_empty(pa_memblockq *bq) {
+bool pa_memblockq_is_empty(pa_memblockq *bq) {
     pa_assert(bq);
 
     return !bq->blocks;

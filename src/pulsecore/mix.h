@@ -19,9 +19,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #include <pulse/sample.h>
@@ -49,7 +47,7 @@ size_t pa_mix(
     size_t length,
     const pa_sample_spec *spec,
     const pa_cvolume *volume,
-    pa_bool_t mute);
+    bool mute);
 
 typedef void (*pa_do_mix_func_t) (pa_mix_info streams[], unsigned nstreams, unsigned channels, void *data, unsigned length);
 

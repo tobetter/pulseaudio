@@ -14,9 +14,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public
-  License along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  License along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #ifdef HAVE_CONFIG_H
@@ -30,6 +28,15 @@
 
 #ifdef HAVE_PTHREAD
 #include <pthread.h>
+#ifdef HAVE_PTHREAD_SETAFFINITY_NP
+#if defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
+#ifdef __FreeBSD__
+#include <pthread_np.h>
+#endif
+#include <sys/param.h>
+#include <sys/cpuset.h>
+#endif
+#endif
 #endif
 
 #include <pulse/util.h>
@@ -54,7 +61,11 @@ static void work(void *p) {
 
 #ifdef HAVE_PTHREAD_SETAFFINITY_NP
 {
+#if defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
+    cpuset_t mask;
+#else
     cpu_set_t mask;
+#endif
 
     CPU_ZERO(&mask);
     CPU_SET((size_t) PA_PTR_TO_UINT(p), &mask);

@@ -14,9 +14,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #ifdef HAVE_CONFIG_H
@@ -331,7 +329,7 @@ pa_hook* pa_reserve_monitor_wrapper_hook(pa_reserve_monitor_wrapper *w) {
     return &w->hook;
 }
 
-pa_bool_t pa_reserve_monitor_wrapper_busy(pa_reserve_monitor_wrapper *w) {
+bool pa_reserve_monitor_wrapper_busy(pa_reserve_monitor_wrapper *w) {
     pa_assert(w);
 
     pa_assert(PA_REFCNT_VALUE(w) >= 1);
@@ -339,6 +337,6 @@ pa_bool_t pa_reserve_monitor_wrapper_busy(pa_reserve_monitor_wrapper *w) {
 #ifdef HAVE_DBUS
     return rm_busy(w->monitor) > 0;
 #else
-    return FALSE;
+    return false;
 #endif
 }

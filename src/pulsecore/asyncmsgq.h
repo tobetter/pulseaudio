@@ -17,9 +17,7 @@
   Lesser General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public
-  License along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  License along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #include <sys/types.h>
@@ -60,13 +58,13 @@ void pa_asyncmsgq_unref(pa_asyncmsgq* q);
 void pa_asyncmsgq_post(pa_asyncmsgq *q, pa_msgobject *object, int code, const void *userdata, int64_t offset, const pa_memchunk *memchunk, pa_free_cb_t userdata_free_cb);
 int pa_asyncmsgq_send(pa_asyncmsgq *q, pa_msgobject *object, int code, const void *userdata, int64_t offset, const pa_memchunk *memchunk);
 
-int pa_asyncmsgq_get(pa_asyncmsgq *q, pa_msgobject **object, int *code, void **userdata, int64_t *offset, pa_memchunk *memchunk, pa_bool_t wait);
+int pa_asyncmsgq_get(pa_asyncmsgq *q, pa_msgobject **object, int *code, void **userdata, int64_t *offset, pa_memchunk *memchunk, bool wait);
 int pa_asyncmsgq_dispatch(pa_msgobject *object, int code, void *userdata, int64_t offset, pa_memchunk *memchunk);
 void pa_asyncmsgq_done(pa_asyncmsgq *q, int ret);
 int pa_asyncmsgq_wait_for(pa_asyncmsgq *a, int code);
 int pa_asyncmsgq_process_one(pa_asyncmsgq *a);
 
-void pa_asyncmsgq_flush(pa_asyncmsgq *a, pa_bool_t run);
+void pa_asyncmsgq_flush(pa_asyncmsgq *a, bool run);
 
 /* For the reading side */
 int pa_asyncmsgq_read_fd(pa_asyncmsgq *q);
@@ -78,6 +76,6 @@ int pa_asyncmsgq_write_fd(pa_asyncmsgq *q);
 void pa_asyncmsgq_write_before_poll(pa_asyncmsgq *a);
 void pa_asyncmsgq_write_after_poll(pa_asyncmsgq *a);
 
-pa_bool_t pa_asyncmsgq_dispatching(pa_asyncmsgq *a);
+bool pa_asyncmsgq_dispatching(pa_asyncmsgq *a);
 
 #endif

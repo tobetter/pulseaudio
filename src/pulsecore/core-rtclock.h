@@ -17,9 +17,7 @@
   Lesser General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public
-  License along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  License along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #include <pulsecore/macro.h>
@@ -32,7 +30,7 @@ struct timeval;
 struct timeval *pa_rtclock_get(struct timeval *ts);
 
 pa_usec_t pa_rtclock_age(const struct timeval *tv);
-pa_bool_t pa_rtclock_hrtimer(void);
+bool pa_rtclock_hrtimer(void);
 void pa_rtclock_hrtimer_enable(void);
 
 /* timer with a resolution better than this are considered high-resolution */
@@ -48,6 +46,6 @@ pa_usec_t pa_timespec_load(const struct timespec *ts);
 struct timespec* pa_timespec_store(struct timespec *ts, pa_usec_t v);
 #endif
 
-struct timeval* pa_timeval_rtstore(struct timeval *tv, pa_usec_t v, pa_bool_t rtclock);
+struct timeval* pa_timeval_rtstore(struct timeval *tv, pa_usec_t v, bool rtclock);
 
 #endif

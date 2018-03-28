@@ -15,9 +15,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #ifdef HAVE_CONFIG_H
@@ -41,7 +39,7 @@ struct pa_dbus_wrap_connection {
     pa_mainloop_api *mainloop;
     DBusConnection *connection;
     pa_defer_event* dispatch_event;
-    pa_bool_t use_rtclock:1;
+    bool use_rtclock:1;
 };
 
 struct timeout_data {
@@ -261,7 +259,7 @@ static void wakeup_main(void *userdata) {
     c->mainloop->defer_enable(c->dispatch_event, 1);
 }
 
-pa_dbus_wrap_connection* pa_dbus_wrap_connection_new(pa_mainloop_api *m, pa_bool_t use_rtclock, DBusBusType type, DBusError *error) {
+pa_dbus_wrap_connection* pa_dbus_wrap_connection_new(pa_mainloop_api *m, bool use_rtclock, DBusBusType type, DBusError *error) {
     DBusConnection *conn;
     pa_dbus_wrap_connection *pconn;
     char *id;
@@ -296,7 +294,7 @@ pa_dbus_wrap_connection* pa_dbus_wrap_connection_new(pa_mainloop_api *m, pa_bool
 
 pa_dbus_wrap_connection* pa_dbus_wrap_connection_new_from_existing(
         pa_mainloop_api *m,
-        pa_bool_t use_rtclock,
+        bool use_rtclock,
         DBusConnection *conn) {
     pa_dbus_wrap_connection *pconn;
 

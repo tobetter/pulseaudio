@@ -14,9 +14,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #ifdef HAVE_CONFIG_H
@@ -99,7 +97,6 @@ char* pa_x11_get_prop(xcb_connection_t *xcb, int screen, const char *name, char 
     pa_assert(xcb);
     pa_assert(name);
     pa_assert(p);
-
 
     xs = screen_of_display(xcb, screen);
     /*

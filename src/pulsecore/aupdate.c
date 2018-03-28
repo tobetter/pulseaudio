@@ -14,9 +14,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public
-  License along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  License along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 #ifdef HAVE_CONFIG_H
@@ -39,7 +37,7 @@ struct pa_aupdate {
     pa_atomic_t read_lock;
     pa_mutex *write_lock;
     pa_semaphore *semaphore;
-    pa_bool_t swapped;
+    bool swapped;
 };
 
 pa_aupdate *pa_aupdate_new(void) {
@@ -47,7 +45,7 @@ pa_aupdate *pa_aupdate_new(void) {
 
     a = pa_xnew(pa_aupdate, 1);
     pa_atomic_store(&a->read_lock, 0);
-    a->write_lock = pa_mutex_new(FALSE, FALSE);
+    a->write_lock = pa_mutex_new(false, false);
     a->semaphore = pa_semaphore_new(0);
 
     return a;
@@ -79,7 +77,7 @@ unsigned pa_aupdate_read_begin(pa_aupdate *a) {
 }
 
 void pa_aupdate_read_end(pa_aupdate *a) {
-    unsigned n;
+    unsigned PA_UNUSED n;
 
     pa_assert(a);
 
@@ -102,7 +100,7 @@ unsigned pa_aupdate_write_begin(pa_aupdate *a) {
 
     n = (unsigned) pa_atomic_load(&a->read_lock);
 
-    a->swapped = FALSE;
+    a->swapped = false;
 
     return !WHICH(n);
 }
@@ -122,7 +120,7 @@ unsigned pa_aupdate_write_swap(pa_aupdate *a) {
             break;
     }
 
-    a->swapped = TRUE;
+    a->swapped = true;
 
     return WHICH(n);
 }
