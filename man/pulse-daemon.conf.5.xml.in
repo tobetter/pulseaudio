@@ -136,12 +136,12 @@ License along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
       channel is available as well. If no input LFE channel is
       available the output LFE channel will always be 0. If no output
       LFE channel is available the signal on the input LFE channel
-      will be ignored. Defaults to <opt>yes</opt>.</p>
+      will be ignored. Defaults to <opt>no</opt>.</p>
     </option>
 
     <option>
       <p><opt>lfe-crossover-freq=</opt> The crossover frequency (in Hz) for the
-      LFE filter. Defaults to 120 Hz. Set it to 0 to disable the LFE filter.</p>
+      LFE filter. Set it to 0 to disable the LFE filter. Defaults to 0.</p>
     </option>
 
     <option>
@@ -189,9 +189,14 @@ License along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 
     <option>
       <p><opt>enable-shm=</opt> Enable data transfer via POSIX
-      shared memory. Takes a boolean argument, defaults to
+      or memfd shared memory. Takes a boolean argument, defaults to
       <opt>yes</opt>. The <opt>--disable-shm</opt> command line
       argument takes precedence.</p>
+    </option>
+
+    <option>
+      <p><opt>enable-memfd=</opt>. Enable memfd shared memory. Takes
+      a boolean argument, defaults to <opt>no</opt>.</p>
     </option>
 
     <option>
