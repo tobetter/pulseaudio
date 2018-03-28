@@ -1,23 +1,25 @@
 #ifndef foomcalignhfoo
 #define foomcalignhfoo
 
+/* $Id: mcalign.h 1266 2006-08-18 19:55:18Z lennart $ */
+
 /***
   This file is part of PulseAudio.
-
-  Copyright 2004-2006 Lennart Poettering
-
+ 
   PulseAudio is free software; you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as
   published by the Free Software Foundation; either version 2.1 of the
   License, or (at your option) any later version.
-
+ 
   PulseAudio is distributed in the hope that it will be useful, but
   WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
   Lesser General Public License for more details.
-
+ 
   You should have received a copy of the GNU Lesser General Public
-  License along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
+  License along with PulseAudio; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
+  USA.
 ***/
 
 #include <pulsecore/memblock.h>
@@ -39,11 +41,11 @@
  * for (;;) {
  *   pa_memchunk input;
  *
- *   ... fill input ...
+ *   ... fill input ... 
  *
  *   pa_mcalign_push(m, &input);
  *   pa_memblock_unref(input.memblock);
- *
+ * 
  *   for (;;) {
  *     pa_memchunk output;
  *
@@ -68,14 +70,11 @@ void pa_mcalign_free(pa_mcalign *m);
  * has to free the memchunk by himself. */
 void pa_mcalign_push(pa_mcalign *m, const pa_memchunk *c);
 
-/* Pop a new memchunk from the aligner. Returns 0 when successful,
+/* Pop a new memchunk from the aligner. Returns 0 when sucessful,
  * nonzero otherwise. */
 int pa_mcalign_pop(pa_mcalign *m, pa_memchunk *c);
 
 /* If we pass l bytes in now, how many bytes would we get out? */
 size_t pa_mcalign_csize(pa_mcalign *m, size_t l);
-
-/* Flush what's still stored in the aligner */
-void pa_mcalign_flush(pa_mcalign *m);
 
 #endif

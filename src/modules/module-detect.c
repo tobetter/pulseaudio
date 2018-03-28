@@ -1,22 +1,22 @@
+/* $Id: module-detect.c 1272 2006-08-18 21:38:40Z lennart $ */
+
 /***
   This file is part of PulseAudio.
-
-  Copyright 2006 Lennart Poettering
-  Copyright 2006 Pierre Ossman <ossman@cendio.se> for Cendio AB
-  Copyright 2006 Diego Pettenò
-
+ 
   PulseAudio is free software; you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as published
-  by the Free Software Foundation; either version 2.1 of the License,
+  by the Free Software Foundation; either version 2 of the License,
   or (at your option) any later version.
-
+ 
   PulseAudio is distributed in the hope that it will be useful, but
   WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
   General Public License for more details.
-
+ 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
+  along with PulseAudio; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
+  USA.
 ***/
 
 #ifdef HAVE_CONFIG_H
@@ -24,6 +24,7 @@
 #endif
 
 #include <stdio.h>
+#include <assert.h>
 #include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
@@ -32,29 +33,20 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
+#include <pulse/xmalloc.h>
+
 #include <pulsecore/core-error.h>
 #include <pulsecore/module.h>
 #include <pulsecore/modargs.h>
 #include <pulsecore/log.h>
 #include <pulsecore/core-util.h>
-#include <pulsecore/macro.h>
 
 #include "module-detect-symdef.h"
 
-PA_MODULE_AUTHOR("Lennart Poettering");
-PA_MODULE_DESCRIPTION("Detect available audio hardware and load matching drivers");
-PA_MODULE_VERSION(PACKAGE_VERSION);
-PA_MODULE_LOAD_ONCE(true);
-PA_MODULE_USAGE("just-one=<boolean>");
-
-#ifdef __linux__
-PA_MODULE_DEPRECATED("Please use module-udev-detect instead of module-detect!");
-#endif
-
-static const char* const valid_modargs[] = {
-    "just-one",
-    NULL
-};
+PA_MODULE_AUTHOR("Lennart Poettering")
+PA_MODULE_DESCRIPTION("Detect available audio hardware and load matching drivers")
+PA_MODULE_VERSION(PACKAGE_VERSION)
+PA_MODULE_USAGE("just-one=<boolean>")
 
 #ifdef HAVE_ALSA
 
@@ -62,11 +54,11 @@ static int detect_alsa(pa_core *c, int just_one) {
     FILE *f;
     int n = 0, n_sink = 0, n_source = 0;
 
-    if (!(f = pa_fopen_cloexec("/proc/asound/devices", "r"))) {
+    if (!(f = fopen("/proc/asound/devices", "r"))) {
 
         if (errno != ENOENT)
             pa_log_error("open(\"/proc/asound/devices\") failed: %s", pa_cstrerror(errno));
-
+        
         return -1;
     }
 
@@ -74,7 +66,7 @@ static int detect_alsa(pa_core *c, int just_one) {
         char line[64], args[64];
         unsigned device, subdevice;
         int is_sink;
-
+    
         if (!fgets(line, sizeof(line), f))
             break;
 
@@ -89,7 +81,7 @@ static int detect_alsa(pa_core *c, int just_one) {
 
         if (just_one && is_sink && n_sink >= 1)
             continue;
-
+        
         if (just_one && !is_sink && n_source >= 1)
             continue;
 
@@ -100,7 +92,7 @@ static int detect_alsa(pa_core *c, int just_one) {
         if (subdevice != 0)
             continue;
 
-        pa_snprintf(args, sizeof(args), "device_id=%u", device);
+        snprintf(args, sizeof(args), "device=hw:%u", device);
         if (!pa_module_load(c, is_sink ? "module-alsa-sink" : "module-alsa-source", args))
             continue;
 
@@ -113,19 +105,19 @@ static int detect_alsa(pa_core *c, int just_one) {
     }
 
     fclose(f);
-
+    
     return n;
 }
 #endif
 
-#ifdef HAVE_OSS_OUTPUT
+#ifdef HAVE_OSS
 static int detect_oss(pa_core *c, int just_one) {
     FILE *f;
     int n = 0, b = 0;
-
-    if (!(f = pa_fopen_cloexec("/dev/sndstat", "r")) &&
-        !(f = pa_fopen_cloexec("/proc/sndstat", "r")) &&
-        !(f = pa_fopen_cloexec("/proc/asound/oss/sndstat", "r"))) {
+    
+    if (!(f = fopen("/dev/sndstat", "r")) &&
+        !(f = fopen("/proc/sndstat", "r")) &&
+        !(f = fopen("/proc/asound/oss/sndstat", "r"))) {
 
         if (errno != ENOENT)
             pa_log_error("failed to open OSS sndstat device: %s", pa_cstrerror(errno));
@@ -134,38 +126,38 @@ static int detect_oss(pa_core *c, int just_one) {
     }
 
     while (!feof(f)) {
-        char line[256], args[64];
+        char line[64], args[64];
         unsigned device;
-
+    
         if (!fgets(line, sizeof(line), f))
             break;
 
         line[strcspn(line, "\r\n")] = 0;
 
         if (!b) {
-            b = pa_streq(line, "Audio devices:") || pa_streq(line, "Installed devices:");
+	     b = strcmp(line, "Audio devices:") == 0 || strcmp(line, "Installed devices:") == 0;
             continue;
         }
 
         if (line[0] == 0)
             break;
-
+        
         if (sscanf(line, "%u: ", &device) == 1) {
             if (device == 0)
-                pa_snprintf(args, sizeof(args), "device=/dev/dsp");
+                snprintf(args, sizeof(args), "device=/dev/dsp");
             else
-                pa_snprintf(args, sizeof(args), "device=/dev/dsp%u", device);
-
+                snprintf(args, sizeof(args), "device=/dev/dsp%u", device);
+            
             if (!pa_module_load(c, "module-oss", args))
                 continue;
-
-        } else if (sscanf(line, "pcm%u: ", &device) == 1) {
+            
+	} else if (sscanf(line, "pcm%u: ", &device) == 1) {
             /* FreeBSD support, the devices are named /dev/dsp0.0, dsp0.1 and so on */
-            pa_snprintf(args, sizeof(args), "device=/dev/dsp%u.0", device);
-
+            snprintf(args, sizeof(args), "device=/dev/dsp%u.0", device);
+            
             if (!pa_module_load(c, "module-oss", args))
                 continue;
-        }
+	}
 
         n++;
 
@@ -197,7 +189,7 @@ static int detect_solaris(pa_core *c, int just_one) {
     if (!S_ISCHR(s.st_mode))
         return 0;
 
-    pa_snprintf(args, sizeof(args), "device=%s", dev);
+    snprintf(args, sizeof(args), "device=%s", dev);
 
     if (!pa_module_load(c, "module-solaris", args))
         return 0;
@@ -219,34 +211,39 @@ static int detect_waveout(pa_core *c, int just_one) {
 }
 #endif
 
-int pa__init(pa_module*m) {
-    bool just_one = false;
-    int n = 0;
+int pa__init(pa_core *c, pa_module*m) {
+    int just_one = 0, n = 0;
     pa_modargs *ma;
 
-    pa_assert(m);
+    static const char* const valid_modargs[] = {
+        "just-one",
+        NULL
+    };
+    
+    assert(c);
+    assert(m);
 
     if (!(ma = pa_modargs_new(m->argument, valid_modargs))) {
         pa_log("Failed to parse module arguments");
         goto fail;
     }
-
+    
     if (pa_modargs_get_value_boolean(ma, "just-one", &just_one) < 0) {
         pa_log("just_one= expects a boolean argument.");
         goto fail;
     }
 
-#ifdef HAVE_ALSA
-    if ((n = detect_alsa(m->core, just_one)) <= 0)
+#if HAVE_ALSA
+    if ((n = detect_alsa(c, just_one)) <= 0) 
 #endif
-#ifdef HAVE_OSS_OUTPUT
-    if ((n = detect_oss(m->core, just_one)) <= 0)
+#if HAVE_OSS
+    if ((n = detect_oss(c, just_one)) <= 0)
 #endif
-#ifdef HAVE_SOLARIS
-    if ((n = detect_solaris(m->core, just_one)) <= 0)
+#if HAVE_SOLARIS
+    if ((n = detect_solaris(c, just_one)) <= 0)
 #endif
-#ifdef OS_IS_WIN32
-    if ((n = detect_waveout(m->core, just_one)) <= 0)
+#if OS_IS_WIN32
+    if ((n = detect_waveout(c, just_one)) <= 0)
 #endif
     {
         pa_log_warn("failed to detect any sound hardware.");
@@ -254,9 +251,9 @@ int pa__init(pa_module*m) {
     }
 
     pa_log_info("loaded %i modules.", n);
-
+    
     /* We were successful and can unload ourselves now. */
-    pa_module_unload_request(m, true);
+    pa_module_unload_request(m);
 
     pa_modargs_free(ma);
 
@@ -265,6 +262,12 @@ int pa__init(pa_module*m) {
 fail:
     if (ma)
         pa_modargs_free(ma);
-
+    
     return -1;
 }
+
+
+void pa__done(PA_GCC_UNUSED pa_core *c, PA_GCC_UNUSED pa_module*m) {
+    /* NOP */
+}
+

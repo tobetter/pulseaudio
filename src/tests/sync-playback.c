@@ -1,18 +1,22 @@
+/* $Id: sync-playback.c 1033 2006-06-19 21:53:48Z lennart $ */
+
 /***
   This file is part of PulseAudio.
-
+ 
   PulseAudio is free software; you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as published
-  by the Free Software Foundation; either version 2.1 of the License,
+  by the Free Software Foundation; either version 2 of the License,
   or (at your option) any later version.
-
+ 
   PulseAudio is distributed in the hope that it will be useful, but
   WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
   General Public License for more details.
-
+ 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
+  along with PulseAudio; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
+  USA.
 ***/
 
 #ifdef HAVE_CONFIG_H
@@ -20,14 +24,14 @@
 #endif
 
 #include <signal.h>
+#include <string.h>
 #include <errno.h>
 #include <unistd.h>
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <getopt.h>
 #include <math.h>
-
-#include <check.h>
 
 #include <pulse/pulseaudio.h>
 #include <pulse/mainloop.h>
@@ -39,7 +43,6 @@
 static pa_context *context = NULL;
 static pa_stream *streams[NSTREAMS];
 static pa_mainloop_api *mainloop_api = NULL;
-static const char *bname = NULL;
 
 static float data[SAMPLE_HZ]; /* one second space */
 
@@ -53,10 +56,9 @@ static const pa_sample_spec sample_spec = {
 
 static const pa_buffer_attr buffer_attr = {
     .maxlength = SAMPLE_HZ*sizeof(float)*NSTREAMS, /* exactly space for the entire play time */
-    .tlength = (uint32_t) -1,
-    .prebuf = 0, /* Setting prebuf to 0 guarantees us the streams will run synchronously, no matter what */
-    .minreq = (uint32_t) -1,
-    .fragsize = 0
+    .tlength = 0,
+    .prebuf = 0, /* Setting prebuf to 0 guarantees us the the streams will run synchronously, no matter what */
+    .minreq = 0
 };
 
 static void nop_free_cb(void *p) {}
@@ -65,7 +67,7 @@ static void underflow_cb(struct pa_stream *s, void *userdata) {
     int i = (int) (long) userdata;
 
     fprintf(stderr, "Stream %i finished\n", i);
-
+    
     if (++n_streams_ready >= 2*NSTREAMS) {
         fprintf(stderr, "We're done\n");
         mainloop_api->quit(mainloop_api, 0);
@@ -74,7 +76,7 @@ static void underflow_cb(struct pa_stream *s, void *userdata) {
 
 /* This routine is called whenever the stream state changes */
 static void stream_state_callback(pa_stream *s, void *userdata) {
-    fail_unless(s != NULL);
+    assert(s);
 
     switch (pa_stream_get_state(s)) {
         case PA_STREAM_UNCONNECTED:
@@ -87,39 +89,39 @@ static void stream_state_callback(pa_stream *s, void *userdata) {
             int r, i = (int) (long) userdata;
 
             fprintf(stderr, "Writing data to stream %i.\n", i);
-
-            r = pa_stream_write(s, data, sizeof(data), nop_free_cb, (int64_t) sizeof(data) * (int64_t) i, PA_SEEK_ABSOLUTE);
-            fail_unless(r == 0);
+            
+            r = pa_stream_write(s, data, sizeof(data), nop_free_cb, sizeof(data) * i, PA_SEEK_ABSOLUTE);
+            assert(r == 0);
 
             /* Be notified when this stream is drained */
             pa_stream_set_underflow_callback(s, underflow_cb, userdata);
-
+            
             /* All streams have been set up, let's go! */
             if (++n_streams_ready >= NSTREAMS) {
                 fprintf(stderr, "Uncorking\n");
                 pa_operation_unref(pa_stream_cork(s, 0, NULL, NULL));
             }
-
+           
             break;
         }
 
         default:
         case PA_STREAM_FAILED:
             fprintf(stderr, "Stream error: %s\n", pa_strerror(pa_context_errno(pa_stream_get_context(s))));
-            ck_abort();
+            abort();
     }
 }
 
 /* This is called whenever the context status changes */
 static void context_state_callback(pa_context *c, void *userdata) {
-    fail_unless(c != NULL);
+    assert(c);
 
     switch (pa_context_get_state(c)) {
         case PA_CONTEXT_CONNECTING:
         case PA_CONTEXT_AUTHORIZING:
         case PA_CONTEXT_SETTING_NAME:
             break;
-
+        
         case PA_CONTEXT_READY: {
 
             int i;
@@ -129,18 +131,18 @@ static void context_state_callback(pa_context *c, void *userdata) {
                 char name[64];
 
                 fprintf(stderr, "Creating stream %i\n", i);
-
+                
                 snprintf(name, sizeof(name), "stream #%i", i);
-
+            
                 streams[i] = pa_stream_new(c, name, &sample_spec, NULL);
-                fail_unless(streams[i] != NULL);
+                assert(streams[i]);
                 pa_stream_set_state_callback(streams[i], stream_state_callback, (void*) (long) i);
                 pa_stream_connect_playback(streams[i], NULL, &buffer_attr, PA_STREAM_START_CORKED, NULL, i == 0 ? NULL : streams[0]);
             }
-
+                
             break;
         }
-
+            
         case PA_CONTEXT_TERMINATED:
             mainloop_api->quit(mainloop_api, 0);
             break;
@@ -148,11 +150,11 @@ static void context_state_callback(pa_context *c, void *userdata) {
         case PA_CONTEXT_FAILED:
         default:
             fprintf(stderr, "Context error: %s\n", pa_strerror(pa_context_errno(c)));
-            ck_abort();
+            abort();
     }
 }
 
-START_TEST (sync_playback_test) {
+int main(int argc, char *argv[]) {
     pa_mainloop* m = NULL;
     int i, ret = 0;
 
@@ -161,28 +163,23 @@ START_TEST (sync_playback_test) {
 
     for (i = 0; i < NSTREAMS; i++)
         streams[i] = NULL;
-
+    
     /* Set up a new main loop */
     m = pa_mainloop_new();
-    fail_unless(m != NULL);
+    assert(m);
 
     mainloop_api = pa_mainloop_get_api(m);
 
-    context = pa_context_new(mainloop_api, bname);
-    fail_unless(context != NULL);
+    context = pa_context_new(mainloop_api, argv[0]);
+    assert(context);
 
     pa_context_set_state_callback(context, context_state_callback, NULL);
 
-    /* Connect the context */
-    if (pa_context_connect(context, NULL, 0, NULL) < 0) {
-        fprintf(stderr, "pa_context_connect() failed.\n");
-        goto quit;
-    }
+    pa_context_connect(context, NULL, 0, NULL);
 
     if (pa_mainloop_run(m, &ret) < 0)
         fprintf(stderr, "pa_mainloop_run() failed.\n");
 
-quit:
     pa_context_unref(context);
 
     for (i = 0; i < NSTREAMS; i++)
@@ -190,30 +187,6 @@ quit:
             pa_stream_unref(streams[i]);
 
     pa_mainloop_free(m);
-
-    fail_unless(ret == 0);
-}
-END_TEST
-
-int main(int argc, char *argv[]) {
-    int failed = 0;
-    Suite *s;
-    TCase *tc;
-    SRunner *sr;
-
-    bname = argv[0];
-
-    s = suite_create("Sync Playback");
-    tc = tcase_create("syncplayback");
-    tcase_add_test(tc, sync_playback_test);
-    /* 4s of audio, 0.5s grace time */
-    tcase_set_timeout(tc, 4.5);
-    suite_add_tcase(s, tc);
-
-    sr = srunner_create(s);
-    srunner_run_all(sr, CK_NORMAL);
-    failed = srunner_ntests_failed(sr);
-    srunner_free(sr);
-
-    return (failed == 0) ? EXIT_SUCCESS : EXIT_FAILURE;
+    
+    return ret;
 }

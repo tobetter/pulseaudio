@@ -1,18 +1,22 @@
+/* $Id: mainloop-test.c 1104 2006-07-18 19:53:29Z lennart $ */
+
 /***
   This file is part of PulseAudio.
-
+ 
   PulseAudio is free software; you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as published
-  by the Free Software Foundation; either version 2.1 of the License,
+  by the Free Software Foundation; either version 2 of the License,
   or (at your option) any later version.
-
+ 
   PulseAudio is distributed in the hope that it will be useful, but
   WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
   General Public License for more details.
-
+ 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
+  along with PulseAudio; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
+  USA.
 ***/
 
 #ifdef HAVE_CONFIG_H
@@ -23,13 +27,11 @@
 #include <unistd.h>
 #include <sys/time.h>
 #include <assert.h>
-#include <check.h>
 
-#include <pulse/rtclock.h>
 #include <pulse/timeval.h>
 
 #include <pulsecore/core-util.h>
-#include <pulsecore/core-rtclock.h>
+#include <pulsecore/gccmacro.h>
 
 #ifdef GLIB_MAIN_LOOP
 
@@ -46,7 +48,7 @@ static pa_defer_event *de;
 
 static void iocb(pa_mainloop_api*a, pa_io_event *e, int fd, pa_io_event_flags_t f, void *userdata) {
     unsigned char c;
-    pa_assert_se(read(fd, &c, sizeof(c)) >= 0);
+    read(fd, &c, sizeof(c));
     fprintf(stderr, "IO EVENT: %c\n", c < 32 ? '.' : c);
     a->defer_enable(de, 1);
 }
@@ -66,7 +68,7 @@ static void tcb(pa_mainloop_api*a, pa_time_event *e, const struct timeval *tv, v
 #endif
 }
 
-START_TEST (mainloop_test) {
+int main(PA_GCC_UNUSED int argc, PA_GCC_UNUSED char *argv[]) {
     pa_mainloop_api *a;
     pa_io_event *ioe;
     pa_time_event *te;
@@ -76,30 +78,32 @@ START_TEST (mainloop_test) {
     pa_glib_mainloop *g;
 
     glib_main_loop = g_main_loop_new(NULL, FALSE);
-    fail_if(!glib_main_loop);
+    assert(glib_main_loop);
 
     g = pa_glib_mainloop_new(NULL);
-    fail_if(!g);
+    assert(g);
 
     a = pa_glib_mainloop_get_api(g);
-    fail_if(!a);
+    assert(a);
 #else /* GLIB_MAIN_LOOP */
     pa_mainloop *m;
 
     m = pa_mainloop_new();
-    fail_if(!m);
+    assert(m);
 
     a = pa_mainloop_get_api(m);
-    fail_if(!a);
+    assert(a);
 #endif /* GLIB_MAIN_LOOP */
 
     ioe = a->io_new(a, 0, PA_IO_EVENT_INPUT, iocb, NULL);
-    fail_if(!ioe);
+    assert(ioe);
 
     de = a->defer_new(a, dcb, NULL);
-    fail_if(!de);
+    assert(de);
 
-    te = a->time_new(a, pa_timeval_rtstore(&tv, pa_rtclock_now() + 2 * PA_USEC_PER_SEC, true), tcb, NULL);
+    pa_gettimeofday(&tv);
+    tv.tv_sec += 10;
+    te = a->time_new(a, &tv, tcb, NULL);
 
 #if defined(GLIB_MAIN_LOOP)
     g_main_loop_run(glib_main_loop);
@@ -117,24 +121,6 @@ START_TEST (mainloop_test) {
 #else
     pa_mainloop_free(m);
 #endif
-}
-END_TEST
-
-int main(int argc, char *argv[]) {
-    int failed = 0;
-    Suite *s;
-    TCase *tc;
-    SRunner *sr;
-
-    s = suite_create("MainLoop");
-    tc = tcase_create("mainloop");
-    tcase_add_test(tc, mainloop_test);
-    suite_add_tcase(s, tc);
-
-    sr = srunner_create(s);
-    srunner_run_all(sr, CK_NORMAL);
-    failed = srunner_ntests_failed(sr);
-    srunner_free(sr);
-
-    return (failed == 0) ? EXIT_SUCCESS : EXIT_FAILURE;
+    
+    return 0;
 }

@@ -1,20 +1,22 @@
+/* $Id: mcalign.c 1266 2006-08-18 19:55:18Z lennart $ */
+
 /***
   This file is part of PulseAudio.
-
-  Copyright 2004-2006 Lennart Poettering
-
+ 
   PulseAudio is free software; you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as
   published by the Free Software Foundation; either version 2.1 of the
   License, or (at your option) any later version.
-
+ 
   PulseAudio is distributed in the hope that it will be useful, but
   WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
   Lesser General Public License for more details.
-
+ 
   You should have received a copy of the GNU Lesser General Public
-  License along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
+  License along with PulseAudio; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
+  USA.
 ***/
 
 #ifdef HAVE_CONFIG_H
@@ -23,10 +25,10 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
 #include <string.h>
 
 #include <pulse/xmalloc.h>
-#include <pulsecore/macro.h>
 
 #include "mcalign.h"
 
@@ -37,41 +39,41 @@ struct pa_mcalign {
 
 pa_mcalign *pa_mcalign_new(size_t base) {
     pa_mcalign *m;
-    pa_assert(base);
+    assert(base);
 
     m = pa_xnew(pa_mcalign, 1);
-
+    
     m->base = base;
     pa_memchunk_reset(&m->leftover);
     pa_memchunk_reset(&m->current);
-
+    
     return m;
 }
 
 void pa_mcalign_free(pa_mcalign *m) {
-    pa_assert(m);
+    assert(m);
 
     if (m->leftover.memblock)
         pa_memblock_unref(m->leftover.memblock);
 
     if (m->current.memblock)
         pa_memblock_unref(m->current.memblock);
-
+    
     pa_xfree(m);
 }
 
 void pa_mcalign_push(pa_mcalign *m, const pa_memchunk *c) {
-    pa_assert(m);
-    pa_assert(c);
+    assert(m);
+    assert(c);
+    
+    assert(c->memblock);
+    assert(c->length > 0);
 
-    pa_assert(c->memblock);
-    pa_assert(c->length > 0);
-
-    pa_assert(!m->current.memblock);
-
+    assert(!m->current.memblock);
+    
     /* Append to the leftover memory block */
     if (m->leftover.memblock) {
-
+        
         /* Try to merge */
         if (m->leftover.memblock == c->memblock &&
             m->leftover.index + m->leftover.length == c->index) {
@@ -83,31 +85,25 @@ void pa_mcalign_push(pa_mcalign *m, const pa_memchunk *c) {
             if (m->leftover.length >= m->base) {
                 m->current = m->leftover;
                 pa_memchunk_reset(&m->leftover);
-            }
+            } 
 
         } else {
             size_t l;
-            void *lo_data, *m_data;
 
             /* We have to copy */
-            pa_assert(m->leftover.length < m->base);
+            assert(m->leftover.length < m->base);
             l = m->base - m->leftover.length;
-
+            
             if (l > c->length)
                 l = c->length;
 
             /* Can we use the current block? */
             pa_memchunk_make_writable(&m->leftover, m->base);
 
-            lo_data = pa_memblock_acquire(m->leftover.memblock);
-            m_data = pa_memblock_acquire(c->memblock);
-            memcpy((uint8_t*) lo_data + m->leftover.index + m->leftover.length, (uint8_t*) m_data + c->index, l);
-            pa_memblock_release(m->leftover.memblock);
-            pa_memblock_release(c->memblock);
+            memcpy((uint8_t*) m->leftover.memblock->data + m->leftover.index + m->leftover.length, (uint8_t*) c->memblock->data + c->index, l);
             m->leftover.length += l;
 
-            pa_assert(m->leftover.length <= m->base);
-            pa_assert(m->leftover.length <= pa_memblock_get_length(m->leftover.memblock));
+            assert(m->leftover.length <= m->base && m->leftover.length <= m->leftover.memblock->length);
 
             if (c->length > l) {
                 /* Save the remainder of the memory block */
@@ -119,7 +115,7 @@ void pa_mcalign_push(pa_mcalign *m, const pa_memchunk *c) {
         }
     } else {
         /* Nothing to merge or copy, just store it */
-
+        
         if (c->length >= m->base)
             m->current = *c;
         else
@@ -130,13 +126,12 @@ void pa_mcalign_push(pa_mcalign *m, const pa_memchunk *c) {
 }
 
 int pa_mcalign_pop(pa_mcalign *m, pa_memchunk *c) {
-    pa_assert(m);
-    pa_assert(c);
+    assert(m);
+    assert(c);
 
     /* First test if there's a leftover memory block available */
     if (m->leftover.memblock) {
-        pa_assert(m->leftover.length > 0);
-        pa_assert(m->leftover.length <= m->base);
+        assert(m->leftover.length > 0 && m->leftover.length <= m->base);
 
         /* The leftover memory block is not yet complete */
         if (m->leftover.length < m->base)
@@ -151,20 +146,20 @@ int pa_mcalign_pop(pa_mcalign *m, pa_memchunk *c) {
             m->leftover = m->current;
             pa_memchunk_reset(&m->current);
         }
-
+        
         return 0;
     }
 
     /* Now let's see if there is other data available */
     if (m->current.memblock) {
         size_t l;
-        pa_assert(m->current.length >= m->base);
+        assert(m->current.length >= m->base);
 
         /* The length of the returned memory block */
         l = m->current.length;
         l /= m->base;
         l *= m->base;
-        pa_assert(l > 0);
+        assert(l > 0);
 
         /* Prepare the returned block */
         *c = m->current;
@@ -172,7 +167,7 @@ int pa_mcalign_pop(pa_mcalign *m, pa_memchunk *c) {
         c->length = l;
 
         /* Drop that from the current memory block */
-        pa_assert(l <= m->current.length);
+        assert(l <= m->current.length);
         m->current.index += l;
         m->current.length -= l;
 
@@ -180,37 +175,30 @@ int pa_mcalign_pop(pa_mcalign *m, pa_memchunk *c) {
         if (m->current.length == 0)
             pa_memblock_unref(m->current.memblock);
         else {
-            /* Move the remainder to leftover */
-            pa_assert(m->current.length < m->base && !m->leftover.memblock);
+            /* Move the raimainder to leftover */
+            assert(m->current.length < m->base && !m->leftover.memblock);
 
             m->leftover = m->current;
         }
 
         pa_memchunk_reset(&m->current);
-
+            
         return 0;
     }
 
     /* There's simply nothing */
     return -1;
+    
 }
 
 size_t pa_mcalign_csize(pa_mcalign *m, size_t l) {
-    pa_assert(m);
-    pa_assert(l > 0);
+    assert(m);
+    assert(l > 0);
 
-    pa_assert(!m->current.memblock);
-
+    assert(!m->current.memblock);
+           
     if (m->leftover.memblock)
         l += m->leftover.length;
-
+    
     return (l/m->base)*m->base;
-}
-
-void pa_mcalign_flush(pa_mcalign *m) {
-    pa_memchunk chunk;
-    pa_assert(m);
-
-    while (pa_mcalign_pop(m, &chunk) >= 0)
-        pa_memblock_unref(chunk.memblock);
 }

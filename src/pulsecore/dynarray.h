@@ -1,69 +1,49 @@
-#ifndef foopulsecoredynarrayhfoo
-#define foopulsecoredynarrayhfoo
+#ifndef foodynarrayhfoo
+#define foodynarrayhfoo
+
+/* $Id: dynarray.h 1033 2006-06-19 21:53:48Z lennart $ */
 
 /***
   This file is part of PulseAudio.
-
-  Copyright 2004-2008 Lennart Poettering
-
+ 
   PulseAudio is free software; you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as
   published by the Free Software Foundation; either version 2.1 of the
   License, or (at your option) any later version.
-
+ 
   PulseAudio is distributed in the hope that it will be useful, but
   WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
   Lesser General Public License for more details.
-
+ 
   You should have received a copy of the GNU Lesser General Public
-  License along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
+  License along with PulseAudio; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
+  USA.
 ***/
-
-#include <pulse/def.h>
 
 typedef struct pa_dynarray pa_dynarray;
 
-/* Implementation of a simple dynamically sized array for storing pointers.
- *
- * When the array is created, a free callback can be provided, which will be
- * then used when removing items from the array and when freeing the array. If
- * the free callback is not provided, the memory management of the stored items
- * is the responsibility of the array user. If there is need to remove items
- * from the array without freeing them, while also having the free callback
- * set, the functions with "steal" in their name can be used.
- *
- * Removing items from the middle of the array causes the last item to be
- * moved to the place of the removed item. That is, array ordering is not
- * preserved.
- *
- * The array doesn't support storing NULL pointers. */
+/* Implementation of a simple dynamically sized array. The array
+ * expands if required, but doesn't shrink if possible. Memory
+ * management of the array's entries is the user's job. */
 
-pa_dynarray* pa_dynarray_new(pa_free_cb_t free_cb);
-void pa_dynarray_free(pa_dynarray *array);
+pa_dynarray* pa_dynarray_new(void);
 
-void pa_dynarray_append(pa_dynarray *array, void *p);
+/* Free the array calling the specified function for every entry in
+ * the array. The function may be NULL. */
+void pa_dynarray_free(pa_dynarray* a, void (*func)(void *p, void *userdata), void *userdata);
 
-/* Returns the element at index i, or NULL if i is out of bounds. */
-void *pa_dynarray_get(pa_dynarray *array, unsigned i);
+/* Store p at position i in the array */
+void pa_dynarray_put(pa_dynarray*a, unsigned i, void *p);
 
-/* Returns the last element, or NULL if the array is empty. */
-void *pa_dynarray_last(pa_dynarray *array);
+/* Store p a the first free position in the array. Returns the index
+ * of that entry. If entries are removed from the array their position
+ * are not filled any more by this function. */
+unsigned pa_dynarray_append(pa_dynarray*a, void *p);
 
-/* Returns -PA_ERR_NOENTITY if i is out of bounds, and zero otherwise. */
-int pa_dynarray_remove_by_index(pa_dynarray *array, unsigned i);
+void *pa_dynarray_get(pa_dynarray*a, unsigned i);
 
-/* Returns -PA_ERR_NOENTITY if p is not found in the array, and zero
- * otherwise. If the array contains multiple occurrencies of p, only one of
- * them is removed (and it's unspecified which one). */
-int pa_dynarray_remove_by_data(pa_dynarray *array, void *p);
-
-/* Returns the removed item, or NULL if the array is empty. */
-void *pa_dynarray_steal_last(pa_dynarray *array);
-
-unsigned pa_dynarray_size(pa_dynarray *array);
-
-#define PA_DYNARRAY_FOREACH(elem, array, idx) \
-    for ((idx) = 0; ((elem) = pa_dynarray_get(array, idx)); (idx)++)
+unsigned pa_dynarray_size(pa_dynarray*a);
 
 #endif

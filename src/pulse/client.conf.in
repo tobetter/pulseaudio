@@ -1,3 +1,5 @@
+# $Id: client.conf.in 1285 2006-08-19 01:18:57Z lennart $
+#
 # This file is part of PulseAudio.
 #
 # PulseAudio is free software; you can redistribute it and/or modify
@@ -11,25 +13,33 @@
 # General Public License for more details.
 #
 # You should have received a copy of the GNU Lesser General Public License
-# along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
+# along with PulseAudio; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
+# USA.
 
-## Configuration file for PulseAudio clients. See pulse-client.conf(5) for
-## more information. Default values are commented out.  Use either ; or # for
-## commenting.
+## Configuration file for pulseaudio clients. Default values are
+## commented out.  Use either ; or # for commenting
 
-; default-sink =
-; default-source =
-; default-server =
-; default-dbus-server =
-
-; autospawn = yes
+## Path to the pulseaudio daemon to run when autospawning.
 ; daemon-binary = @PA_BINARY@
-; extra-arguments = --log-target=syslog
 
-; cookie-file =
+## Extra arguments to pass to the pulseaudio daemon
+; extra-arguments = --log-target=syslog --exit-idle-time=5
 
-; enable-shm = yes
-; shm-size-bytes = 0 # setting this 0 will use the system-default, usually 64 MiB
+## The default sink to connect to
+; default-sink = 
 
-; auto-connect-localhost = no
-; auto-connect-display = no
+## The default source to connect to
+; default-source =
+
+## The default sever to connect to
+; default-server =
+
+## Autospawn daemons?
+; autospawn = 0
+
+### Cookie file
+; cookie-file = 
+
+### Disable shared memory data transfer
+; disable-shm = 0

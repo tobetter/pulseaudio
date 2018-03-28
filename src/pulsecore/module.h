@@ -1,23 +1,25 @@
 #ifndef foomodulehfoo
 #define foomodulehfoo
 
+/* $Id: module.h 1237 2006-08-13 16:19:56Z lennart $ */
+
 /***
   This file is part of PulseAudio.
-
-  Copyright 2004-2006 Lennart Poettering
-
+ 
   PulseAudio is free software; you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as published
-  by the Free Software Foundation; either version 2.1 of the License,
+  by the Free Software Foundation; either version 2 of the License,
   or (at your option) any later version.
-
+ 
   PulseAudio is distributed in the hope that it will be useful, but
   WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
   General Public License for more details.
-
+ 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
+  along with PulseAudio; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
+  USA.
 ***/
 
 #include <inttypes.h>
@@ -25,10 +27,8 @@
 
 typedef struct pa_module pa_module;
 
-#include <pulse/proplist.h>
-#include <pulsecore/dynarray.h>
-
 #include <pulsecore/core.h>
+#include <pulsecore/modinfo.h>
 
 struct pa_module {
     pa_core *core;
@@ -36,60 +36,35 @@ struct pa_module {
     uint32_t index;
 
     lt_dlhandle dl;
-
-    int (*init)(pa_module*m);
-    void (*done)(pa_module*m);
-    int (*get_n_used)(pa_module *m);
+    
+    int (*init)(pa_core *c, pa_module*m);
+    void (*done)(pa_core *c, pa_module*m);
 
     void *userdata;
 
-    bool load_once:1;
-    bool unload_requested:1;
+    int n_used;
+    int auto_unload;
+    time_t last_used_time;
 
-    pa_proplist *proplist;
-    pa_dynarray *hooks;
+    int unload_requested;
 };
 
-bool pa_module_exists(const char *name);
-
-pa_module* pa_module_load(pa_core *c, const char *name, const char *argument);
-
-void pa_module_unload(pa_module *m, bool force);
-void pa_module_unload_by_index(pa_core *c, uint32_t idx, bool force);
-
-void pa_module_unload_request(pa_module *m, bool force);
-void pa_module_unload_request_by_index(pa_core *c, uint32_t idx, bool force);
+pa_module* pa_module_load(pa_core *c, const char *name, const char*argument);
+void pa_module_unload(pa_core *c, pa_module *m);
+void pa_module_unload_by_index(pa_core *c, uint32_t idx);
 
 void pa_module_unload_all(pa_core *c);
+void pa_module_unload_unused(pa_core *c);
 
-int pa_module_get_n_used(pa_module*m);
+void pa_module_unload_request(pa_module *m);
 
-void pa_module_update_proplist(pa_module *m, pa_update_mode_t mode, pa_proplist *p);
+void pa_module_set_used(pa_module*m, int used);
 
-void pa_module_hook_connect(pa_module *m, pa_hook *hook, pa_hook_priority_t prio, pa_hook_cb_t cb, void *data);
+#define PA_MODULE_AUTHOR(s) const char * pa__get_author(void) { return s; }
+#define PA_MODULE_DESCRIPTION(s) const char * pa__get_description(void) { return s; }
+#define PA_MODULE_USAGE(s) const char * pa__get_usage(void) { return s; }
+#define PA_MODULE_VERSION(s) const char * pa__get_version(void) { return s; }
 
-#define PA_MODULE_AUTHOR(s)                                     \
-    const char *pa__get_author(void) { return s; }              \
-    struct __stupid_useless_struct_to_allow_trailing_semicolon
-
-#define PA_MODULE_DESCRIPTION(s)                                \
-    const char *pa__get_description(void) { return s; }         \
-    struct __stupid_useless_struct_to_allow_trailing_semicolon
-
-#define PA_MODULE_USAGE(s)                                      \
-    const char *pa__get_usage(void) { return s; }               \
-    struct __stupid_useless_struct_to_allow_trailing_semicolon
-
-#define PA_MODULE_VERSION(s)                                    \
-    const char * pa__get_version(void) { return s; }            \
-    struct __stupid_useless_struct_to_allow_trailing_semicolon
-
-#define PA_MODULE_DEPRECATED(s)                                 \
-    const char * pa__get_deprecated(void) { return s; }         \
-    struct __stupid_useless_struct_to_allow_trailing_semicolon
-
-#define PA_MODULE_LOAD_ONCE(b)                                  \
-    bool pa__load_once(void) { return b; }                 \
-    struct __stupid_useless_struct_to_allow_trailing_semicolon
+pa_modinfo *pa_module_get_info(pa_module *m);
 
 #endif

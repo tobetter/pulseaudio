@@ -1,18 +1,22 @@
+/* $Id: parec-simple.c 1033 2006-06-19 21:53:48Z lennart $ */
+
 /***
   This file is part of PulseAudio.
-
+ 
   PulseAudio is free software; you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as published
-  by the Free Software Foundation; either version 2.1 of the License,
+  by the Free Software Foundation; either version 2 of the License,
   or (at your option) any later version.
-
+ 
   PulseAudio is distributed in the hope that it will be useful, but
   WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
   General Public License for more details.
-
+ 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
+  along with PulseAudio; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
+  USA.
 ***/
 
 #ifdef HAVE_CONFIG_H
@@ -26,6 +30,7 @@
 
 #include <pulse/simple.h>
 #include <pulse/error.h>
+#include <pulsecore/gccmacro.h>
 
 #define BUFSIZE 1024
 
@@ -41,16 +46,16 @@ static ssize_t loop_write(int fd, const void*data, size_t size) {
 
         if (r == 0)
             break;
-
+        
         ret += r;
         data = (const uint8_t*) data + r;
-        size -= (size_t) r;
+        size -= r;
     }
 
     return ret;
 }
 
-int main(int argc, char*argv[]) {
+int main(PA_GCC_UNUSED int argc, char*argv[]) {
     /* The sample type to use */
     static const pa_sample_spec ss = {
         .format = PA_SAMPLE_S16LE,
@@ -69,6 +74,7 @@ int main(int argc, char*argv[]) {
 
     for (;;) {
         uint8_t buf[BUFSIZE];
+        ssize_t r;
 
         /* Record some data ... */
         if (pa_simple_read(s, buf, sizeof(buf), &error) < 0) {
@@ -77,7 +83,7 @@ int main(int argc, char*argv[]) {
         }
 
         /* And write it to STDOUT */
-        if (loop_write(STDOUT_FILENO, buf, sizeof(buf)) != sizeof(buf)) {
+        if ((r = loop_write(STDOUT_FILENO, buf, sizeof(buf))) <= 0) {
             fprintf(stderr, __FILE__": write() failed: %s\n", strerror(errno));
             goto finish;
         }
@@ -89,6 +95,6 @@ finish:
 
     if (s)
         pa_simple_free(s);
-
+    
     return ret;
 }

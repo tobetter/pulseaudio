@@ -1,20 +1,22 @@
+/* $Id: module-native-protocol-fd.c 1272 2006-08-18 21:38:40Z lennart $ */
+
 /***
   This file is part of PulseAudio.
-
-  Copyright 2004-2006 Lennart Poettering
-
+ 
   PulseAudio is free software; you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as published
-  by the Free Software Foundation; either version 2.1 of the License,
+  by the Free Software Foundation; either version 2 of the License,
   or (at your option) any later version.
-
+ 
   PulseAudio is distributed in the hope that it will be useful, but
   WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
   General Public License for more details.
-
+ 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
+  along with PulseAudio; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
+  USA.
 ***/
 
 #ifdef HAVE_CONFIG_H
@@ -22,10 +24,10 @@
 #endif
 
 #include <stdio.h>
+#include <assert.h>
 #include <unistd.h>
 
 #include <pulsecore/module.h>
-#include <pulsecore/macro.h>
 #include <pulsecore/iochannel.h>
 #include <pulsecore/modargs.h>
 #include <pulsecore/protocol-native.h>
@@ -33,62 +35,51 @@
 
 #include "module-native-protocol-fd-symdef.h"
 
-PA_MODULE_AUTHOR("Lennart Poettering");
-PA_MODULE_DESCRIPTION("Native protocol autospawn helper");
-PA_MODULE_VERSION(PACKAGE_VERSION);
-PA_MODULE_LOAD_ONCE(true);
+PA_MODULE_AUTHOR("Lennart Poettering")
+PA_MODULE_DESCRIPTION("Native protocol autospawn helper")
+PA_MODULE_VERSION(PACKAGE_VERSION)
 
 static const char* const valid_modargs[] = {
     "fd",
+    "public",
+    "cookie",
     NULL,
 };
 
-int pa__init(pa_module*m) {
+int pa__init(pa_core *c, pa_module*m) {
     pa_iochannel *io;
     pa_modargs *ma;
-    int32_t fd = -1;
-    int r = -1;
-    pa_native_options *options = NULL;
-
-    pa_assert(m);
+    int fd, r = -1;
+    assert(c && m);
 
     if (!(ma = pa_modargs_new(m->argument, valid_modargs))) {
-        pa_log("Failed to parse module arguments.");
+        pa_log("failed to parse module arguments.");
         goto finish;
     }
 
-    if (pa_modargs_get_value_s32(ma, "fd", &fd) < 0 || fd < 0) {
-        pa_log("Invalid file descriptor.");
+    if (pa_modargs_get_value_s32(ma, "fd", &fd) < 0) {
+        pa_log("invalid file descriptor.");
         goto finish;
     }
+    
+    io = pa_iochannel_new(c->mainloop, fd, fd);
 
-    m->userdata = pa_native_protocol_get(m->core);
-
-    io = pa_iochannel_new(m->core->mainloop, fd, fd);
-
-    options = pa_native_options_new();
-    options->module = m;
-    options->auth_anonymous = true;
-
-    pa_native_protocol_connect(m->userdata, io, options);
+    if (!(m->userdata = pa_protocol_native_new_iochannel(c, io, m, ma))) {
+        pa_iochannel_free(io);
+        goto finish;
+    }
 
     r = 0;
 
 finish:
     if (ma)
         pa_modargs_free(ma);
-
-    if (options)
-        pa_native_options_unref(options);
-
+    
     return r;
 }
 
-void pa__done(pa_module*m) {
-    pa_assert(m);
+void pa__done(pa_core *c, pa_module*m) {
+    assert(c && m);
 
-    if (m->userdata) {
-        pa_native_protocol_disconnect(m->userdata, m);
-        pa_native_protocol_unref(m->userdata);
-    }
+    pa_protocol_native_free(m->userdata);
 }

@@ -1,15 +1,14 @@
 #ifndef foodaemonconfhfoo
 #define foodaemonconfhfoo
 
+/* $Id: daemon-conf.h 1286 2006-08-19 01:20:13Z lennart $ */
+
 /***
   This file is part of PulseAudio.
 
-  Copyright 2004-2006 Lennart Poettering
-  Copyright 2006 Pierre Ossman <ossman@cendio.se> for Cendio AB
-
   PulseAudio is free software; you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as published
-  by the Free Software Foundation; either version 2.1 of the License,
+  by the Free Software Foundation; either version 2 of the License,
   or (at your option) any later version.
 
   PulseAudio is distributed in the hope that it will be useful, but
@@ -18,16 +17,12 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
+  along with PulseAudio; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
+  USA.
 ***/
 
-#include <pulse/sample.h>
-#include <pulse/channelmap.h>
-
 #include <pulsecore/log.h>
-#include <pulsecore/macro.h>
-#include <pulsecore/core.h>
-#include <pulsecore/core-util.h>
 
 #ifdef HAVE_SYS_RESOURCE_H
 #include <sys/resource.h>
@@ -36,105 +31,52 @@
 /* The actual command to execute */
 typedef enum pa_daemon_conf_cmd {
     PA_CMD_DAEMON,  /* the default */
-    PA_CMD_START,
     PA_CMD_HELP,
     PA_CMD_VERSION,
     PA_CMD_DUMP_CONF,
     PA_CMD_DUMP_MODULES,
     PA_CMD_KILL,
-    PA_CMD_CHECK,
-    PA_CMD_DUMP_RESAMPLE_METHODS,
-    PA_CMD_CLEANUP_SHM
+    PA_CMD_CHECK
 } pa_daemon_conf_cmd_t;
 
 #ifdef HAVE_SYS_RESOURCE_H
 typedef struct pa_rlimit {
     rlim_t value;
-    bool is_set;
+    int is_set;
 } pa_rlimit;
 #endif
 
 /* A structure containing configuration data for the PulseAudio server . */
 typedef struct pa_daemon_conf {
     pa_daemon_conf_cmd_t cmd;
-    bool daemonize,
+    int daemonize,
         fail,
         high_priority,
-        realtime_scheduling,
         disallow_module_loading,
+        exit_idle_time,
+        module_idle_time,
+        scache_idle_time,
+        auto_log_target,
         use_pid_file,
         system_instance,
         no_cpu_limit,
-        disable_shm,
-        disable_memfd,
-        avoid_resampling,
-        disable_remixing,
-        remixing_use_all_sink_channels,
-        disable_lfe_remixing,
-        load_default_script_file,
-        disallow_exit,
-        log_meta,
-        log_time,
-        flat_volumes,
-        lock_memory,
-        deferred_volume;
-    pa_server_type_t local_server_type;
-    int exit_idle_time,
-        scache_idle_time,
-        realtime_priority,
-        nice_level,
-        resample_method;
+        disable_shm;
     char *script_commands, *dl_search_path, *default_script_file;
-    pa_log_target *log_target;
+    pa_log_target_t log_target;
     pa_log_level_t log_level;
-    unsigned log_backtrace;
+    int resample_method;
     char *config_file;
-
+    
 #ifdef HAVE_SYS_RESOURCE_H
-    pa_rlimit rlimit_fsize, rlimit_data, rlimit_stack, rlimit_core;
-#ifdef RLIMIT_RSS
-    pa_rlimit rlimit_rss;
-#endif
-#ifdef RLIMIT_NOFILE
-    pa_rlimit rlimit_nofile;
-#endif
-#ifdef RLIMIT_AS
-    pa_rlimit rlimit_as;
-#endif
+    pa_rlimit rlimit_as, rlimit_core, rlimit_data, rlimit_fsize, rlimit_nofile, rlimit_stack;
 #ifdef RLIMIT_NPROC
     pa_rlimit rlimit_nproc;
 #endif
 #ifdef RLIMIT_MEMLOCK
     pa_rlimit rlimit_memlock;
 #endif
-#ifdef RLIMIT_LOCKS
-    pa_rlimit rlimit_locks;
 #endif
-#ifdef RLIMIT_SIGPENDING
-    pa_rlimit rlimit_sigpending;
-#endif
-#ifdef RLIMIT_MSGQUEUE
-    pa_rlimit rlimit_msgqueue;
-#endif
-#ifdef RLIMIT_NICE
-    pa_rlimit rlimit_nice;
-#endif
-#ifdef RLIMIT_RTPRIO
-    pa_rlimit rlimit_rtprio;
-#endif
-#ifdef RLIMIT_RTTIME
-    pa_rlimit rlimit_rttime;
-#endif
-#endif
-
-    unsigned default_n_fragments, default_fragment_size_msec;
-    unsigned deferred_volume_safety_margin_usec;
-    int deferred_volume_extra_delay_usec;
-    unsigned lfe_crossover_freq;
-    pa_sample_spec default_sample_spec;
-    uint32_t alternate_sample_rate;
-    pa_channel_map default_channel_map;
-    size_t shm_size;
+    
 } pa_daemon_conf;
 
 /* Allocate a new structure and fill it with sane defaults */
@@ -159,9 +101,5 @@ int pa_daemon_conf_env(pa_daemon_conf *c);
 int pa_daemon_conf_set_log_target(pa_daemon_conf *c, const char *string);
 int pa_daemon_conf_set_log_level(pa_daemon_conf *c, const char *string);
 int pa_daemon_conf_set_resample_method(pa_daemon_conf *c, const char *string);
-int pa_daemon_conf_set_local_server_type(pa_daemon_conf *c, const char *string);
-
-const char *pa_daemon_conf_get_default_script_file(pa_daemon_conf *c);
-FILE *pa_daemon_conf_open_default_script_file(pa_daemon_conf *c);
 
 #endif

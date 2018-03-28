@@ -1,26 +1,29 @@
 #ifndef fooesoundhfoo
 #define fooesoundhfoo
 
+/* $Id: esound.h 1033 2006-06-19 21:53:48Z lennart $ */
+
 /***
   This file is part of PulseAudio.
-
-  Copyright 2004-2006 Lennart Poettering
-
+ 
   PulseAudio is free software; you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as published
-  by the Free Software Foundation; either version 2.1 of the License,
+  by the Free Software Foundation; either version 2 of the License,
   or (at your option) any later version.
-
+ 
   PulseAudio is distributed in the hope that it will be useful, but
   WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
   General Public License for more details.
-
+ 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
+  along with PulseAudio; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
+  USA.
 ***/
 
 /* Most of the following is blatantly stolen from esound. */
+
 
 /* path and name of the default EsounD domain socket */
 #define ESD_UNIX_SOCKET_DIR     "/tmp/.esd"
@@ -31,7 +34,7 @@
 /* maximum size we can write().  Otherwise we might overflow */
 #define ESD_MAX_WRITE_SIZE (21 * 4096)
 
-/* length of the authentication key, octets */
+/* length of the authorization key, octets */
 #define ESD_KEY_LEN (16)
 
 /* default port for the EsounD server */
@@ -48,10 +51,11 @@
 
 #define ESD_VOLUME_BASE (256)
 
+
 /*************************************/
 /* what can we do to/with the EsounD */
 enum esd_proto {
-    ESD_PROTO_CONNECT,      /* implied on initial client connection */
+    ESD_PROTO_CONNECT,      /* implied on inital client connection */
 
     /* pseudo "security" functionality */
     ESD_PROTO_LOCK,         /* disable "foreign" client connections */
@@ -68,7 +72,7 @@ enum esd_proto {
     ESD_PROTO_SAMPLE_PLAY,  /* play a cached sample */
     ESD_PROTO_SAMPLE_LOOP,  /* loop a cached sample, til eoloop */
     ESD_PROTO_SAMPLE_STOP,  /* stop a looping sample when done */
-    ESD_PROTO_SAMPLE_KILL,  /* stop the looping sample immediately */
+    ESD_PROTO_SAMPLE_KILL,  /* stop the looping sample immed. */
 
     /* free and reclaim /dev/dsp functionality */
     ESD_PROTO_STANDBY,      /* release /dev/dsp and ignore all data */
@@ -190,7 +194,7 @@ typedef int esd_standby_mode_t;
 enum esd_client_state {
     ESD_STREAMING_DATA,         /* data from here on is streamed data */
     ESD_CACHING_SAMPLE,         /* midway through caching a sample */
-    ESD_NEEDS_REQDATA,          /* more data needed to complete request */
+    ESD_NEEDS_REQDATA,          /* more data needed to complere request */
     ESD_NEXT_REQUEST,           /* proceed to next request */
     ESD_CLIENT_STATE_MAX        /* place holder */
 };
@@ -199,6 +203,7 @@ typedef int esd_client_state_t;
 /* the endian key is transferred in binary, if it's read into int, */
 /* and matches ESD_ENDIAN_KEY (ENDN), then the endianness of the */
 /* server and the client match; if it's SWAP_ENDIAN_KEY, swap data */
-#define ESD_SWAP_ENDIAN_KEY (PA_UINT32_SWAP(ESD_ENDIAN_KEY))
+#define ESD_SWAP_ENDIAN_KEY (UINT32_SWAP(ESD_ENDIAN_KEY))
+
 
 #endif

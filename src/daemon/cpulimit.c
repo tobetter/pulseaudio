@@ -1,33 +1,33 @@
+/* $Id: cpulimit.c 1272 2006-08-18 21:38:40Z lennart $ */
+
 /***
   This file is part of PulseAudio.
-
-  Copyright 2004-2006 Lennart Poettering
-
+ 
   PulseAudio is free software; you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as
-  published by the Free Software Foundation; either version 2.1 of the
+  published by the Free Software Foundation; either version 2 of the
   License, or (at your option) any later version.
-
+ 
   PulseAudio is distributed in the hope that it will be useful, but
   WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
   General Public License for more details.
-
+ 
   You should have received a copy of the GNU Lesser General Public
-  License along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
+  License along with PulseAudio; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
+  USA.
 ***/
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
 
-#include <pulse/rtclock.h>
-#include <pulse/timeval.h>
+#include <pulse/error.h>
 
 #include <pulsecore/core-util.h>
 #include <pulsecore/core-error.h>
 #include <pulsecore/log.h>
-#include <pulsecore/macro.h>
 
 #include "cpulimit.h"
 
@@ -36,6 +36,8 @@
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
+#include <assert.h>
+#include <sys/time.h>
 #include <unistd.h>
 #include <signal.h>
 
@@ -65,7 +67,7 @@
 #define CPUTIME_INTERVAL_HARD (5)
 
 /* Time of the last CPU load check */
-static pa_usec_t last_time = 0;
+static time_t last_time = 0;
 
 /* Pipe for communicating with the main loop */
 static int the_pipe[2] = {-1, -1};
@@ -78,28 +80,33 @@ static pa_io_event *io_event = NULL;
 static struct sigaction sigaction_prev;
 
 /* Nonzero after pa_cpu_limit_init() */
-static bool installed = false;
+static int installed = 0; 
 
 /* The current state of operation */
-static enum {
+static enum  {
     PHASE_IDLE,   /* Normal state */
     PHASE_SOFT    /* After CPU overload has been detected */
 } phase = PHASE_IDLE;
 
 /* Reset the SIGXCPU timer to the next t seconds */
 static void reset_cpu_time(int t) {
+    int r;
     long n;
     struct rlimit rl;
     struct rusage ru;
 
     /* Get the current CPU time of the current process */
-    pa_assert_se(getrusage(RUSAGE_SELF, &ru) >= 0);
+    r = getrusage(RUSAGE_SELF, &ru);
+    assert(r >= 0);
 
     n = ru.ru_utime.tv_sec + ru.ru_stime.tv_sec + t;
-    pa_assert_se(getrlimit(RLIMIT_CPU, &rl) >= 0);
 
-    rl.rlim_cur = (rlim_t) n;
-    pa_assert_se(setrlimit(RLIMIT_CPU, &rl) >= 0);
+    r = getrlimit(RLIMIT_CPU, &rl);
+    assert(r >= 0);
+
+    rl.rlim_cur = n;
+    r = setrlimit(RLIMIT_CPU, &rl);
+    assert(r >= 0);
 }
 
 /* A simple, thread-safe puts() work-alike */
@@ -109,87 +116,70 @@ static void write_err(const char *p) {
 
 /* The signal handler, called on every SIGXCPU */
 static void signal_handler(int sig) {
-    int saved_errno;
-
-    saved_errno = errno;
-    pa_assert(sig == SIGXCPU);
+    assert(sig == SIGXCPU);
 
     if (phase == PHASE_IDLE) {
-        pa_usec_t now, elapsed;
+        time_t now;
 
 #ifdef PRINT_CPU_LOAD
         char t[256];
 #endif
 
-        now = pa_rtclock_now();
-        elapsed = now - last_time;
+        time(&now);
 
 #ifdef PRINT_CPU_LOAD
-        pa_snprintf(t, sizeof(t), "Using %0.1f%% CPU\n", ((double) CPUTIME_INTERVAL_SOFT * (double) PA_USEC_PER_SEC) / (double) elapsed * 100.0);
+        snprintf(t, sizeof(t), "Using %0.1f%% CPU\n", (double)CPUTIME_INTERVAL_SOFT/(now-last_time)*100);
         write_err(t);
 #endif
-
-        if (((double) CPUTIME_INTERVAL_SOFT * (double) PA_USEC_PER_SEC) >= ((double) elapsed * (double) CPUTIME_PERCENT / 100.0)) {
+        
+        if (CPUTIME_INTERVAL_SOFT >= ((now-last_time)*(double)CPUTIME_PERCENT/100)) {
             static const char c = 'X';
 
             write_err("Soft CPU time limit exhausted, terminating.\n");
-
+            
             /* Try a soft cleanup */
-            (void) pa_write(the_pipe[1], &c, sizeof(c), NULL);
+            write(the_pipe[1], &c, sizeof(c));
             phase = PHASE_SOFT;
             reset_cpu_time(CPUTIME_INTERVAL_HARD);
-
+            
         } else {
 
             /* Everything's fine */
             reset_cpu_time(CPUTIME_INTERVAL_SOFT);
             last_time = now;
         }
-
+        
     } else if (phase == PHASE_SOFT) {
         write_err("Hard CPU time limit exhausted, terminating forcibly.\n");
-        abort(); /* Forced exit */
+        _exit(1); /* Forced exit */
     }
-
-    errno = saved_errno;
 }
 
 /* Callback for IO events on the FIFO */
 static void callback(pa_mainloop_api*m, pa_io_event*e, int fd, pa_io_event_flags_t f, void *userdata) {
     char c;
-    pa_assert(m);
-    pa_assert(e);
-    pa_assert(f == PA_IO_EVENT_INPUT);
-    pa_assert(e == io_event);
-    pa_assert(fd == the_pipe[0]);
-
-    pa_log("Received request to terminate due to CPU overload.");
-
-    (void) pa_read(the_pipe[0], &c, sizeof(c), NULL);
+    assert(m && e && f == PA_IO_EVENT_INPUT && e == io_event && fd == the_pipe[0]);
+    pa_read(the_pipe[0], &c, sizeof(c), NULL);
     m->quit(m, 1); /* Quit the main loop */
 }
 
 /* Initializes CPU load limiter */
 int pa_cpu_limit_init(pa_mainloop_api *m) {
     struct sigaction sa;
-
-    pa_assert(m);
-    pa_assert(!api);
-    pa_assert(!io_event);
-    pa_assert(the_pipe[0] == -1);
-    pa_assert(the_pipe[1] == -1);
-    pa_assert(!installed);
-
-    last_time = pa_rtclock_now();
+    assert(m && !api && !io_event && the_pipe[0] == -1 && the_pipe[1] == -1 && !installed);
+    
+    time(&last_time);
 
     /* Prepare the main loop pipe */
-    if (pa_pipe_cloexec(the_pipe) < 0) {
+    if (pipe(the_pipe) < 0) {
         pa_log("pipe() failed: %s", pa_cstrerror(errno));
         return -1;
     }
 
-    pa_make_fd_nonblock(the_pipe[0]);
-    pa_make_fd_nonblock(the_pipe[1]);
+    pa_make_nonblock_fd(the_pipe[0]);
+    pa_make_nonblock_fd(the_pipe[1]);
+    pa_fd_set_cloexec(the_pipe[0], 1);
+    pa_fd_set_cloexec(the_pipe[1], 1);
 
     api = m;
     io_event = api->io_new(m, the_pipe[0], PA_IO_EVENT_INPUT, callback, NULL);
@@ -201,40 +191,46 @@ int pa_cpu_limit_init(pa_mainloop_api *m) {
     sa.sa_handler = signal_handler;
     sigemptyset(&sa.sa_mask);
     sa.sa_flags = SA_RESTART;
-
+    
     if (sigaction(SIGXCPU, &sa, &sigaction_prev) < 0) {
         pa_cpu_limit_done();
         return -1;
     }
 
-    installed = true;
+    installed = 1;
 
     reset_cpu_time(CPUTIME_INTERVAL_SOFT);
-
+    
     return 0;
 }
 
 /* Shutdown CPU load limiter */
 void pa_cpu_limit_done(void) {
+    int r;
 
     if (io_event) {
-        pa_assert(api);
+        assert(api);
         api->io_free(io_event);
         io_event = NULL;
         api = NULL;
     }
 
-    pa_close_pipe(the_pipe);
+    if (the_pipe[0] >= 0)
+        close(the_pipe[0]);
+    if (the_pipe[1] >= 0)
+        close(the_pipe[1]);
+    the_pipe[0] = the_pipe[1] = -1;
 
     if (installed) {
-        pa_assert_se(sigaction(SIGXCPU, &sigaction_prev, NULL) >= 0);
-        installed = false;
+        r = sigaction(SIGXCPU, &sigaction_prev, NULL);
+        assert(r >= 0);
+        installed = 0;
     }
 }
 
 #else /* HAVE_SIGXCPU */
 
-int pa_cpu_limit_init(pa_mainloop_api *m) {
+int pa_cpu_limit_init(PA_GCC_UNUSED pa_mainloop_api *m) {
     return 0;
 }
 

@@ -1,21 +1,22 @@
+/* $Id: mainloop-signal.c 1272 2006-08-18 21:38:40Z lennart $ */
+
 /***
   This file is part of PulseAudio.
-
-  Copyright 2004-2008 Lennart Poettering
-  Copyright 2006 Pierre Ossman <ossman@cendio.se> for Cendio AB
-
+ 
   PulseAudio is free software; you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as published
-  by the Free Software Foundation; either version 2.1 of the License,
+  by the Free Software Foundation; either version 2 of the License,
   or (at your option) any later version.
-
+ 
   PulseAudio is distributed in the hope that it will be useful, but
   WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
   General Public License for more details.
-
+ 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
+  along with PulseAudio; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
+  USA.
 ***/
 
 #ifdef HAVE_CONFIG_H
@@ -23,23 +24,24 @@
 #endif
 
 #include <stdio.h>
+#include <assert.h>
 #include <signal.h>
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <fcntl.h>
 
 #ifdef HAVE_WINDOWS_H
 #include <windows.h>
 #endif
 
+#include <pulsecore/core-error.h>
 #include <pulse/xmalloc.h>
 
-#include <pulsecore/core-error.h>
 #include <pulsecore/core-util.h>
-#include <pulsecore/i18n.h>
 #include <pulsecore/log.h>
-#include <pulsecore/macro.h>
+#include <pulsecore/gccmacro.h>
 
 #include "mainloop-signal.h"
 
@@ -50,9 +52,9 @@ struct pa_signal_event {
 #else
     void (*saved_handler)(int sig);
 #endif
+    void (*callback) (pa_mainloop_api*a, pa_signal_event *e, int sig, void *userdata);
     void *userdata;
-    pa_signal_cb_t callback;
-    pa_signal_destroy_cb_t destroy_callback;
+    void (*destroy_callback) (pa_mainloop_api*a, pa_signal_event*e, void *userdata);
     pa_signal_event *previous, *next;
 };
 
@@ -62,40 +64,27 @@ static pa_io_event* io_event = NULL;
 static pa_signal_event *signals = NULL;
 
 static void signal_handler(int sig) {
-    int saved_errno;
-
-    saved_errno = errno;
-
 #ifndef HAVE_SIGACTION
     signal(sig, signal_handler);
 #endif
-
-    /* XXX: If writing fails, there's nothing we can do? */
-    (void) pa_write(signal_pipe[1], &sig, sizeof(sig), NULL);
-
-    errno = saved_errno;
+    pa_write(signal_pipe[1], &sig, sizeof(sig), NULL);
 }
 
 static void dispatch(pa_mainloop_api*a, int sig) {
-    pa_signal_event *s;
+    pa_signal_event*s;
 
-    for (s = signals; s; s = s->next)
+    for (s = signals; s; s = s->next) 
         if (s->sig == sig) {
-            pa_assert(s->callback);
+            assert(s->callback);
             s->callback(a, s, sig, s->userdata);
             break;
         }
 }
 
-static void callback(pa_mainloop_api*a, pa_io_event*e, int fd, pa_io_event_flags_t f, void *userdata) {
+static void callback(pa_mainloop_api*a, pa_io_event*e, int fd, pa_io_event_flags_t f, PA_GCC_UNUSED void *userdata) {
     ssize_t r;
     int sig;
-
-    pa_assert(a);
-    pa_assert(e);
-    pa_assert(f == PA_IO_EVENT_INPUT);
-    pa_assert(e == io_event);
-    pa_assert(fd == signal_pipe[0]);
+    assert(a && e && f == PA_IO_EVENT_INPUT && e == io_event && fd == signal_pipe[0]);
 
     if ((r = pa_read(signal_pipe[0], &sig, sizeof(sig), NULL)) < 0) {
         if (errno == EAGAIN)
@@ -104,7 +93,7 @@ static void callback(pa_mainloop_api*a, pa_io_event*e, int fd, pa_io_event_flags
         pa_log("read(): %s", pa_cstrerror(errno));
         return;
     }
-
+    
     if (r != sizeof(sig)) {
         pa_log("short read()");
         return;
@@ -115,59 +104,56 @@ static void callback(pa_mainloop_api*a, pa_io_event*e, int fd, pa_io_event_flags
 
 int pa_signal_init(pa_mainloop_api *a) {
 
-    pa_assert(a);
-    pa_assert(!api);
-    pa_assert(signal_pipe[0] == -1);
-    pa_assert(signal_pipe[1] == -1);
-    pa_assert(!io_event);
+    assert(!api && a && signal_pipe[0] == -1 && signal_pipe[1] == -1 && !io_event);
 
-    if (pa_pipe_cloexec(signal_pipe) < 0) {
+    if (pipe(signal_pipe) < 0) {
         pa_log("pipe(): %s", pa_cstrerror(errno));
         return -1;
     }
 
-    pa_make_fd_nonblock(signal_pipe[0]);
-    pa_make_fd_nonblock(signal_pipe[1]);
+    pa_make_nonblock_fd(signal_pipe[0]);
+    pa_make_nonblock_fd(signal_pipe[1]);
+    pa_fd_set_cloexec(signal_pipe[0], 1);
+    pa_fd_set_cloexec(signal_pipe[1], 1);
 
     api = a;
 
-    pa_assert_se(io_event = api->io_new(api, signal_pipe[0], PA_IO_EVENT_INPUT, callback, NULL));
+    io_event = api->io_new(api, signal_pipe[0], PA_IO_EVENT_INPUT, callback, NULL);
+    assert(io_event);
 
     return 0;
 }
 
 void pa_signal_done(void) {
+    assert(api && signal_pipe[0] >= 0 && signal_pipe[1] >= 0 && io_event);
+
     while (signals)
         pa_signal_free(signals);
+    
+    api->io_free(io_event);
+    io_event = NULL;
 
-    if (io_event) {
-        pa_assert(api);
-        api->io_free(io_event);
-        io_event = NULL;
-    }
-
-    pa_close_pipe(signal_pipe);
+    close(signal_pipe[0]);
+    close(signal_pipe[1]);
+    signal_pipe[0] = signal_pipe[1] = -1;
 
     api = NULL;
 }
 
-pa_signal_event* pa_signal_new(int sig, pa_signal_cb_t _callback, void *userdata) {
+pa_signal_event* pa_signal_new(int sig, void (*_callback) (pa_mainloop_api *api, pa_signal_event*e, int sig, void *userdata), void *userdata) {
     pa_signal_event *e = NULL;
 
 #ifdef HAVE_SIGACTION
     struct sigaction sa;
 #endif
 
-    pa_assert(sig > 0);
-    pa_assert(_callback);
-
-    pa_init_i18n();
-
+    assert(sig > 0 && _callback);
+    
     for (e = signals; e; e = e->next)
         if (e->sig == sig)
-            return NULL;
-
-    e = pa_xnew(pa_signal_event, 1);
+            goto fail;
+    
+    e = pa_xmalloc(sizeof(pa_signal_event));
     e->sig = sig;
     e->callback = _callback;
     e->userdata = userdata;
@@ -178,7 +164,7 @@ pa_signal_event* pa_signal_new(int sig, pa_signal_cb_t _callback, void *userdata
     sa.sa_handler = signal_handler;
     sigemptyset(&sa.sa_mask);
     sa.sa_flags = SA_RESTART;
-
+    
     if (sigaction(sig, &sa, &e->saved_sigaction) < 0)
 #else
     if ((e->saved_handler = signal(sig, signal_handler)) == SIG_ERR)
@@ -191,12 +177,13 @@ pa_signal_event* pa_signal_new(int sig, pa_signal_cb_t _callback, void *userdata
 
     return e;
 fail:
-    pa_xfree(e);
+    if (e)
+        pa_xfree(e);
     return NULL;
 }
 
 void pa_signal_free(pa_signal_event *e) {
-    pa_assert(e);
+    assert(e);
 
     if (e->next)
         e->next->previous = e->previous;
@@ -206,19 +193,18 @@ void pa_signal_free(pa_signal_event *e) {
         signals = e->next;
 
 #ifdef HAVE_SIGACTION
-    pa_assert_se(sigaction(e->sig, &e->saved_sigaction, NULL) == 0);
+    sigaction(e->sig, &e->saved_sigaction, NULL);
 #else
-    pa_assert_se(signal(e->sig, e->saved_handler) == signal_handler);
+    signal(e->sig, e->saved_handler);
 #endif
 
     if (e->destroy_callback)
         e->destroy_callback(api, e, e->userdata);
-
+    
     pa_xfree(e);
 }
 
-void pa_signal_set_destroy(pa_signal_event *e, pa_signal_destroy_cb_t _callback) {
-    pa_assert(e);
-
+void pa_signal_set_destroy(pa_signal_event *e, void (*_callback) (pa_mainloop_api *api, pa_signal_event*e, void *userdata)) {
+    assert(e);
     e->destroy_callback = _callback;
 }

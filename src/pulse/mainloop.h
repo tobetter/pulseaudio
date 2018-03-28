@@ -1,24 +1,25 @@
 #ifndef foomainloophfoo
 #define foomainloophfoo
 
+/* $Id: mainloop.h 1033 2006-06-19 21:53:48Z lennart $ */
+
 /***
   This file is part of PulseAudio.
-
-  Copyright 2004-2006 Lennart Poettering
-  Copyright 2006 Pierre Ossman <ossman@cendio.se> for Cendio AB
-
+ 
   PulseAudio is free software; you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as published
-  by the Free Software Foundation; either version 2.1 of the License,
+  by the Free Software Foundation; either version 2 of the License,
   or (at your option) any later version.
-
+ 
   PulseAudio is distributed in the hope that it will be useful, but
   WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
   General Public License for more details.
-
+ 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
+  along with PulseAudio; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
+  USA.
 ***/
 
 #include <pulse/mainloop-api.h>
@@ -48,7 +49,7 @@ struct pollfd;
  *
  * -# Prepare - Build a list of file descriptors
  *               that need to be monitored and calculate the next timeout.
- * -# Poll - Execute the actual poll() system call.
+ * -# Poll - Execute the actuall poll() system call.
  * -# Dispatch - Dispatch any events that have fired.
  *
  * When using the main loop, the application can either execute each
@@ -64,15 +65,12 @@ struct pollfd;
  */
 
 /** \file
- *
+ * 
  * A minimal main loop implementation based on the C library's poll()
  * function. Using the routines defined herein you may create a simple
  * main loop supporting the generic main loop abstraction layer as
  * defined in \ref mainloop-api.h. This implementation is thread safe
- * as long as you access the main loop object from a single thread only.
- *
- * See also \subpage mainloop
- */
+ * as long as you access the main loop object from a single thread only.*/
 
 /** An opaque main loop object */
 typedef struct pa_mainloop pa_mainloop;
@@ -109,13 +107,11 @@ int pa_mainloop_iterate(pa_mainloop *m, int block, int *retval);
 /** Run unlimited iterations of the main loop object until the main loop's quit() routine is called. */
 int pa_mainloop_run(pa_mainloop *m, int *retval);
 
-/** Return the abstract main loop abstraction layer vtable for this
-    main loop. No need to free the API as it is owned by the loop
-    and is destroyed when the loop is freed. */
+/** Return the abstract main loop abstraction layer vtable for this main loop. */
 pa_mainloop_api* pa_mainloop_get_api(pa_mainloop*m);
 
-/** Shutdown the main loop with the specified return value */
-void pa_mainloop_quit(pa_mainloop *m, int retval);
+/** Shutdown the main loop */
+void pa_mainloop_quit(pa_mainloop *m, int r);
 
 /** Interrupt a running poll (for threaded systems) */
 void pa_mainloop_wakeup(pa_mainloop *m);

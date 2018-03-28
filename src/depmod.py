@@ -1,5 +1,6 @@
 #!/usr/bin/python
-
+# $Id: depmod.py 1033 2006-06-19 21:53:48Z lennart $
+#
 # This file is part of PulseAudio.
 #
 # PulseAudio is free software; you can redistribute it and/or modify
@@ -13,7 +14,9 @@
 # General Public License for more details.
 #
 # You should have received a copy of the GNU Lesser General Public License
-# along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
+# along with PulseAudio; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
+# USA.
 
 import sys, os, string
 

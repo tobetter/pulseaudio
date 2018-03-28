@@ -1,5 +1,7 @@
 #!/bin/sh
 
+# $Id: esdcompat.in 1107 2006-07-19 18:11:12Z lennart $
+#
 # This file is part of PulseAudio.
 #
 # PulseAudio is free software; you can redistribute it and/or modify
@@ -13,7 +15,9 @@
 # General Public License for more details.
 #
 # You should have received a copy of the GNU Lesser General Public License
-# along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
+# along with PulseAudio; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
+# USA.
 
 VERSION_STRING="@PACKAGE_NAME@ esd wrapper @PACKAGE_VERSION@"
 
@@ -24,7 +28,7 @@ fail() {
 
 ARGS=" --log-target=syslog"
 
-while [ "$#" -gt "0" ]; do
+for N in $(seq $#) ; do
 
     case "$1" in
         "")
@@ -57,7 +61,7 @@ Ignored directives:
   -terminate    terminate esd daemone after last client exits
   -nobeeps      disable startup beeps
   -trust        start esd even if use of /tmp/.esd can be insecure
-  -port PORT    listen for connections at PORT (only for tcp/ip)
+  -port PORT   listen for connections at PORT (only for tcp/ip)
   -bind ADDRESS binds to ADDRESS (only for tcp/ip)
 EOF
             exit 0

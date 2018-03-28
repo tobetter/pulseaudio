@@ -1,44 +1,47 @@
+/* $Id: subscribe.c 1033 2006-06-19 21:53:48Z lennart $ */
+
 /***
   This file is part of PulseAudio.
-
-  Copyright 2004-2006 Lennart Poettering
-
+ 
   PulseAudio is free software; you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as published
-  by the Free Software Foundation; either version 2.1 of the License,
+  by the Free Software Foundation; either version 2 of the License,
   or (at your option) any later version.
-
+ 
   PulseAudio is distributed in the hope that it will be useful, but
   WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
   General Public License for more details.
-
+ 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
+  along with PulseAudio; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
+  USA.
 ***/
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
 
+#include <assert.h>
 #include <stdio.h>
 
-#include <pulsecore/macro.h>
+#include <pulsecore/gccmacro.h>
 #include <pulsecore/pstream-util.h>
 
 #include "internal.h"
+
 #include "subscribe.h"
 
-void pa_command_subscribe_event(pa_pdispatch *pd, uint32_t command, uint32_t tag, pa_tagstruct *t, void *userdata) {
+void pa_command_subscribe_event(pa_pdispatch *pd, uint32_t command, PA_GCC_UNUSED uint32_t tag, pa_tagstruct *t, void *userdata) {
     pa_context *c = userdata;
     pa_subscription_event_type_t e;
     uint32_t idx;
 
-    pa_assert(pd);
-    pa_assert(command == PA_COMMAND_SUBSCRIBE_EVENT);
-    pa_assert(t);
-    pa_assert(c);
-    pa_assert(PA_REFCNT_VALUE(c) >= 1);
+    assert(pd);
+    assert(command == PA_COMMAND_SUBSCRIBE_EVENT);
+    assert(t);
+    assert(c);
 
     pa_context_ref(c);
 
@@ -56,16 +59,17 @@ finish:
     pa_context_unref(c);
 }
 
+
 pa_operation* pa_context_subscribe(pa_context *c, pa_subscription_mask_t m, pa_context_success_cb_t cb, void *userdata) {
     pa_operation *o;
     pa_tagstruct *t;
     uint32_t tag;
 
-    pa_assert(c);
-    pa_assert(PA_REFCNT_VALUE(c) >= 1);
+    assert(c);
+    assert(c->ref >= 1);
 
     PA_CHECK_VALIDITY_RETURN_NULL(c, c->state == PA_CONTEXT_READY, PA_ERR_BADSTATE);
-
+    
     o = pa_operation_new(c, NULL, (pa_operation_cb_t) cb, userdata);
 
     t = pa_tagstruct_command(c, PA_COMMAND_SUBSCRIBE, &tag);
@@ -77,12 +81,9 @@ pa_operation* pa_context_subscribe(pa_context *c, pa_subscription_mask_t m, pa_c
 }
 
 void pa_context_set_subscribe_callback(pa_context *c, pa_context_subscribe_cb_t cb, void *userdata) {
-    pa_assert(c);
-    pa_assert(PA_REFCNT_VALUE(c) >= 1);
-
-    if (c->state == PA_CONTEXT_TERMINATED || c->state == PA_CONTEXT_FAILED)
-        return;
-
+    assert(c);
+    assert(c->ref >= 1);
+    
     c->subscribe_callback = cb;
     c->subscribe_userdata = userdata;
 }

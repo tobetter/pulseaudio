@@ -1,20 +1,22 @@
+/* $Id: pipe.c 1099 2006-07-17 21:20:31Z lennart $ */
+
 /***
   This file is part of PulseAudio.
-
-  Copyright 2006-2007 Pierre Ossman <ossman@cendio.se> for Cendio AB
-
+ 
   PulseAudio is free software; you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as published
-  by the Free Software Foundation; either version 2.1 of the License,
+  by the Free Software Foundation; either version 2 of the License,
   or (at your option) any later version.
-
+ 
   PulseAudio is distributed in the hope that it will be useful, but
   WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
   General Public License for more details.
-
+ 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
+  along with PulseAudio; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
+  USA.
 ***/
 
 #ifdef HAVE_CONFIG_H
@@ -27,8 +29,11 @@
 
 #include <sys/types.h>
 
-#include <pulsecore/socket.h>
-#include <pulsecore/core-util.h>
+#ifdef HAVE_SYS_SOCKET_H
+#include <sys/socket.h>
+#endif
+
+#include "winsock.h"
 
 #include "pipe.h"
 
@@ -39,7 +44,7 @@ static int set_block(int fd, int blocking) {
 
     int v;
 
-    pa_assert(fd >= 0);
+    assert(fd >= 0);
 
     if ((v = fcntl(fd, F_GETFL)) < 0)
         return -1;
@@ -137,19 +142,19 @@ int pipe(int filedes[2]) {
     if ((addr.sin_port != peer.sin_port) || (addr.sin_addr.s_addr != peer.sin_addr.s_addr))
         goto error;
 
-    pa_close(listener);
+    close(listener);
 
     return 0;
 
 error:
-        if (listener >= 0)
-                pa_close(listener);
-        if (filedes[0] >= 0)
-                pa_close(filedes[0]);
-        if (filedes[1] >= 0)
-                pa_close(filedes[1]);
+	if (listener >= 0)
+		close(listener);
+	if (filedes[0] >= 0)
+		close(filedes[0]);
+	if (filedes[1] >= 0)
+		close(filedes[0]);
 
-        return -1;
+	return -1;
 }
 
 #endif /* HAVE_PIPE */

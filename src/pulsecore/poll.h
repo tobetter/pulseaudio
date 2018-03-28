@@ -1,30 +1,31 @@
+/* $Id: poll.h 1099 2006-07-17 21:20:31Z lennart $ */
+
+/***
+   Compatibility definitions for System V `poll' interface.
+   Copyright (C) 1994,96,97,98,99,2000,2001,2004 Free Software Foundation, Inc.
+   Copyright (C) 2005, Cendio AB.
+   This file is part of PulseAudio.
+   Based on work for the GNU C Library.
+***/
+
 /***
   This file is part of PulseAudio.
-
-  Copyright 2006 Pierre Ossman <ossman@cendio.se> for Cendio AB
-
+ 
   PulseAudio is free software; you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as published
-  by the Free Software Foundation; either version 2.1 of the License,
+  by the Free Software Foundation; either version 2 of the License,
   or (at your option) any later version.
-
+ 
   PulseAudio is distributed in the hope that it will be useful, but
   WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
   General Public License for more details.
-
+ 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
+  along with PulseAudio; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
+  USA.
 ***/
-
-/***
-   Based on work for the GNU C Library.
-   Copyright (C) 1994,96,97,98,99,2000,2001,2004 Free Software Foundation, Inc.
-***/
-
-#if defined(HAVE_POLL_H)
-#include <poll.h>
-#else
 
 /* Event types that can be polled for.  These bits may be set in `events'
    to indicate the interesting event types; they will appear in `revents'
@@ -40,23 +41,21 @@
 #define POLLHUP         0x010           /* Hung up.  */
 #define POLLNVAL        0x020           /* Invalid polling request.  */
 
+
+/* Type used for the number of file descriptors.  */
+typedef unsigned long int nfds_t;
+
 /* Data structure describing a polling request.  */
-struct pollfd {
+struct pollfd
+  {
     int fd;                     /* File descriptor to poll.  */
     short int events;           /* Types of events poller cares about.  */
     short int revents;          /* Types of events that actually occurred.  */
-};
+  };
 
 /* Poll the file descriptors described by the NFDS structures starting at
    FDS.  If TIMEOUT is nonzero and not -1, allow TIMEOUT milliseconds for
    an event to occur; if TIMEOUT is -1, block until an event occurs.
    Returns the number of file descriptors with events, zero if timed out,
    or -1 for errors.  */
-
-#endif /* HAVE_POLL_H */
-
-#if defined(HAVE_POLL_H) && !defined(OS_IS_DARWIN)
-#define pa_poll(fds,nfds,timeout) poll((fds),(nfds),(timeout))
-#else
-int pa_poll(struct pollfd *fds, unsigned long nfds, int timeout);
-#endif
+extern int poll (struct pollfd *__fds, nfds_t __nfds, int __timeout);

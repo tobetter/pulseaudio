@@ -1,20 +1,22 @@
+/* $Id: strlist.c 1033 2006-06-19 21:53:48Z lennart $ */
+
 /***
   This file is part of PulseAudio.
-
-  Copyright 2004-2006 Lennart Poettering
-
+ 
   PulseAudio is free software; you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as published
-  by the Free Software Foundation; either version 2.1 of the License,
+  by the Free Software Foundation; either version 2 of the License,
   or (at your option) any later version.
-
+ 
   PulseAudio is distributed in the hope that it will be useful, but
   WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
   General Public License for more details.
-
+ 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
+  along with PulseAudio; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
+  USA.
 ***/
 
 #ifdef HAVE_CONFIG_H
@@ -22,35 +24,30 @@
 #endif
 
 #include <string.h>
+#include <assert.h>
 
 #include <pulse/xmalloc.h>
 
 #include <pulsecore/strbuf.h>
-#include <pulsecore/macro.h>
 #include <pulsecore/core-util.h>
 
 #include "strlist.h"
 
 struct pa_strlist {
     pa_strlist *next;
+    char *str;
 };
-
-#define ITEM_TO_TEXT(c) ((char*) (c) + PA_ALIGN(sizeof(pa_strlist)))
 
 pa_strlist* pa_strlist_prepend(pa_strlist *l, const char *s) {
     pa_strlist *n;
-    size_t size;
-
-    pa_assert(s);
-    size = strlen(s);
-    n = pa_xmalloc(PA_ALIGN(sizeof(pa_strlist)) + size + 1);
-    memcpy(ITEM_TO_TEXT(n), s, size + 1);
+    assert(s);
+    n = pa_xmalloc(sizeof(pa_strlist));
+    n->str = pa_xstrdup(s);
     n->next = l;
-
-    return n;
+    return  n;
 }
 
-char *pa_strlist_to_string(pa_strlist *l) {
+char *pa_strlist_tostring(pa_strlist *l) {
     int first = 1;
     pa_strbuf *b;
 
@@ -59,32 +56,31 @@ char *pa_strlist_to_string(pa_strlist *l) {
         if (!first)
             pa_strbuf_puts(b, " ");
         first = 0;
-        pa_strbuf_puts(b, ITEM_TO_TEXT(l));
+        pa_strbuf_puts(b, l->str);
     }
 
-    return pa_strbuf_to_string_free(b);
+    return pa_strbuf_tostring_free(b);
 }
 
 pa_strlist* pa_strlist_remove(pa_strlist *l, const char *s) {
     pa_strlist *ret = l, *prev = NULL;
-
-    pa_assert(l);
-    pa_assert(s);
+    assert(l && s);
 
     while (l) {
-        if (pa_streq(ITEM_TO_TEXT(l), s)) {
+        if (!strcmp(l->str, s)) {
             pa_strlist *n = l->next;
-
+            
             if (!prev) {
-                pa_assert(ret == l);
+                assert(ret == l);
                 ret = n;
             } else
                 prev->next = n;
 
+            pa_xfree(l->str);
             pa_xfree(l);
 
             l = n;
-
+            
         } else {
             prev = l;
             l = l->next;
@@ -98,21 +94,22 @@ void pa_strlist_free(pa_strlist *l) {
     while (l) {
         pa_strlist *c = l;
         l = l->next;
+
+        pa_xfree(c->str);
         pa_xfree(c);
     }
 }
 
 pa_strlist* pa_strlist_pop(pa_strlist *l, char **s) {
     pa_strlist *r;
-
-    pa_assert(s);
-
+    assert(s);
+    
     if (!l) {
         *s = NULL;
         return NULL;
     }
-
-    *s = pa_xstrdup(ITEM_TO_TEXT(l));
+        
+    *s = l->str;
     r = l->next;
     pa_xfree(l);
     return r;
@@ -125,12 +122,10 @@ pa_strlist* pa_strlist_parse(const char *s) {
 
     while ((r = pa_split_spaces(s, &state))) {
         pa_strlist *n;
-        size_t size = strlen(r);
 
-        n = pa_xmalloc(PA_ALIGN(sizeof(pa_strlist)) + size + 1);
+        n = pa_xmalloc(sizeof(pa_strlist));
+        n->str = r;
         n->next = NULL;
-        memcpy(ITEM_TO_TEXT(n), r, size+1);
-        pa_xfree(r);
 
         if (p)
             p->next = n;
@@ -141,31 +136,4 @@ pa_strlist* pa_strlist_parse(const char *s) {
     }
 
     return head;
-}
-
-pa_strlist *pa_strlist_reverse(pa_strlist *l) {
-    pa_strlist *r = NULL;
-
-    while (l) {
-        pa_strlist *n;
-
-        n = l->next;
-        l->next = r;
-        r = l;
-        l = n;
-    }
-
-    return r;
-}
-
-pa_strlist *pa_strlist_next(pa_strlist *s) {
-    pa_assert(s);
-
-    return s->next;
-}
-
-const char *pa_strlist_data(pa_strlist *s) {
-    pa_assert(s);
-
-    return ITEM_TO_TEXT(s);
 }

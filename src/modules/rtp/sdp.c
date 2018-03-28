@@ -1,68 +1,69 @@
+/* $Id: sdp.c 1272 2006-08-18 21:38:40Z lennart $ */
+
 /***
   This file is part of PulseAudio.
-
-  Copyright 2006 Lennart Poettering
-
+ 
   PulseAudio is free software; you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as published
-  by the Free Software Foundation; either version 2.1 of the License,
+  by the Free Software Foundation; either version 2 of the License,
   or (at your option) any later version.
-
+ 
   PulseAudio is distributed in the hope that it will be useful, but
   WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
   General Public License for more details.
-
+ 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
+  along with PulseAudio; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
+  USA.
 ***/
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
 
+#include <assert.h>
 #include <time.h>
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 #include <string.h>
 
 #include <pulse/xmalloc.h>
-#include <pulse/util.h>
 
 #include <pulsecore/core-util.h>
 #include <pulsecore/log.h>
-#include <pulsecore/macro.h>
-#include <pulsecore/arpa-inet.h>
 
 #include "sdp.h"
 #include "rtp.h"
 
+
 char *pa_sdp_build(int af, const void *src, const void *dst, const char *name, uint16_t port, uint8_t payload, const pa_sample_spec *ss) {
     uint32_t ntp;
-    char buf_src[64], buf_dst[64], un[64];
-    const char *u, *f;
+    char buf_src[64], buf_dst[64];
+    const char *u, *f, *a;
 
-    pa_assert(src);
-    pa_assert(dst);
+    assert(src);
+    assert(dst);
+    assert(af == AF_INET || af == AF_INET6);
 
-#ifdef HAVE_IPV6
-    pa_assert(af == AF_INET || af == AF_INET6);
-#else
-    pa_assert(af == AF_INET);
-#endif
+    f = pa_rtp_format_to_string(ss->format);
+    assert(f);
+    
+    if (!(u = getenv("USER")))
+        if (!(u = getenv("USERNAME")))
+            u = "-";
+    
+    ntp = time(NULL) + 2208988800U;
 
-    pa_assert_se(f = pa_rtp_format_to_string(ss->format));
-
-    if (!(u = pa_get_user_name(un, sizeof(un))))
-        u = "-";
-
-    ntp = (uint32_t) time(NULL) + 2208988800U;
-
-    pa_assert_se(inet_ntop(af, src, buf_src, sizeof(buf_src)));
-    pa_assert_se(inet_ntop(af, dst, buf_dst, sizeof(buf_dst)));
-
+    a = inet_ntop(af, src, buf_src, sizeof(buf_src));
+    assert(a);
+    a = inet_ntop(af, dst, buf_dst, sizeof(buf_dst));
+    assert(a);
+    
     return pa_sprintf_malloc(
             PA_SDP_HEADER
             "o=%s %lu 0 IN %s %s\n"
@@ -83,8 +84,8 @@ char *pa_sdp_build(int af, const void *src, const void *dst, const char *name, u
 
 static pa_sample_spec *parse_sdp_sample_spec(pa_sample_spec *ss, char *c) {
     unsigned rate, channels;
-    pa_assert(ss);
-    pa_assert(c);
+    assert(ss);
+    assert(c);
 
     if (pa_startswith(c, "L16/")) {
         ss->format = PA_SAMPLE_S16BE;
@@ -102,10 +103,10 @@ static pa_sample_spec *parse_sdp_sample_spec(pa_sample_spec *ss, char *c) {
         return NULL;
 
     if (sscanf(c, "%u/%u", &rate, &channels) == 2) {
-        ss->rate = (uint32_t) rate;
-        ss->channels = (uint8_t) channels;
+        ss->rate = rate;
+        ss->channels = channels;
     } else if (sscanf(c, "%u", &rate) == 2) {
-        ss->rate = (uint32_t) rate;
+        ss->rate = rate;
         ss->channels = 1;
     } else
         return NULL;
@@ -118,15 +119,15 @@ static pa_sample_spec *parse_sdp_sample_spec(pa_sample_spec *ss, char *c) {
 
 pa_sdp_info *pa_sdp_parse(const char *t, pa_sdp_info *i, int is_goodbye) {
     uint16_t port = 0;
-    bool ss_valid = false;
+    int ss_valid = 0;
 
-    pa_assert(t);
-    pa_assert(i);
-
+    assert(t);
+    assert(i);
+    
     i->origin = i->session_name = NULL;
     i->salen = 0;
     i->payload = 255;
-
+    
     if (!pa_startswith(t, PA_SDP_HEADER)) {
         pa_log("Failed to parse SDP data: invalid header.");
         goto fail;
@@ -153,7 +154,7 @@ pa_sdp_info *pa_sdp_parse(const char *t, pa_sdp_info *i, int is_goodbye) {
             size_t k;
 
             k = l-8 > sizeof(a) ? sizeof(a) : l-8;
-
+            
             pa_strlcpy(a, t+9, k);
             a[strcspn(a, "/")] = 0;
 
@@ -165,13 +166,12 @@ pa_sdp_info *pa_sdp_parse(const char *t, pa_sdp_info *i, int is_goodbye) {
             ((struct sockaddr_in*) &i->sa)->sin_family = AF_INET;
             ((struct sockaddr_in*) &i->sa)->sin_port = 0;
             i->salen = sizeof(struct sockaddr_in);
-#ifdef HAVE_IPV6
         } else if (pa_startswith(t, "c=IN IP6 ")) {
             char a[64];
             size_t k;
 
             k = l-8 > sizeof(a) ? sizeof(a) : l-8;
-
+            
             pa_strlcpy(a, t+9, k);
             a[strcspn(a, "/")] = 0;
 
@@ -183,12 +183,11 @@ pa_sdp_info *pa_sdp_parse(const char *t, pa_sdp_info *i, int is_goodbye) {
             ((struct sockaddr_in6*) &i->sa)->sin6_family = AF_INET6;
             ((struct sockaddr_in6*) &i->sa)->sin6_port = 0;
             i->salen = sizeof(struct sockaddr_in6);
-#endif
         } else if (pa_startswith(t, "m=audio ")) {
 
             if (i->payload > 127) {
                 int _port, _payload;
-
+                
                 if (sscanf(t+8, "%i RTP/AVP %i", &_port, &_payload) == 2) {
 
                     if (_port <= 0 || _port > 0xFFFF) {
@@ -205,7 +204,7 @@ pa_sdp_info *pa_sdp_parse(const char *t, pa_sdp_info *i, int is_goodbye) {
                     i->payload = (uint8_t) _payload;
 
                     if (pa_rtp_sample_spec_from_payload(i->payload, &i->sample_spec))
-                        ss_valid = true;
+                        ss_valid = 1;
                 }
             }
         } else if (pa_startswith(t, "a=rtpmap:")) {
@@ -213,27 +212,26 @@ pa_sdp_info *pa_sdp_parse(const char *t, pa_sdp_info *i, int is_goodbye) {
             if (i->payload <= 127) {
                 char c[64];
                 int _payload;
-                int len;
 
-                if (sscanf(t + 9, "%i %n", &_payload, &len) == 1) {
+                if (sscanf(t+9, "%i %64c", &_payload, c) == 2) {
+
                     if (_payload < 0 || _payload > 127) {
                         pa_log("Failed to parse SDP data: invalid payload %i.", _payload);
                         goto fail;
                     }
                     if (_payload == i->payload) {
-                        strncpy(c, t + 9 + len, 63);
-                        c[63] = 0;
-                        c[strcspn(c, "\n")] = 0;
 
+                        c[strcspn(c, "\n")] = 0;
+                        
                         if (parse_sdp_sample_spec(&i->sample_spec, c))
-                            ss_valid = true;
+                            ss_valid = 1;
                     }
                 }
             }
         }
-
+        
         t += l;
-
+        
         if (*t == '\n')
             t++;
     }
@@ -247,7 +245,7 @@ pa_sdp_info *pa_sdp_parse(const char *t, pa_sdp_info *i, int is_goodbye) {
         ((struct sockaddr_in*) &i->sa)->sin_port = htons(port);
     else
         ((struct sockaddr_in6*) &i->sa)->sin6_port = htons(port);
-
+    
     return i;
 
 fail:
@@ -258,7 +256,7 @@ fail:
 }
 
 void pa_sdp_info_destroy(pa_sdp_info *i) {
-    pa_assert(i);
+    assert(i);
 
     pa_xfree(i->origin);
     pa_xfree(i->session_name);

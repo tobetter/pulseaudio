@@ -1,29 +1,29 @@
 #ifndef foothreadmainloophfoo
 #define foothreadmainloophfoo
 
+/* $Id: thread-mainloop.h 1036 2006-06-19 22:11:49Z lennart $ */
+
 /***
   This file is part of PulseAudio.
-
-  Copyright 2006 Lennart Poettering
-  Copyright 2006 Pierre Ossman <ossman@cendio.se> for Cendio AB
-
+ 
   PulseAudio is free software; you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as published
-  by the Free Software Foundation; either version 2.1 of the License,
+  by the Free Software Foundation; either version 2 of the License,
   or (at your option) any later version.
-
+ 
   PulseAudio is distributed in the hope that it will be useful, but
   WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
   General Public License for more details.
-
+ 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
+  along with PulseAudio; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
+  USA.
 ***/
 
 #include <pulse/mainloop-api.h>
 #include <pulse/cdecl.h>
-#include <pulse/version.h>
 
 PA_C_DECL_BEGIN
 
@@ -106,10 +106,10 @@ PA_C_DECL_BEGIN
  * Example:
  *
  * \code
- * static void my_drain_callback(pa_stream *s, int success, void *userdata) {
+ * static void my_drain_callback(pa_stream*s, int success, void *userdata) {
  *     pa_threaded_mainloop *m;
  *
- *     m = userdata;
+ *     m = (pa_threaded_mainloop*)userdata;
  *     assert(m);
  *
  *     pa_threaded_mainloop_signal(m, 0);
@@ -123,7 +123,7 @@ PA_C_DECL_BEGIN
  *     o = pa_stream_drain(s, my_drain_callback, m);
  *     assert(o);
  *
- *     while (pa_operation_get_state(o) == PA_OPERATION_RUNNING)
+ *     while (pa_operation_get_state(o) != OPERATION_DONE)
  *         pa_threaded_mainloop_wait(m);
  *
  *     pa_operation_unref(o);
@@ -135,25 +135,21 @@ PA_C_DECL_BEGIN
  * The main function, my_drain_stream_func(), will wait for the callback to
  * be called using pa_threaded_mainloop_wait().
  *
- * If your application is multi-threaded, then this waiting must be
- * done inside a while loop. The reason for this is that multiple
- * threads might be using pa_threaded_mainloop_wait() at the same
- * time. Each thread must therefore verify that it was its callback
- * that was invoked. Also the underlying OS synchronization primitives
- * are usually not free of spurious wake-ups, so a
- * pa_threaded_mainloop_wait() must be called within a loop even if
- * you have only one thread waiting.
+ * If your application is multi-threaded, then this waiting must be done
+ * inside a while loop. The reason for this is that multiple threads might be
+ * using pa_threaded_mainloop_wait() at the same time. Each thread must
+ * therefore verify that it was its callback that was invoked.
  *
  * The callback, my_drain_callback(), indicates to the main function that it
  * has been called using pa_threaded_mainloop_signal().
  *
- * As you can see, pa_threaded_mainloop_wait() may only be called with
+ * As you can see, both pa_threaded_mainloop_wait() may only be called with
  * the lock held. The same thing is true for pa_threaded_mainloop_signal(),
  * but as the lock is held before the callback is invoked, you do not have to
  * deal with that.
  *
  * The functions will not dead lock because the wait function will release
- * the lock before waiting and then regrab it once it has been signalled.
+ * the lock before waiting and then regrab it once it has been signaled. 
  * For those of you familiar with threads, the behaviour is that of a
  * condition variable.
  *
@@ -164,12 +160,12 @@ PA_C_DECL_BEGIN
  * access this data safely, we must extend our example a bit:
  *
  * \code
- * static int * volatile drain_result = NULL;
+ * static int *drain_result;
  *
  * static void my_drain_callback(pa_stream*s, int success, void *userdata) {
  *     pa_threaded_mainloop *m;
  *
- *     m = userdata;
+ *     m = (pa_threaded_mainloop*)userdata;
  *     assert(m);
  *
  *     drain_result = &success;
@@ -185,7 +181,7 @@ PA_C_DECL_BEGIN
  *     o = pa_stream_drain(s, my_drain_callback, m);
  *     assert(o);
  *
- *     while (drain_result == NULL)
+ *     while (pa_operation_get_state(o) != OPERATION_DONE)
  *         pa_threaded_mainloop_wait(m);
  *
  *     pa_operation_unref(o);
@@ -205,10 +201,10 @@ PA_C_DECL_BEGIN
  * copy the contents of success, but for larger data structures this can be
  * wasteful.
  *
- * The difference here compared to the basic callback is the value 1 passed
- * to pa_threaded_mainloop_signal() and the call to
+ * The difference here compared to the basic callback is the 1 sent to
+ * pa_threaded_mainloop_signal() and the call to
  * pa_threaded_mainloop_accept(). What will happen is that
- * pa_threaded_mainloop_signal() will signal the main function and then wait.
+ * pa_threaded_mainloop_signal() will signal the main function and then stop.
  * The main function is then free to use the data in the callback until
  * pa_threaded_mainloop_accept() is called, which will allow the callback
  * to continue.
@@ -221,10 +217,10 @@ PA_C_DECL_BEGIN
  * \subsection async_subsec Asynchronous callbacks
  *
  * PulseAudio also has callbacks that are completely asynchronous, meaning
- * that they can be called at any time. The threaded main loop API provides
+ * that they can be called at any time. The threading main loop API provides
  * the locking mechanism to handle concurrent accesses, but nothing else.
  * Applications will have to handle communication from the callback to the
- * main program through their own mechanisms.
+ * main program through some own system.
  *
  * The callbacks that are completely asynchronous are:
  *
@@ -233,14 +229,11 @@ PA_C_DECL_BEGIN
  */
 
 /** \file
- *
+ * 
  * A thread based event loop implementation based on pa_mainloop. The
  * event loop is run in a helper thread in the background. A few
  * synchronization primitives are available to access the objects
- * attached to the event loop safely.
- *
- * See also \subpage threaded_mainloop
- */
+ * attached to the event loop safely. */
 
 /** An opaque threaded main loop object */
 typedef struct pa_threaded_mainloop pa_threaded_mainloop;
@@ -251,7 +244,7 @@ typedef struct pa_threaded_mainloop pa_threaded_mainloop;
 pa_threaded_mainloop *pa_threaded_mainloop_new(void);
 
 /** Free a threaded main loop object. If the event loop thread is
- * still running, terminate it with pa_threaded_mainloop_stop()
+ * still running, it is terminated using pa_threaded_mainloop_stop()
  * first. */
 void pa_threaded_mainloop_free(pa_threaded_mainloop* m);
 
@@ -270,22 +263,20 @@ void pa_threaded_mainloop_stop(pa_threaded_mainloop *m);
  * are executed with this lock held. */
 void pa_threaded_mainloop_lock(pa_threaded_mainloop *m);
 
-/** Unlock the event loop object, inverse of pa_threaded_mainloop_lock(). */
+/** Unlock the event loop object, inverse of pa_threaded_mainloop_lock() */
 void pa_threaded_mainloop_unlock(pa_threaded_mainloop *m);
 
 /** Wait for an event to be signalled by the event loop thread. You
  * can use this to pass data from the event loop thread to the main
- * thread in a synchronized fashion. This function may not be called
+ * thread in synchronized fashion. This function may not be called
  * inside the event loop thread. Prior to this call the event loop
  * object needs to be locked using pa_threaded_mainloop_lock(). While
- * waiting the lock will be released. Immediately before returning it
- * will be acquired again. This function may spuriously wake up even
- * without pa_threaded_mainloop_signal() being called. You need to
- * make sure to handle that! */
+ * waiting the lock will be released, immediately before returning it
+ * will be acquired again. */
 void pa_threaded_mainloop_wait(pa_threaded_mainloop *m);
 
 /** Signal all threads waiting for a signalling event in
- * pa_threaded_mainloop_wait(). If wait_for_accept is non-zero, do
+ * pa_threaded_mainloop_wait(). If wait_for_release is non-zero, do
  * not return before the signal was accepted by a
  * pa_threaded_mainloop_accept() call. While waiting for that condition
  * the event loop object is unlocked. */
@@ -297,20 +288,11 @@ void pa_threaded_mainloop_signal(pa_threaded_mainloop *m, int wait_for_accept);
  * wait_for_accept value.  */
 void pa_threaded_mainloop_accept(pa_threaded_mainloop *m);
 
-/** Return the return value as specified with the main loop's
- * pa_mainloop_quit() routine. */
+/** Return the return value as specified with the main loop's quit() routine. */
 int pa_threaded_mainloop_get_retval(pa_threaded_mainloop *m);
 
-/** Return the main loop abstraction layer vtable for this main loop.
- * There is no need to free this object as it is owned by the loop
- * and is destroyed when the loop is freed. */
+/** Return the abstract main loop abstraction layer vtable for this main loop. */
 pa_mainloop_api* pa_threaded_mainloop_get_api(pa_threaded_mainloop*m);
-
-/** Returns non-zero when called from within the event loop thread. \since 0.9.7 */
-int pa_threaded_mainloop_in_thread(pa_threaded_mainloop *m);
-
-/** Sets the name of the thread. \since 5.0 */
-void pa_threaded_mainloop_set_name(pa_threaded_mainloop *m, const char *name);
 
 PA_C_DECL_END
 

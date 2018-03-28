@@ -1,20 +1,22 @@
+/* $Id: core-subscribe.c 1272 2006-08-18 21:38:40Z lennart $ */
+
 /***
   This file is part of PulseAudio.
-
-  Copyright 2004-2006 Lennart Poettering
-
+ 
   PulseAudio is free software; you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as published
-  by the Free Software Foundation; either version 2.1 of the License,
+  by the Free Software Foundation; either version 2 of the License,
   or (at your option) any later version.
-
+ 
   PulseAudio is distributed in the hope that it will be useful, but
   WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
   General Public License for more details.
-
+ 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
+  along with PulseAudio; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
+  USA.
 ***/
 
 #ifdef HAVE_CONFIG_H
@@ -22,11 +24,12 @@
 #endif
 
 #include <stdio.h>
+#include <assert.h>
 
 #include <pulse/xmalloc.h>
 
+#include <pulsecore/queue.h>
 #include <pulsecore/log.h>
-#include <pulsecore/macro.h>
 
 #include "core-subscribe.h"
 
@@ -39,7 +42,7 @@
 
 struct pa_subscription {
     pa_core *core;
-    bool dead;
+    int dead;
 
     pa_subscription_cb_t callback;
     void *userdata;
@@ -62,14 +65,14 @@ static void sched_event(pa_core *c);
 /* Allocate a new subscription object for the given subscription mask. Use the specified callback function and user data */
 pa_subscription* pa_subscription_new(pa_core *c, pa_subscription_mask_t m, pa_subscription_cb_t callback, void *userdata) {
     pa_subscription *s;
-
-    pa_assert(c);
-    pa_assert(m);
-    pa_assert(callback);
+    
+    assert(c);
+    assert(m);
+    assert(callback);
 
     s = pa_xnew(pa_subscription, 1);
     s->core = c;
-    s->dead = false;
+    s->dead = 0;
     s->callback = callback;
     s->userdata = userdata;
     s->mask = m;
@@ -80,36 +83,36 @@ pa_subscription* pa_subscription_new(pa_core *c, pa_subscription_mask_t m, pa_su
 
 /* Free a subscription object, effectively marking it for deletion */
 void pa_subscription_free(pa_subscription*s) {
-    pa_assert(s);
-    pa_assert(!s->dead);
-
-    s->dead = true;
+    assert(s);
+    assert(!s->dead);
+    
+    s->dead = 1;
     sched_event(s->core);
 }
 
 static void free_subscription(pa_subscription *s) {
-    pa_assert(s);
-    pa_assert(s->core);
+    assert(s);
+    assert(s->core);
 
     PA_LLIST_REMOVE(pa_subscription, s->core->subscriptions, s);
     pa_xfree(s);
 }
 
 static void free_event(pa_subscription_event *s) {
-    pa_assert(s);
-    pa_assert(s->core);
+    assert(s);
+    assert(s->core);
 
     if (!s->next)
         s->core->subscription_event_last = s->prev;
-
+    
     PA_LLIST_REMOVE(pa_subscription_event, s->core->subscription_event_queue, s);
     pa_xfree(s);
 }
 
 /* Free all subscription objects */
 void pa_subscription_free_all(pa_core *c) {
-    pa_assert(c);
-
+    assert(c);
+    
     while (c->subscriptions)
         free_subscription(c->subscriptions);
 
@@ -142,7 +145,7 @@ static void dump_event(const char * prefix, pa_subscription_event*e) {
         [PA_SUBSCRIPTION_EVENT_REMOVE] = "REMOVE"
     };
 
-    pa_log_debug("%s event (%s|%s|%u)",
+    pa_log("%s event (%s|%s|%u)",
            prefix,
            fac_table[e->type & PA_SUBSCRIPTION_EVENT_FACILITY_MASK],
            type_table[e->type & PA_SUBSCRIPTION_EVENT_TYPE_MASK],
@@ -150,14 +153,14 @@ static void dump_event(const char * prefix, pa_subscription_event*e) {
 }
 #endif
 
-/* Deferred callback for dispatching subscription events */
+/* Deferred callback for dispatching subscirption events */
 static void defer_cb(pa_mainloop_api *m, pa_defer_event *de, void *userdata) {
     pa_core *c = userdata;
     pa_subscription *s;
-
-    pa_assert(c->mainloop == m);
-    pa_assert(c);
-    pa_assert(c->subscription_defer_event == de);
+    
+    assert(c->mainloop == m);
+    assert(c);
+    assert(c->subscription_defer_event == de);
 
     c->mainloop->defer_enable(c->subscription_defer_event, 0);
 
@@ -167,7 +170,7 @@ static void defer_cb(pa_mainloop_api *m, pa_defer_event *de, void *userdata) {
         pa_subscription_event *e = c->subscription_event_queue;
 
         for (s = c->subscriptions; s; s = s->next) {
-
+            
             if (!s->dead && pa_subscription_match_flags(s->mask, e->type))
                 s->callback(c, e->type, e->index, s->userdata);
         }
@@ -179,7 +182,7 @@ static void defer_cb(pa_mainloop_api *m, pa_defer_event *de, void *userdata) {
     }
 
     /* Remove dead subscriptions */
-
+    
     s = c->subscriptions;
     while (s) {
         pa_subscription *n = s->next;
@@ -191,38 +194,38 @@ static void defer_cb(pa_mainloop_api *m, pa_defer_event *de, void *userdata) {
 
 /* Schedule an mainloop event so that a pending subscription event is dispatched */
 static void sched_event(pa_core *c) {
-    pa_assert(c);
+    assert(c);
 
     if (!c->subscription_defer_event) {
         c->subscription_defer_event = c->mainloop->defer_new(c->mainloop, defer_cb, c);
-        pa_assert(c->subscription_defer_event);
+        assert(c->subscription_defer_event);
     }
-
+        
     c->mainloop->defer_enable(c->subscription_defer_event, 1);
 }
 
 /* Append a new subscription event to the subscription event queue and schedule a main loop event */
-void pa_subscription_post(pa_core *c, pa_subscription_event_type_t t, uint32_t idx) {
+void pa_subscription_post(pa_core *c, pa_subscription_event_type_t t, uint32_t index) {
     pa_subscription_event *e;
-    pa_assert(c);
+    assert(c);
 
-    /* No need for queuing subscriptions of no one is listening */
+    /* No need for queuing subscriptions of noone is listening */
     if (!c->subscriptions)
         return;
-
+    
     if ((t & PA_SUBSCRIPTION_EVENT_TYPE_MASK) != PA_SUBSCRIPTION_EVENT_NEW) {
         pa_subscription_event *i, *n;
-
+        
         /* Check for duplicates */
         for (i = c->subscription_event_last; i; i = n) {
             n = i->prev;
-
+                
             /* not the same object type */
             if (((t ^ i->type) & PA_SUBSCRIPTION_EVENT_FACILITY_MASK))
                 continue;
-
+            
             /* not the same object */
-            if (i->index != idx)
+            if (i->index != index)
                 continue;
 
             if ((t & PA_SUBSCRIPTION_EVENT_TYPE_MASK) == PA_SUBSCRIPTION_EVENT_REMOVE) {
@@ -231,7 +234,7 @@ void pa_subscription_post(pa_core *c, pa_subscription_event_type_t t, uint32_t i
                  * entry in the queue. */
 
                 free_event(i);
-                pa_log_debug("Dropped redundant event due to remove event.");
+                pa_log_debug("dropped redundant event.");
                 continue;
             }
 
@@ -239,7 +242,7 @@ void pa_subscription_post(pa_core *c, pa_subscription_event_type_t t, uint32_t i
                 /* This object has changed. If a "new" or "change" event for
                  * this object is still in the queue we can exit. */
 
-                pa_log_debug("Dropped redundant event due to change event.");
+                pa_log_debug("dropped redundant event.");
                 return;
             }
         }
@@ -248,9 +251,9 @@ void pa_subscription_post(pa_core *c, pa_subscription_event_type_t t, uint32_t i
     e = pa_xnew(pa_subscription_event, 1);
     e->core = c;
     e->type = t;
-    e->index = idx;
+    e->index = index;
 
-    PA_LLIST_INSERT_AFTER(pa_subscription_event, c->subscription_event_queue, c->subscription_event_last, e);
+    PA_LLIST_INSERT_AFTER(pa_subscription_event, c->subscription_event_queue, c->subscription_event_last, e); 
     c->subscription_event_last = e;
 
 #ifdef DEBUG
