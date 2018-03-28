@@ -18,9 +18,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public License
-  along with PulseAudio; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
+  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
 /* WARNING: Make sure to edit the real source file version.h.in! */
@@ -35,7 +33,7 @@ PA_C_DECL_BEGIN
 /** Return the version of the header files. Keep in mind that this is
 a macro and not a function, so it is impossible to get the pointer of
 it. */
-#define pa_get_headers_version() ("5.99.0")
+#define pa_get_headers_version() ("6.0.0")
 
 /** Return the version of the library the current application is
  * linked to. */
@@ -52,10 +50,10 @@ const char* pa_get_library_version(void);
 #define PA_PROTOCOL_VERSION 30
 
 /** The major version of PA. \since 0.9.15 */
-#define PA_MAJOR 5
+#define PA_MAJOR 6
 
 /** The minor version of PA. \since 0.9.15 */
-#define PA_MINOR 99
+#define PA_MINOR 0
 
 /** The micro version of PA (will always be 0 from v1.0 onwards). \since 0.9.15 */
 #define PA_MICRO 0
