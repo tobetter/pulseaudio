@@ -1,3 +1,15 @@
+pulseaudio (11.99.1-1) experimental; urgency=medium
+
+  * New upstream version 11.99.1
+    - Drop all patches, applied upstream
+    - Licence of qpaeq changed from AGPL to LGPL
+  * Install new module always-source into pulseaudio package
+  * Build and install the gsettings module.
+    Disable the gconf module as it is superseded by gsettings
+  * Add new libpulse0 functions to the symbols file
+
+ -- Felipe Sateler <fsateler@debian.org>  Sun, 13 May 2018 12:35:13 -0400
+
 pulseaudio (11.1-5) unstable; urgency=medium
 
   * Change Vcs-* urls to new home in salsa.debian.org
