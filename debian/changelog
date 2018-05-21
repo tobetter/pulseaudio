@@ -1,3 +1,12 @@
+pulseaudio (1:11.1-1ubuntu8) cosmic; urgency=medium
+
+  * 0804-bluez5-device-Rewrite-of-thread-function-reduce-send.patch,
+    0805-bluez5-device-Fix-memory-leak-in-sco_process_render.patch:
+    - Reduce latency over bluetooth, using A2DP, when the connection drops
+      temporarily (LP: #405294).
+
+ -- Alberto Milone <alberto.milone@canonical.com>  Mon, 21 May 2018 16:41:41 +0200
+
 pulseaudio (1:11.1-1ubuntu7) bionic; urgency=medium
 
   * Drop build-dependency on dbus-cpp, which is not actually used and is to
