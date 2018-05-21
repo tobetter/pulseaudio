@@ -1326,7 +1326,8 @@ dist_alsaprofilesets_DATA = \
 		modules/alsa/mixer/profile-sets/native-instruments-traktorkontrol-s4.conf \
 		modules/alsa/mixer/profile-sets/native-instruments-korecontroller.conf \
 		modules/alsa/mixer/profile-sets/kinect-audio.conf \
-		modules/alsa/mixer/profile-sets/sb-omni-surround-5.1.conf
+		modules/alsa/mixer/profile-sets/sb-omni-surround-5.1.conf \
+		modules/alsa/mixer/profile-sets/dell-dock-tb16-usb-audio.conf
 
 if HAVE_UDEV
 dist_udevrules_DATA = \
