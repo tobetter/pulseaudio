@@ -14,7 +14,7 @@ Index: pulseaudio/src/Makefile.am
 ===================================================================
 --- pulseaudio.orig/src/Makefile.am
 +++ pulseaudio/src/Makefile.am
-@@ -1241,6 +1241,11 @@ modlibexec_LTLIBRARIES += \
+@@ -1250,6 +1250,11 @@ modlibexec_LTLIBRARIES += \
  		module-esound-sink.la
  endif
  
@@ -26,19 +26,7 @@ Index: pulseaudio/src/Makefile.am
  # See comment at librtp.la above
  if !OS_IS_WIN32
  modlibexec_LTLIBRARIES += \
-@@ -1582,6 +1587,11 @@ SYMDEF_FILES += \
- 		module-esound-sink-symdef.h
- endif
- 
-+if HAVE_APPARMOR
-+SYMDEF_FILES += \
-+		module-snappy-policy-symdef.h
-+endif
-+
- EXTRA_DIST += $(SYMDEF_FILES)
- BUILT_SOURCES += $(SYMDEF_FILES) builddirs
- 
-@@ -2101,6 +2111,14 @@ module_trust_store_la_LIBADD = $(MODULE_
+@@ -2048,6 +2053,14 @@ module_trust_store_la_LIBADD = $(MODULE_
  module_trust_store_la_CFLAGS = $(AM_CFLAGS) -DHAVE_TRUST_STORE=1
  endif
  
@@ -57,7 +45,7 @@ Index: pulseaudio/src/modules/module-snappy-policy.c
 ===================================================================
 --- /dev/null
 +++ pulseaudio/src/modules/module-snappy-policy.c
-@@ -0,0 +1,98 @@
+@@ -0,0 +1,96 @@
 +/***
 +    This file is part of PulseAudio.
 +
@@ -93,8 +81,6 @@ Index: pulseaudio/src/modules/module-snappy-policy.c
 +#include <pulsecore/thread.h>
 +#include <pulsecore/core-util.h>
 +#include <pulse/mainloop-api.h>
-+
-+#include "module-snappy-policy-symdef.h"
 +
 +#define SNAP_LABEL_PREFIX           "snap."
 +#define SNAP_LABEL_PREFIX_LENGTH    5
@@ -160,7 +146,7 @@ Index: pulseaudio/configure.ac
 ===================================================================
 --- pulseaudio.orig/configure.ac
 +++ pulseaudio/configure.ac
-@@ -1412,6 +1412,19 @@ AS_IF([test "x$os_is_win32" != "x1"],
+@@ -1446,6 +1446,19 @@ AS_IF([test "x$os_is_win32" != "x1"],
  AS_IF([test "x$ax_pthread_ok" = "xyes"],
      AC_DEFINE([_POSIX_PTHREAD_SEMANTICS], 1, [Needed on Solaris]))
  
@@ -180,7 +166,7 @@ Index: pulseaudio/configure.ac
  
  # Ubuntu touch trust store
  
-@@ -1602,6 +1615,8 @@ AS_IF([test "x$HAVE_ESOUND" = "x1" -a "x
+@@ -1641,6 +1654,8 @@ AS_IF([test "x$HAVE_ESOUND" = "x1" -a "x
  AS_IF([test "x$HAVE_GCOV" = "x1"], ENABLE_GCOV=yes, ENABLE_GCOV=no)
  AS_IF([test "x$HAVE_LIBCHECK" = "x1"], ENABLE_TESTS=yes, ENABLE_TESTS=no)
  AS_IF([test "x$enable_legacy_database_entry_format" != "xno"], ENABLE_LEGACY_DATABASE_ENTRY_FORMAT=yes, ENABLE_LEGACY_DATABASE_ENTRY_FORMAT=no)
@@ -189,7 +175,7 @@ Index: pulseaudio/configure.ac
  
  echo "
   ---{ $PACKAGE_NAME $VERSION }---
-@@ -1658,6 +1673,8 @@ echo "
+@@ -1698,6 +1713,8 @@ echo "
      Enable soxr (resampler):       ${ENABLE_SOXR}
      Enable WebRTC echo canceller:  ${ENABLE_WEBRTC}
      Enable Ubuntu trust store:     ${ENABLE_TRUST_STORE}

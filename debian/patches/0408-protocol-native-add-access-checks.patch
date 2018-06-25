@@ -214,7 +214,7 @@ Index: pulseaudio/src/pulsecore/protocol-native.c
  
 +    CHECK_ACCESS(c, command, tag, PA_INVALID_INDEX, name);
 +
-     if (!(m = pa_module_load(c->protocol->core, name, argument))) {
+     if (pa_module_load(&m, c->protocol->core, name, argument) < 0) {
          pa_pstream_send_error(c->pstream, tag, PA_ERR_MODINITFAILED);
          return;
 @@ -4496,6 +4549,8 @@ static void command_unload_module(pa_pdi

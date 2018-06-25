@@ -26,7 +26,7 @@ Index: pulseaudio/configure.ac
 ===================================================================
 --- pulseaudio.orig/configure.ac
 +++ pulseaudio/configure.ac
-@@ -1413,6 +1413,19 @@ AS_IF([test "x$ax_pthread_ok" = "xyes"],
+@@ -1447,6 +1447,19 @@ AS_IF([test "x$ax_pthread_ok" = "xyes"],
      AC_DEFINE([_POSIX_PTHREAD_SEMANTICS], 1, [Needed on Solaris]))
  
  
@@ -46,7 +46,7 @@ Index: pulseaudio/configure.ac
  
  ###################################
  #            Output               #
-@@ -1580,6 +1593,7 @@ AS_IF([test "x$HAVE_ADRIAN_EC" = "x1"],
+@@ -1619,6 +1632,7 @@ AS_IF([test "x$HAVE_ADRIAN_EC" = "x1"],
  AS_IF([test "x$HAVE_SPEEX" = "x1"], ENABLE_SPEEX=yes, ENABLE_SPEEX=no)
  AS_IF([test "x$HAVE_SOXR" = "x1"], ENABLE_SOXR=yes, ENABLE_SOXR=no)
  AS_IF([test "x$HAVE_WEBRTC" = "x1"], ENABLE_WEBRTC=yes, ENABLE_WEBRTC=no)
@@ -54,7 +54,7 @@ Index: pulseaudio/configure.ac
  AS_IF([test "x$HAVE_TDB" = "x1"], ENABLE_TDB=yes, ENABLE_TDB=no)
  AS_IF([test "x$HAVE_GDBM" = "x1"], ENABLE_GDBM=yes, ENABLE_GDBM=no)
  AS_IF([test "x$HAVE_SIMPLEDB" = "x1"], ENABLE_SIMPLEDB=yes, ENABLE_SIMPLEDB=no)
-@@ -1643,6 +1657,7 @@ echo "
+@@ -1683,6 +1697,7 @@ echo "
      Enable speex (resampler, AEC): ${ENABLE_SPEEX}
      Enable soxr (resampler):       ${ENABLE_SOXR}
      Enable WebRTC echo canceller:  ${ENABLE_WEBRTC}
@@ -66,7 +66,7 @@ Index: pulseaudio/src/Makefile.am
 ===================================================================
 --- pulseaudio.orig/src/Makefile.am
 +++ pulseaudio/src/Makefile.am
-@@ -1097,6 +1097,10 @@ if HAVE_WEBRTC
+@@ -1105,6 +1105,10 @@ if HAVE_WEBRTC
  modlibexec_LTLIBRARIES += libwebrtc-util.la
  endif
  
@@ -77,7 +77,7 @@ Index: pulseaudio/src/Makefile.am
  if HAVE_ESOUND
  modlibexec_LTLIBRARIES += \
  		libprotocol-esound.la
-@@ -1226,6 +1230,11 @@ modlibexec_LTLIBRARIES += \
+@@ -1235,6 +1239,11 @@ modlibexec_LTLIBRARIES += \
  		module-role-ducking.la \
  		module-allow-passthrough.la
  
@@ -89,15 +89,7 @@ Index: pulseaudio/src/Makefile.am
  if HAVE_ESOUND
  modlibexec_LTLIBRARIES += \
  		module-esound-protocol-tcp.la \
-@@ -1535,6 +1544,7 @@ SYMDEF_FILES = \
- 		module-intended-roles-symdef.h \
- 		module-suspend-on-idle-symdef.h \
- 		module-echo-cancel-symdef.h \
-+		module-trust-store-symdef.h \
- 		module-hal-detect-symdef.h \
- 		module-udev-detect-symdef.h \
- 		module-systemd-login-symdef.h \
-@@ -2077,6 +2087,20 @@ module_echo_cancel_la_CFLAGS += -DHAVE_W
+@@ -2025,6 +2034,20 @@ module_echo_cancel_la_CFLAGS += -DHAVE_W
  module_echo_cancel_la_LIBADD += libwebrtc-util.la
  endif
  
@@ -122,7 +114,7 @@ Index: pulseaudio/src/modules/trust-store/module-trust-store.c
 ===================================================================
 --- /dev/null
 +++ pulseaudio/src/modules/trust-store/module-trust-store.c
-@@ -0,0 +1,228 @@
+@@ -0,0 +1,226 @@
 +/***
 +    This file is part of PulseAudio.
 +
@@ -154,8 +146,6 @@ Index: pulseaudio/src/modules/trust-store/module-trust-store.c
 +#include <pulsecore/thread.h>
 +#include <pulsecore/core-util.h>
 +#include <pulse/mainloop-api.h>
-+
-+#include "module-trust-store-symdef.h"
 +
 +PA_MODULE_AUTHOR("David Henningsson");
 +PA_MODULE_DESCRIPTION("Ubuntu touch trust store integration");
@@ -578,5 +568,5 @@ Index: pulseaudio/po/POTFILES.in
  src/modules/module-allow-passthrough.c
 +src/modules/trust-store/module-trust-store.c
  src/modules/module-always-sink.c
+ src/modules/module-always-source.c
  src/modules/module-cli.c
- src/modules/module-combine.c
