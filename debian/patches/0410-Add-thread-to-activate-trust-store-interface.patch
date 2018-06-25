@@ -19,8 +19,8 @@ Index: pulseaudio/src/modules/trust-store/module-trust-store.c
 +#include <pulsecore/dynarray.h>
  #include <pulse/mainloop-api.h>
  
- #include "module-trust-store-symdef.h"
-@@ -173,18 +174,6 @@ static pa_hook_result_t connect_record_h
+ PA_MODULE_AUTHOR("David Henningsson");
+@@ -171,18 +172,6 @@ static pa_hook_result_t connect_record_h
      return PA_HOOK_CANCEL;
  }
  
@@ -39,7 +39,7 @@ Index: pulseaudio/src/modules/trust-store/module-trust-store.c
  int pa__init(pa_module *m) {
      struct userdata *u;
      pa_trust_store *ts = pa_trust_store_new();
-@@ -204,7 +193,6 @@ int pa__init(pa_module *m) {
+@@ -202,7 +191,6 @@ int pa__init(pa_module *m) {
                   pa_fdsem_get(u->fdsem), PA_IO_EVENT_INPUT, check_fdsem, u));
      pa_fdsem_before_poll(u->fdsem);
  

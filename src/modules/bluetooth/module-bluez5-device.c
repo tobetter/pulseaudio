@@ -49,8 +49,6 @@
 #include "bluez5-util.h"
 #include "rtp.h"
 
-#include "module-bluez5-device-symdef.h"
-
 PA_MODULE_AUTHOR("João Paulo Rechi Vita");
 PA_MODULE_DESCRIPTION("BlueZ 5 Bluetooth audio sink and source");
 PA_MODULE_VERSION(PACKAGE_VERSION);
@@ -76,6 +74,7 @@ static const char* const valid_modargs[] = {
 enum {
     BLUETOOTH_MESSAGE_IO_THREAD_FAILED,
     BLUETOOTH_MESSAGE_STREAM_FD_HUP,
+    BLUETOOTH_MESSAGE_SET_TRANSPORT_PLAYING,
     BLUETOOTH_MESSAGE_MAX
 };
 
@@ -808,8 +807,17 @@ static int transport_acquire(struct userdata *u, bool optional) {
     if (u->stream_fd < 0)
         return u->stream_fd;
 
+    /* transport_acquired must be set before calling
+     * pa_bluetooth_transport_set_state() */
     u->transport_acquired = true;
     pa_log_info("Transport %s acquired: fd %d", u->transport->path, u->stream_fd);
+
+    if (u->transport->state == PA_BLUETOOTH_TRANSPORT_STATE_IDLE) {
+        if (pa_thread_mq_get() != NULL)
+            pa_asyncmsgq_post(pa_thread_mq_get()->outq, PA_MSGOBJECT(u->msg), BLUETOOTH_MESSAGE_SET_TRANSPORT_PLAYING, NULL, 0, NULL, NULL);
+        else
+            pa_bluetooth_transport_set_state(u->transport, PA_BLUETOOTH_TRANSPORT_STATE_PLAYING);
+    }
 
     return 0;
 }
@@ -932,53 +940,11 @@ static bool setup_transport_and_stream(struct userdata *u) {
 /* Run from IO thread */
 static int source_process_msg(pa_msgobject *o, int code, void *data, int64_t offset, pa_memchunk *chunk) {
     struct userdata *u = PA_SOURCE(o)->userdata;
-    bool failed = false;
-    int r;
 
     pa_assert(u->source == PA_SOURCE(o));
     pa_assert(u->transport);
 
     switch (code) {
-
-        case PA_SOURCE_MESSAGE_SET_STATE:
-
-            switch ((pa_source_state_t) PA_PTR_TO_UINT(data)) {
-
-                case PA_SOURCE_SUSPENDED:
-                    /* Ignore if transition is PA_SOURCE_INIT->PA_SOURCE_SUSPENDED */
-                    if (!PA_SOURCE_IS_OPENED(u->source->thread_info.state))
-                        break;
-
-                    /* Stop the device if the sink is suspended as well */
-                    if (!u->sink || u->sink->state == PA_SINK_SUSPENDED)
-                        transport_release(u);
-
-                    if (u->read_smoother)
-                        pa_smoother_pause(u->read_smoother, pa_rtclock_now());
-
-                    break;
-
-                case PA_SOURCE_IDLE:
-                case PA_SOURCE_RUNNING:
-                    if (u->source->thread_info.state != PA_SOURCE_SUSPENDED)
-                        break;
-
-                    /* Resume the device if the sink was suspended as well */
-                    if (!u->sink || !PA_SINK_IS_OPENED(u->sink->thread_info.state))
-                        failed = !setup_transport_and_stream(u);
-
-                    /* We don't resume the smoother here. Instead we
-                     * wait until the first packet arrives */
-
-                    break;
-
-                case PA_SOURCE_UNLINKED:
-                case PA_SOURCE_INIT:
-                case PA_SOURCE_INVALID_STATE:
-                    break;
-            }
-
-            break;
 
         case PA_SOURCE_MESSAGE_GET_LATENCY: {
             int64_t wi, ri;
@@ -1000,9 +966,54 @@ static int source_process_msg(pa_msgobject *o, int code, void *data, int64_t off
 
     }
 
-    r = pa_source_process_msg(o, code, data, offset, chunk);
+    return pa_source_process_msg(o, code, data, offset, chunk);
+}
 
-    return (r < 0 || !failed) ? r : -1;
+/* Called from the IO thread. */
+static int source_set_state_in_io_thread_cb(pa_source *s, pa_source_state_t new_state, pa_suspend_cause_t new_suspend_cause) {
+    struct userdata *u;
+
+    pa_assert(s);
+    pa_assert_se(u = s->userdata);
+
+    switch (new_state) {
+
+        case PA_SOURCE_SUSPENDED:
+            /* Ignore if transition is PA_SOURCE_INIT->PA_SOURCE_SUSPENDED */
+            if (!PA_SOURCE_IS_OPENED(u->source->thread_info.state))
+                break;
+
+            /* Stop the device if the sink is suspended as well */
+            if (!u->sink || u->sink->state == PA_SINK_SUSPENDED)
+                transport_release(u);
+
+            if (u->read_smoother)
+                pa_smoother_pause(u->read_smoother, pa_rtclock_now());
+
+            break;
+
+        case PA_SOURCE_IDLE:
+        case PA_SOURCE_RUNNING:
+            if (u->source->thread_info.state != PA_SOURCE_SUSPENDED)
+                break;
+
+            /* Resume the device if the sink was suspended as well */
+            if (!u->sink || !PA_SINK_IS_OPENED(u->sink->thread_info.state))
+                if (!setup_transport_and_stream(u))
+                    return -1;
+
+            /* We don't resume the smoother here. Instead we
+             * wait until the first packet arrives */
+
+            break;
+
+        case PA_SOURCE_UNLINKED:
+        case PA_SOURCE_INIT:
+        case PA_SOURCE_INVALID_STATE:
+            break;
+    }
+
+    return 0;
 }
 
 /* Run from main thread */
@@ -1093,6 +1104,7 @@ static int add_source(struct userdata *u) {
 
     u->source->userdata = u;
     u->source->parent.process_msg = source_process_msg;
+    u->source->set_state_in_io_thread = source_set_state_in_io_thread_cb;
 
     if (u->profile == PA_BLUETOOTH_PROFILE_HEADSET_HEAD_UNIT || u->profile == PA_BLUETOOTH_PROFILE_HEADSET_AUDIO_GATEWAY) {
         pa_source_set_set_volume_callback(u->source, source_set_volume_cb);
@@ -1104,50 +1116,11 @@ static int add_source(struct userdata *u) {
 /* Run from IO thread */
 static int sink_process_msg(pa_msgobject *o, int code, void *data, int64_t offset, pa_memchunk *chunk) {
     struct userdata *u = PA_SINK(o)->userdata;
-    bool failed = false;
-    int r;
 
     pa_assert(u->sink == PA_SINK(o));
     pa_assert(u->transport);
 
     switch (code) {
-
-        case PA_SINK_MESSAGE_SET_STATE:
-
-            switch ((pa_sink_state_t) PA_PTR_TO_UINT(data)) {
-
-                case PA_SINK_SUSPENDED:
-                    /* Ignore if transition is PA_SINK_INIT->PA_SINK_SUSPENDED */
-                    if (!PA_SINK_IS_OPENED(u->sink->thread_info.state))
-                        break;
-
-                    /* Stop the device if the source is suspended as well */
-                    if (!u->source || u->source->state == PA_SOURCE_SUSPENDED)
-                        /* We deliberately ignore whether stopping
-                         * actually worked. Since the stream_fd is
-                         * closed it doesn't really matter */
-                        transport_release(u);
-
-                    break;
-
-                case PA_SINK_IDLE:
-                case PA_SINK_RUNNING:
-                    if (u->sink->thread_info.state != PA_SINK_SUSPENDED)
-                        break;
-
-                    /* Resume the device if the source was suspended as well */
-                    if (!u->source || !PA_SOURCE_IS_OPENED(u->source->thread_info.state))
-                        failed = !setup_transport_and_stream(u);
-
-                    break;
-
-                case PA_SINK_UNLINKED:
-                case PA_SINK_INIT:
-                case PA_SINK_INVALID_STATE:
-                    break;
-            }
-
-            break;
 
         case PA_SINK_MESSAGE_GET_LATENCY: {
             int64_t wi = 0, ri = 0;
@@ -1170,9 +1143,51 @@ static int sink_process_msg(pa_msgobject *o, int code, void *data, int64_t offse
             return 0;
     }
 
-    r = pa_sink_process_msg(o, code, data, offset, chunk);
+    return pa_sink_process_msg(o, code, data, offset, chunk);
+}
 
-    return (r < 0 || !failed) ? r : -1;
+/* Called from the IO thread. */
+static int sink_set_state_in_io_thread_cb(pa_sink *s, pa_sink_state_t new_state, pa_suspend_cause_t new_suspend_cause) {
+    struct userdata *u;
+
+    pa_assert(s);
+    pa_assert_se(u = s->userdata);
+
+    switch (new_state) {
+
+        case PA_SINK_SUSPENDED:
+            /* Ignore if transition is PA_SINK_INIT->PA_SINK_SUSPENDED */
+            if (!PA_SINK_IS_OPENED(u->sink->thread_info.state))
+                break;
+
+            /* Stop the device if the source is suspended as well */
+            if (!u->source || u->source->state == PA_SOURCE_SUSPENDED)
+                /* We deliberately ignore whether stopping
+                 * actually worked. Since the stream_fd is
+                 * closed it doesn't really matter */
+                transport_release(u);
+
+            break;
+
+        case PA_SINK_IDLE:
+        case PA_SINK_RUNNING:
+            if (u->sink->thread_info.state != PA_SINK_SUSPENDED)
+                break;
+
+            /* Resume the device if the source was suspended as well */
+            if (!u->source || !PA_SOURCE_IS_OPENED(u->source->thread_info.state))
+                if (!setup_transport_and_stream(u))
+                    return -1;
+
+            break;
+
+        case PA_SINK_UNLINKED:
+        case PA_SINK_INIT:
+        case PA_SINK_INVALID_STATE:
+            break;
+    }
+
+    return 0;
 }
 
 /* Run from main thread */
@@ -1264,6 +1279,7 @@ static int add_sink(struct userdata *u) {
 
     u->sink->userdata = u;
     u->sink->parent.process_msg = sink_process_msg;
+    u->sink->set_state_in_io_thread = sink_set_state_in_io_thread_cb;
 
     if (u->profile == PA_BLUETOOTH_PROFILE_HEADSET_HEAD_UNIT || u->profile == PA_BLUETOOTH_PROFILE_HEADSET_AUDIO_GATEWAY) {
         pa_sink_set_set_volume_callback(u->sink, sink_set_volume_cb);
@@ -2074,7 +2090,7 @@ static int uuid_to_profile(const char *uuid, pa_bluetooth_profile_t *_r) {
         *_r = PA_BLUETOOTH_PROFILE_A2DP_SINK;
     else if (pa_streq(uuid, PA_BLUETOOTH_UUID_A2DP_SOURCE))
         *_r = PA_BLUETOOTH_PROFILE_A2DP_SOURCE;
-    else if (pa_streq(uuid, PA_BLUETOOTH_UUID_HSP_HS) || pa_streq(uuid, PA_BLUETOOTH_UUID_HFP_HF))
+    else if (pa_bluetooth_uuid_is_hsp_hs(uuid) || pa_streq(uuid, PA_BLUETOOTH_UUID_HFP_HF))
         *_r = PA_BLUETOOTH_PROFILE_HEADSET_HEAD_UNIT;
     else if (pa_streq(uuid, PA_BLUETOOTH_UUID_HSP_AG) || pa_streq(uuid, PA_BLUETOOTH_UUID_HFP_AG))
         *_r = PA_BLUETOOTH_PROFILE_HEADSET_AUDIO_GATEWAY;
@@ -2340,6 +2356,16 @@ static int device_process_msg(pa_msgobject *obj, int code, void *data, int64_t o
         case BLUETOOTH_MESSAGE_STREAM_FD_HUP:
             if (u->transport->state > PA_BLUETOOTH_TRANSPORT_STATE_IDLE)
                 pa_bluetooth_transport_set_state(u->transport, PA_BLUETOOTH_TRANSPORT_STATE_IDLE);
+            break;
+        case BLUETOOTH_MESSAGE_SET_TRANSPORT_PLAYING:
+            /* transport_acquired needs to be checked here, because a message could have been
+             * pending when the profile was switched. If the new transport has been acquired
+             * correctly, the call below will have no effect because the transport state is
+             * already PLAYING. If transport_acquire() failed for the new profile, the transport
+             * state should not be changed. If the transport has been released for other reasons
+             * (I/O thread shutdown), transport_acquired will also be false. */
+            if (u->transport_acquired)
+                pa_bluetooth_transport_set_state(u->transport, PA_BLUETOOTH_TRANSPORT_STATE_PLAYING);
             break;
     }
 

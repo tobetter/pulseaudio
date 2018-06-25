@@ -34,8 +34,6 @@
 #include <pulsecore/core-util.h>
 #include <pulse/mainloop-api.h>
 
-#include "module-snappy-policy-symdef.h"
-
 #define SNAP_LABEL_PREFIX           "snap."
 #define SNAP_LABEL_PREFIX_LENGTH    5
 

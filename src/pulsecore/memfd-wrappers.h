@@ -20,11 +20,10 @@
   License along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
-#ifdef HAVE_MEMFD
+#if defined(HAVE_MEMFD) && !defined(HAVE_MEMFD_CREATE)
 
 #include <sys/syscall.h>
 #include <fcntl.h>
-
 #include <sys/mman.h>
 
 /* fcntl() seals-related flags */
@@ -43,6 +42,6 @@
 #define F_SEAL_WRITE    0x0008  /* prevent writes */
 #endif
 
-#endif /* HAVE_MEMFD */
+#endif /* HAVE_MEMFD && !HAVE_MEMFD_CREATE */
 
 #endif

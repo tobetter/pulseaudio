@@ -25,6 +25,7 @@ src/modules/macosx/module-coreaudio-device.c
 src/modules/module-allow-passthrough.c
 src/modules/trust-store/module-trust-store.c
 src/modules/module-always-sink.c
+src/modules/module-always-source.c
 src/modules/module-cli.c
 src/modules/module-combine.c
 src/modules/module-console-kit.c
@@ -62,6 +63,8 @@ src/modules/module-zeroconf-discover.c
 src/modules/module-zeroconf-publish.c
 src/modules/oss/module-oss.c
 src/modules/oss/oss-util.c
+src/modules/raop/module-raop-discover.c
+src/modules/raop/raop-sink.c
 src/modules/reserve-wrap.c
 src/modules/rtp/module-rtp-recv.c
 src/modules/rtp/module-rtp-send.c

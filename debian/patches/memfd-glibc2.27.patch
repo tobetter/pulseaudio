@@ -4,16 +4,18 @@ Description: fix build failure with glibc 2.27
  in our headers.  Explicitly use the glibc 2.27 version instead.
 Author: Steve Langasek <steve.langasek@ubuntu.com>
 
-Index: pulseaudio-11.1/src/pulsecore/memfd-wrappers.h
+Index: pulseaudio/src/pulsecore/memfd-wrappers.h
 ===================================================================
---- pulseaudio-11.1.orig/src/pulsecore/memfd-wrappers.h
-+++ pulseaudio-11.1/src/pulsecore/memfd-wrappers.h
-@@ -25,27 +25,7 @@
+--- pulseaudio.orig/src/pulsecore/memfd-wrappers.h
++++ pulseaudio/src/pulsecore/memfd-wrappers.h
+@@ -24,29 +24,7 @@
+ 
  #include <sys/syscall.h>
  #include <fcntl.h>
- 
+-
 -/*
-- * No glibc wrappers exist for memfd_create(2), so provide our own.
+- * Before glibc version 2.27 there was no wrapper for memfd_create(2),
+- * so we have to provide our own.
 - *
 - * Also define memfd fcntl sealing macros. While they are already
 - * defined in the kernel header file <linux/fcntl.h>, that file as

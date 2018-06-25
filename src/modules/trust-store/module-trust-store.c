@@ -33,8 +33,6 @@
 
 #include <sys/apparmor.h>
 
-#include "module-trust-store-symdef.h"
-
 PA_MODULE_AUTHOR("David Henningsson");
 PA_MODULE_DESCRIPTION("Ubuntu touch trust store integration");
 PA_MODULE_VERSION(PACKAGE_VERSION);
