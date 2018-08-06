@@ -1446,6 +1446,19 @@ AS_IF([test "x$os_is_win32" != "x1"],
 AS_IF([test "x$ax_pthread_ok" = "xyes"],
     AC_DEFINE([_POSIX_PTHREAD_SEMANTICS], 1, [Needed on Solaris]))
 
+# Snappy support
+
+AC_ARG_ENABLE([snappy],
+    AS_HELP_STRING([--enable-snappy], [Enable snappy support]))
+
+AS_IF([test "x$enable_snappy" != "xno"],
+    [PKG_CHECK_MODULES(APPARMOR, [libapparmor], [HAVE_APPARMOR=1], [HAVE_APPARMOR=0])],
+    [HAVE_APPARMOR=0])
+
+AS_IF([test "x$enable_snappy" = "xyes" && test "x$HAVE_APPARMOR" = "x0"],
+    [AC_MSG_ERROR([*** Apparmor library not found])])
+
+AM_CONDITIONAL([HAVE_APPARMOR], [test "x$HAVE_APPARMOR" = "x1"])
 
 # Ubuntu touch trust store
 
@@ -1641,6 +1654,8 @@ AS_IF([test "x$HAVE_ESOUND" = "x1" -a "x$USE_PER_USER_ESOUND_SOCKET" = "x1"], EN
 AS_IF([test "x$HAVE_GCOV" = "x1"], ENABLE_GCOV=yes, ENABLE_GCOV=no)
 AS_IF([test "x$HAVE_LIBCHECK" = "x1"], ENABLE_TESTS=yes, ENABLE_TESTS=no)
 AS_IF([test "x$enable_legacy_database_entry_format" != "xno"], ENABLE_LEGACY_DATABASE_ENTRY_FORMAT=yes, ENABLE_LEGACY_DATABASE_ENTRY_FORMAT=no)
+AS_IF([test "x$enable_snappy" = "x1"], ENABLE_SNAPPY=yes, ENABLE_SNAPPY=no)
+AS_IF([test "x$HAVE_APPARMOR" = "x1"], ENABLE_APPARMOR=yes, ENABLE_APPARMOR=no)
 
 echo "
  ---{ $PACKAGE_NAME $VERSION }---
@@ -1698,6 +1713,8 @@ echo "
     Enable soxr (resampler):       ${ENABLE_SOXR}
     Enable WebRTC echo canceller:  ${ENABLE_WEBRTC}
     Enable Ubuntu trust store:     ${ENABLE_TRUST_STORE}
+    Enable Snappy support:         ${ENABLE_SNAPPY}
+    Enable Apparmor:               ${ENABLE_APPARMOR}
     Enable gcov coverage:          ${ENABLE_GCOV}
     Enable unit tests:             ${ENABLE_TESTS}
     Database
