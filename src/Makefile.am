@@ -269,7 +269,6 @@ TESTS_default = \
 		resampler-test \
 		smoother-test \
 		thread-test \
-		volume-test \
 		mix-test \
 		proplist-test \
 		cpu-mix-test \
