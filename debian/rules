@@ -22,7 +22,7 @@ DEB_CONFIGURE_EXTRA_FLAGS = --enable-x11 --disable-hal-compat \
   --with-zsh-completion-dir=\$${datadir}/zsh/vendor-completions \
   --with-bash-completion-dir=\$${datadir}/bash-completion/completions \
   --with-systemduserunitdir=\$${prefix}/lib/systemd/user \
-  --enable-snappy \
+  --enable-snap \
   --disable-bluez4 \
   --enable-gsettings \
   --disable-gconf

@@ -23,7 +23,6 @@ src/modules/jack/module-jack-sink.c
 src/modules/jack/module-jack-source.c
 src/modules/macosx/module-coreaudio-device.c
 src/modules/module-allow-passthrough.c
-src/modules/trust-store/module-trust-store.c
 src/modules/module-always-sink.c
 src/modules/module-always-source.c
 src/modules/module-cli.c

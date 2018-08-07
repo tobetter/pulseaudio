@@ -1,3 +1,19 @@
+pulseaudio (1:12.2-0ubuntu2) cosmic; urgency=medium
+
+  * Update snap policy to make access to audio recording conditional on
+    plugging the "pulseaudio" or "audio-record" interfaces (LP: #1781428):
+    - 0700-modules-add-snappy-policy-module.patch: rewrite to query
+      snapd for the client's plugged interfaces.
+    - 0701-enable-snap-policy-module.patch: enable the module in the
+      default configuration.
+    - Build depend on libsnapd-glib-dev.
+  * Remove module-trust-store patch set:
+    - 0409-Trust-store-patch.patch: trimmed down to pulsecore changes.
+    - 0410-Add-thread-to-activate-trust-store-interface.patch: removed.
+    - 0417-increase-timeout-check-apparmor.patch: removed.
+
+ -- James Henstridge <james.henstridge@canonical.com>  Tue, 07 Aug 2018 17:01:22 +0800
+
 pulseaudio (1:12.2-0ubuntu1) cosmic; urgency=medium
 
   * New upstream release 12.2 (LP: #1785551):
