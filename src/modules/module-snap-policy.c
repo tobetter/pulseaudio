@@ -75,17 +75,27 @@ struct userdata {
 
 /* ---- Code running in glib thread ---- */
 
-static void check_interfaces_finish(GObject *source_object,
+static void complete_check_access(struct per_client *pc, bool grant_access)
+{
+    struct userdata *u = pc->userdata;
+
+    pa_mutex_lock(u->mutex);
+    pc->grant_access = grant_access;
+    pc->completed = true;
+    pa_asyncq_push(u->results, pc, true);
+    pa_mutex_unlock(u->mutex);
+}
+
+static void get_interfaces_finished(GObject *source_object,
                                     GAsyncResult *result,
                                     gpointer user_data)
 {
     struct per_client *pc = user_data;
     struct userdata *u = pc->userdata;
+    bool grant_access = false;
     g_autoptr(GError) error = NULL;
     g_autoptr(GPtrArray) plugs = NULL;
     unsigned i;
-
-    pa_mutex_lock(u->mutex);
 
     if (!snapd_client_get_interfaces_finish(u->snapd, result, &plugs, NULL, &error)) {
         pa_log_warn("snapd_client_get_interfaces failed: %s", error->message);
@@ -104,24 +114,51 @@ static void check_interfaces_finish(GObject *source_object,
             continue;
         }
         if (!strcmp(iface, "pulseaudio") || !strcmp(iface, "audio-record")) {
-            pc->grant_access = true;
+            grant_access = true;
             break;
         }
     }
 
 end:
-    pc->completed = true;
-    pa_asyncq_push(u->results, pc, true);
-    pa_mutex_unlock(u->mutex);
+    complete_check_access(pc, grant_access);
 }
 
-static gboolean check_interfaces(void *data)
+static void get_snap_finished(GObject *source_object,
+                              GAsyncResult *result,
+                              gpointer user_data)
+{
+    struct per_client *pc = user_data;
+    struct userdata *u = pc->userdata;
+    g_autoptr(GError) error = NULL;
+    g_autoptr(SnapdSnap) snap = NULL;
+
+    snap = snapd_client_list_one_finish(u->snapd, result, &error);
+    if (!snap) {
+        pa_log_warn("snapd_client_get_snap failed: %s", error->message);
+        complete_check_access(pc, false);
+        return;
+    }
+
+    /* Snaps using classic confinement are granted access */
+    if (snapd_snap_get_confinement(snap) == SNAPD_CONFINEMENT_CLASSIC) {
+        complete_check_access(pc, true);
+        return;
+    }
+
+    /* We have a non-classic snap, we need to check its connected
+     * interfaces */
+    snapd_client_get_interfaces_async(u->snapd, u->cancellable,
+                                      get_interfaces_finished, pc);
+}
+
+
+static gboolean check_access(void *data)
 {
     struct per_client *pc = data;
     struct userdata *u = pc->userdata;
 
-    snapd_client_get_interfaces_async(u->snapd, u->cancellable,
-                                      check_interfaces_finish, pc);
+    snapd_client_list_one_async(u->snapd, pc->snap_name, u->cancellable,
+                                get_snap_finished, pc);
     return G_SOURCE_REMOVE;
 }
 
@@ -255,7 +292,7 @@ static pa_hook_result_t connect_record_hook(pa_core *core, pa_access_data *d,
     pa_dynarray_append(pc->pending_requests, d);
     pa_hashmap_put(u->clients, (void *) (size_t) d->client_index, pc);
     pa_log_info("Checking access for client %d (%s)", pc->index, pc->snap_name);
-    g_main_context_invoke(u->main_context, check_interfaces, pc);
+    g_main_context_invoke(u->main_context, check_access, pc);
 
     result = PA_HOOK_CANCEL;
 
