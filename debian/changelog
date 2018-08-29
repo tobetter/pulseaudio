@@ -1,3 +1,17 @@
+pulseaudio (1:12.2-0ubuntu3) cosmic; urgency=medium
+
+  [ Ken VanDine ]
+  * Update patch tags with more detailed descriptions and a note about 
+    not forwarding upstream:
+    - 0700-modules-add-snappy-policy-module.patch
+    - 0701-enable-snap-policy-module.patch
+
+  [ James Henstridge ]
+  * 0700-modules-add-snappy-policy-module.patch: grant recording access
+    to snaps with classic confinement. (LP: #1787324)
+
+ -- Ken VanDine <ken.vandine@canonical.com>  Wed, 29 Aug 2018 09:18:41 -0400
+
 pulseaudio (1:12.2-0ubuntu2) cosmic; urgency=medium
 
   * Update snap policy to make access to audio recording conditional on

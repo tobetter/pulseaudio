@@ -2,6 +2,12 @@ From: James Henstridge <james.henstridge@canonical.com>
 Date: Tue, 7 Aug 2018 16:54:00 +0800
 Subject: daemon: enable module-snap-policy module
 
+Forwarded: not-needed
+
+This patch allows pulseaudio to limit audio recording to snaps with
+the audio-recording interface connected.  We will not pursue upstreaming
+this patch as the longer term solution will probably use PipeWire.  
+
 ---
  src/daemon/default.pa.in | 6 ++++++
  1 file changed, 6 insertions(+)
