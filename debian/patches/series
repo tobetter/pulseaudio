@@ -1,3 +1,5 @@
+volume-test.patch
+
 # Ubuntu specific config/fixes
 0001-volume-config-changes.patch
 0006-load-module-x11-bell.patch
@@ -5,7 +7,6 @@
 0022-inotify-wrapper-Quit-daemon-if-pid-file-is-removed.patch
 0030-load-module-switch-on-connect.patch
 memfd-glibc2.27.patch
-0050-disable-volume-test.patch
 
 # Ubuntu Snap policy support
 0406-tagstruct-add-copy-method.patch

@@ -1,3 +1,14 @@
+pulseaudio (1:12.2-2ubuntu0) disco; urgency=medium
+
+  * Merged with Debian git (12.2-2 + 8ec20f69) (lp: #1807079):
+    - Do not build esound compatibility anymore (Closes: #561780).
+    - Add volume-test.patch to replace 0050-disable-volume-test.patch, so
+      now we can run the test instead of disabling it (LP: #1785556).
+    - d/changelog & d/control: fix lintian complaint about
+      file-contains-trailing-whitespace.
+
+ -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Tue, 27 Nov 2018 16:35:03 +0800
+
 pulseaudio (1:12.2-0ubuntu4) cosmic; urgency=medium
 
   * No change rebuild for launchpad translations import

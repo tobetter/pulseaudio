@@ -24,6 +24,7 @@ DEB_CONFIGURE_EXTRA_FLAGS = --enable-x11 --disable-hal-compat \
   --with-systemduserunitdir=\$${prefix}/lib/systemd/user \
   --enable-snap \
   --disable-bluez4 \
+  --disable-esound \
   --enable-gsettings \
   --disable-gconf
 
