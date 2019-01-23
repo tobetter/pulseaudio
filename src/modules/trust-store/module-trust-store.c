@@ -28,6 +28,7 @@
 #include <pulsecore/fdsem.h>
 #include <pulsecore/thread.h>
 #include <pulsecore/core-util.h>
+#include <pulsecore/dynarray.h>
 #include <pulse/mainloop-api.h>
 
 #include "module-trust-store-symdef.h"
@@ -173,18 +174,6 @@ static pa_hook_result_t connect_record_hook(pa_core *core, pa_access_data *d, st
     return PA_HOOK_CANCEL;
 }
 
-/* Test code - remove from final product */
-static void test(struct userdata *u) {
-    uint32_t dummy;
-    pa_client *client;
-
-    PA_IDXSET_FOREACH(client, u->core->clients, dummy) {
-        if (client->creds_valid)
-            pa_trust_store_check(u->ts, "The evil app", client->creds.uid,
-                client->creds.pid, "%1% wants to eat your laundry.");
-    }
-}
-
 int pa__init(pa_module *m) {
     struct userdata *u;
     pa_trust_store *ts = pa_trust_store_new();
@@ -204,7 +193,6 @@ int pa__init(pa_module *m) {
                  pa_fdsem_get(u->fdsem), PA_IO_EVENT_INPUT, check_fdsem, u));
     pa_fdsem_before_poll(u->fdsem);
 
-    test(u);
     return 0;
 }
 
