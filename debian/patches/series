@@ -23,3 +23,10 @@
 memfd-glibc2.27.patch
 0804-bluez5-device-Rewrite-of-thread-function-reduce-send.patch
 0805-bluez5-device-Fix-memory-leak-in-sco_process_render.patch
+
+# Bug fixes for Steelseries all backported from PulseAudio 12
+steelseries.1.15386a710.patch
+steelseries.2.c7fe78c9f.patch
+steelseries.3.83675b374.patch
+steelseries.4.fe6a9a8f5.patch
+steelseries.5.3454c19f3.patch
