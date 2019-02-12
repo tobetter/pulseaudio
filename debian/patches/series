@@ -15,3 +15,9 @@ memfd-glibc2.27.patch
 0409-pa-client-peer-credentials.patch
 0700-modules-add-snappy-policy-module.patch
 0701-enable-snap-policy-module.patch
+
+# Bug fixes for Steelseries all backported from upstream PulseAudio
+# Patch, 1 and 2 are already included in Pulseaudio 12.2
+steelseries.3.83675b374.patch
+steelseries.4.fe6a9a8f5.patch
+steelseries.5.3454c19f3.patch
