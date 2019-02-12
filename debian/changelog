@@ -1,3 +1,10 @@
+pulseaudio (1:12.2-0ubuntu5) cosmic; urgency=medium
+
+  * Add steelseries headset support.  This provides sufficient support to
+    enable the Steelseries Arctis 5 and 7 Gaming Headsets (LP: #1758736).
+
+ -- Dave Chiluk <chiluk@ubuntu.com>  Tue, 12 Feb 2019 00:44:03 -0600
+
 pulseaudio (1:12.2-0ubuntu4) cosmic; urgency=medium
 
   * No change rebuild for launchpad translations import
