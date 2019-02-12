@@ -1326,7 +1326,8 @@ dist_alsaprofilesets_DATA = \
 		modules/alsa/mixer/profile-sets/native-instruments-korecontroller.conf \
 		modules/alsa/mixer/profile-sets/kinect-audio.conf \
 		modules/alsa/mixer/profile-sets/sb-omni-surround-5.1.conf \
-		modules/alsa/mixer/profile-sets/steelseries-arctis-usb-audio.conf \
+		modules/alsa/mixer/profile-sets/steelseries-arctis-5-usb-audio.conf \
+		modules/alsa/mixer/profile-sets/steelseries-arctis-7-usb-audio.conf \
 		modules/alsa/mixer/profile-sets/dell-dock-tb16-usb-audio.conf
 
 if HAVE_UDEV
@@ -1370,9 +1371,11 @@ dist_alsapaths_DATA = \
 		modules/alsa/mixer/paths/hdmi-output-5.conf \
 		modules/alsa/mixer/paths/hdmi-output-6.conf \
 		modules/alsa/mixer/paths/hdmi-output-7.conf \
-		modules/alsa/mixer/paths/steelseries-arctis-input.conf \
-		modules/alsa/mixer/paths/steelseries-arctis-output-mono.conf \
-		modules/alsa/mixer/paths/steelseries-arctis-output-stereo.conf
+		modules/alsa/mixer/paths/steelseries-arctis-5-output-chat.conf \
+		modules/alsa/mixer/paths/steelseries-arctis-5-output-game.conf \
+		modules/alsa/mixer/paths/steelseries-arctis-7-input.conf \
+		modules/alsa/mixer/paths/steelseries-arctis-7-output-mono.conf \
+		modules/alsa/mixer/paths/steelseries-arctis-7-output-stereo.conf
 
 endif
 
