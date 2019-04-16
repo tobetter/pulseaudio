@@ -1,4 +1,5 @@
 volume-test.patch
+Don-t-compile-with-ffast-math.patch
 
 # Ubuntu specific config/fixes
 0001-volume-config-changes.patch
