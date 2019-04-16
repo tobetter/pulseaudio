@@ -1,3 +1,9 @@
+pulseaudio (1:12.2-2ubuntu3) disco; urgency=medium
+
+  * debian/pulseaudio.links: chmod +x so that dh-exec actually works.
+
+ -- Adam Conrad <adconrad@ubuntu.com>  Tue, 16 Apr 2019 07:54:26 -0600
+
 pulseaudio (1:12.2-2ubuntu2) disco; urgency=medium
 
   * Cherrypick changes from 12.2-3 to stop compiling with -ffast-math
