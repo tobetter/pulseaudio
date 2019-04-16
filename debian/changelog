@@ -1,3 +1,10 @@
+pulseaudio (1:12.2-2ubuntu2) disco; urgency=medium
+
+  * Cherrypick changes from 12.2-3 to stop compiling with -ffast-math
+    and to fix alsa/pulseaudio config file integration (LP: #1824103)
+
+ -- Adam Conrad <adconrad@ubuntu.com>  Tue, 16 Apr 2019 07:23:01 -0600
+
 pulseaudio (1:12.2-2ubuntu1) disco; urgency=medium
 
   * Add steelseries headset support.  This provides sufficient support to
