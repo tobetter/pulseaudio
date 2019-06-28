@@ -3,7 +3,6 @@ Don-t-compile-with-ffast-math.patch
 
 # Ubuntu specific config/fixes
 0001-volume-config-changes.patch
-0006-load-module-x11-bell.patch
 0016-nodisplay-autostart.patch
 0022-inotify-wrapper-Quit-daemon-if-pid-file-is-removed.patch
 0030-load-module-switch-on-connect.patch
@@ -22,3 +21,5 @@ memfd-glibc2.27.patch
 steelseries.3.83675b374.patch
 steelseries.4.fe6a9a8f5.patch
 steelseries.5.3454c19f3.patch
+
+0800-stream-restore-Don-t-restore-if-the-active_port-is-P.patch
