@@ -1,3 +1,18 @@
+pulseaudio (1:12.2-2ubuntu3.1) disco; urgency=medium
+
+  * debian/patches/0006-load-module-x11-bell.patch:
+    - remove that old distro patch, it's undocumented, not needed since
+      GNOME handles the login sound by itself and create issues in some
+      cases (duplicate sound, not respecting the UI choice)
+      (lp: #1827842)
+
+  [ Hui Wang ]
+  * d/p/0800-stream-restore-Don-t-restore-if-the-active_port-is-P.patch:
+    - Don't restore the streams to sinks/sources with only unavailable ports
+      (LP: #1834138)
+
+ -- Sebastien Bacher <seb128@ubuntu.com>  Fri, 28 Jun 2019 11:45:10 +0200
+
 pulseaudio (1:12.2-2ubuntu3) disco; urgency=medium
 
   * debian/pulseaudio.links: chmod +x so that dh-exec actually works.
