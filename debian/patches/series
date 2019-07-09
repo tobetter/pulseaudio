@@ -23,6 +23,8 @@
 memfd-glibc2.27.patch
 0804-bluez5-device-Rewrite-of-thread-function-reduce-send.patch
 0805-bluez5-device-Fix-memory-leak-in-sco_process_render.patch
+0810-lp1556439-sink-source-Don-t-finish-move-if-unlink-happens-afte.patch
+0811-lp1663528-alsa-card-fix-null-dereference.patch
 
 # Bug fixes for Steelseries all backported from PulseAudio 12
 steelseries.1.15386a710.patch
