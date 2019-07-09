@@ -1,0 +1,55 @@
+From 59d264ac56d644f626251daa44ef7b39a9a9fe03 Mon Sep 17 00:00:00 2001
+From: Georg Chini <georg@chini.tk>
+Date: Sun, 3 Dec 2017 22:29:09 +0100
+Subject: [PATCH] sink, source: Don't finish move if unlink happens after
+ pa_*_move_all_start()
+
+When a sink input was unlinked between the calls to pa_sink_move_all_start() and
+pa_sink_move_all_finish(), pa_sink_move_all_finish() tried to finish the move
+of the already unlinked sink input, which lead to an assertion in
+pa_sink_input_finish_move(). The same applies for the source side.
+
+This patch fixes the problem by checking the state of the sink input or
+source output in pa_*_move_all_finish().
+
+Bug: https://bugs.freedesktop.org/show_bug.cgi?id=103752
+Bug-Ubuntu: https://bugs.launchpad.net/bugs/1556439
+Forwarded: not-needed
+Last-Update: 2019-07-01
+
+Index: pulseaudio/src/pulsecore/sink.c
+===================================================================
+--- pulseaudio.orig/src/pulsecore/sink.c
++++ pulseaudio/src/pulsecore/sink.c
+@@ -920,9 +920,11 @@ void pa_sink_move_all_finish(pa_sink *s,
+     pa_assert(q);
+ 
+     while ((i = PA_SINK_INPUT(pa_queue_pop(q)))) {
+-        if (pa_sink_input_finish_move(i, s, save) < 0)
+-            pa_sink_input_fail_move(i);
++        if (PA_SINK_INPUT_IS_LINKED(i->state)) {
++            if (pa_sink_input_finish_move(i, s, save) < 0)
++                pa_sink_input_fail_move(i);
+ 
++        }
+         pa_sink_input_unref(i);
+     }
+ 
+Index: pulseaudio/src/pulsecore/source.c
+===================================================================
+--- pulseaudio.orig/src/pulsecore/source.c
++++ pulseaudio/src/pulsecore/source.c
+@@ -860,9 +860,11 @@ void pa_source_move_all_finish(pa_source
+     pa_assert(q);
+ 
+     while ((o = PA_SOURCE_OUTPUT(pa_queue_pop(q)))) {
+-        if (pa_source_output_finish_move(o, s, save) < 0)
+-            pa_source_output_fail_move(o);
++        if (PA_SOURCE_OUTPUT_IS_LINKED(o->state)) {
++            if (pa_source_output_finish_move(o, s, save) < 0)
++                pa_source_output_fail_move(o);
+ 
++        }
+         pa_source_output_unref(o);
+     }
+ 
