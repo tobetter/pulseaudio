@@ -97,6 +97,19 @@ void pa_tagstruct_free(pa_tagstruct*t) {
         pa_xfree(t);
 }
 
+pa_tagstruct *pa_tagstruct_copy(pa_tagstruct*t) {
+    pa_tagstruct*tc;
+
+    tc = pa_xnew(pa_tagstruct, 1);
+    tc->data = pa_xmemdup(t->data, t->length);
+    tc->allocated = t->length;
+    tc->length = t->length;
+    tc->rindex = 0;
+    tc->type = PA_TAGSTRUCT_DYNAMIC;
+
+    return tc;
+}
+
 static inline void extend(pa_tagstruct*t, size_t l) {
     pa_assert(t);
     pa_assert(t->type != PA_TAGSTRUCT_FIXED);
@@ -310,7 +323,7 @@ void pa_tagstruct_put_volume(pa_tagstruct *t, pa_volume_t vol) {
     write_u32(t, vol);
 }
 
-void pa_tagstruct_put_proplist(pa_tagstruct *t, pa_proplist *p) {
+void pa_tagstruct_put_proplist(pa_tagstruct *t, const pa_proplist *p) {
     void *state = NULL;
     pa_assert(t);
     pa_assert(p);
@@ -334,7 +347,7 @@ void pa_tagstruct_put_proplist(pa_tagstruct *t, pa_proplist *p) {
     pa_tagstruct_puts(t, NULL);
 }
 
-void pa_tagstruct_put_format_info(pa_tagstruct *t, pa_format_info *f) {
+void pa_tagstruct_put_format_info(pa_tagstruct *t, const pa_format_info *f) {
     pa_assert(t);
     pa_assert(f);
 

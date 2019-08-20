@@ -28,6 +28,8 @@ AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_AUX_DIR([build-aux])
 AM_INIT_AUTOMAKE([foreign 1.11 -Wall -Wno-portability subdir-objects silent-rules color-tests dist-xz tar-ustar])
 
+AM_MAINTAINER_MODE([enable])
+
 AS_IF([! test -n "$VERSION"], [
    AC_MSG_ERROR([git-version-gen failed])
 ])
@@ -40,11 +42,11 @@ AC_SUBST(PA_MINOR, pa_minor)
 AC_SUBST(PA_MAJORMINOR, pa_major.pa_minor)
 
 AC_SUBST(PA_API_VERSION, 12)
-AC_SUBST(PA_PROTOCOL_VERSION, 32)
+AC_SUBST(PA_PROTOCOL_VERSION, 33)
 
 # The stable ABI for client applications, for the version info x:y:z
 # always will hold y=z
-AC_SUBST(LIBPULSE_VERSION_INFO, [20:3:20])
+AC_SUBST(LIBPULSE_VERSION_INFO, [21:0:21])
 
 # A simplified, synchronous, ABI-stable interface for client
 # applications, for the version info x:y:z always will hold y=z
@@ -99,21 +101,12 @@ PKG_PROG_PKG_CONFIG
 
 # gettext
 
-if test "x$enable_nls" != "xno"; then
-IT_PROG_INTLTOOL([0.35.0])
-
-AM_GNU_GETTEXT_VERSION([0.18.1])
+AM_GNU_GETTEXT_VERSION([0.19.3])
 AM_GNU_GETTEXT([external])
 
 GETTEXT_PACKAGE=pulseaudio
 AC_SUBST([GETTEXT_PACKAGE])
 AC_DEFINE_UNQUOTED([GETTEXT_PACKAGE],["$GETTEXT_PACKAGE"],[Gettext package])
-else
-# workaround till an intltool m4 bug is fixed upstream
-# (https://bugs.launchpad.net/intltool/+bug/904647)
-USE_NLS=no
-AC_SUBST(USE_NLS)
-fi
 
 
 #### Determine host OS ####
@@ -253,6 +246,15 @@ fi
 # If everything else fails use libatomic_ops
 need_libatomic_ops=yes
 
+AC_CACHE_CHECK([whether $CC knows __atomic_store_n()],
+    pulseaudio_cv_atomic_store_n, [
+    AC_LINK_IFELSE(
+        [AC_LANG_PROGRAM([], [[int c = 0; __atomic_store_n(&c, 4, __ATOMIC_SEQ_CST);]])],
+        [pulseaudio_cv_atomic_store_n=yes],
+        [pulseaudio_cv_atomic_store_n=no])
+    ])
+
+
 AC_CACHE_CHECK([whether $CC knows __sync_bool_compare_and_swap()],
     pulseaudio_cv_sync_bool_compare_and_swap, [
     AC_LINK_IFELSE(
@@ -263,6 +265,9 @@ AC_CACHE_CHECK([whether $CC knows __sync_bool_compare_and_swap()],
 
 if test "$pulseaudio_cv_sync_bool_compare_and_swap" = "yes" ; then
     AC_DEFINE([HAVE_ATOMIC_BUILTINS], 1, [Have __sync_bool_compare_and_swap() and friends.])
+    if test "$pulseaudio_cv_atomic_store_n" = "yes" ; then
+         AC_DEFINE([HAVE_ATOMIC_BUILTINS_MEMORY_MODEL], 1, [Have __atomic_store_n() and friends.])
+    fi
     need_libatomic_ops=no
 else
     # HW specific atomic ops stuff
@@ -833,7 +838,7 @@ AS_IF([test "x$enable_alsa" = "xyes" && test "x$HAVE_ALSA" = "x0"],
 AS_IF([test "x$HAVE_ALSA" = "x1"],
     [
         save_CPPFLAGS="$CPPFLAGS"; CPPFLAGS="$CPPFLAGS $ASOUNDLIB_CFLAGS"
-        AC_CHECK_HEADERS([use-case.h], HAVE_ALSA_UCM=1, HAVE_ALSA_UCM=0)
+        AC_CHECK_HEADERS([alsa/use-case.h], HAVE_ALSA_UCM=1, HAVE_ALSA_UCM=0)
         CPPFLAGS="$save_CPPFLAGS"
     ],
     HAVE_ALSA_UCM=0)
@@ -998,6 +1003,16 @@ AS_IF([test "x$enable_asyncns" = "xyes" && test "x$HAVE_LIBASYNCNS" = "x0"],
 AM_CONDITIONAL([HAVE_LIBASYNCNS], [test "x$HAVE_LIBASYNCNS" = x1])
 AS_IF([test "x$HAVE_LIBASYNCNS" = "x1"], AC_DEFINE([HAVE_LIBASYNCNS], 1, [Have libasyncns?]))
 
+#### Running from build tree (optional) ####
+
+AC_ARG_ENABLE([running-from-build-tree],
+    AS_HELP_STRING([--disable-running-from-build-tree],[Disable running from build tree]))
+
+AS_IF([test "x$enable_running_from_build_tree" != "xno"],
+      AC_DEFINE([HAVE_RUNNING_FROM_BUILD_TREE], 1, [Have running from build tree]))
+
+AC_SUBST(HAVE_RUNNING_FROM_BUILD_TREE)
+
 #### TCP wrappers (optional) ####
 
 AC_ARG_ENABLE([tcpwrap],
@@ -1050,15 +1065,6 @@ AS_IF([test "x$enable_dbus" != "xno"],
 AS_IF([test "x$enable_dbus" = "xyes" && test "x$HAVE_DBUS" = "x0"],
     [AC_MSG_ERROR([*** D-Bus not available or too old version])])
 
-AS_IF([test "x$HAVE_DBUS" = "x1"],
-    [
-        save_CFLAGS="$CFLAGS"; CFLAGS="$CFLAGS $DBUS_CFLAGS"
-        save_LIBS="$LIBS"; LIBS="$LIBS $DBUS_LIBS"
-        AC_CHECK_FUNCS(dbus_watch_get_unix_fd)
-        CFLAGS="$save_CFLAGS"
-        LIBS="$save_LIBS"
-    ])
-
 AC_SUBST(HAVE_DBUS)
 AM_CONDITIONAL([HAVE_DBUS], [test "x$HAVE_DBUS" = x1])
 AS_IF([test "x$HAVE_DBUS" = "x1"], AC_DEFINE([HAVE_DBUS], 1, [Have D-Bus.]))
@@ -1071,23 +1077,13 @@ AX_DEFINE_DIR(PA_MACHINE_ID_FALLBACK, PA_MACHINE_ID_FALLBACK,
 
 #### BlueZ support (optional, dependent on D-Bus and SBC) ####
 
-AC_ARG_ENABLE([bluez4],
-    AS_HELP_STRING([--disable-bluez4],[Disable optional BlueZ 4 support]))
 AC_ARG_ENABLE([bluez5],
     AS_HELP_STRING([--disable-bluez5],[Disable optional BlueZ 5 support]))
 
 ## SBC ##
-AS_IF([test "x$enable_bluez4" != "xno" || test "x$enable_bluez5" != "xno"],
+AS_IF([test "x$enable_bluez5" != "xno"],
     [PKG_CHECK_MODULES(SBC, [ sbc >= 1.0 ], HAVE_SBC=1, HAVE_SBC=0)],
     HAVE_SBC=0)
-
-## BlueZ 4 ##
-AS_IF([test "x$enable_bluez4" != "xno" && test "x$HAVE_DBUS" = "x1" && test "x$HAVE_SBC" = "x1"], HAVE_BLUEZ_4=1,
-      HAVE_BLUEZ_4=0)
-AS_IF([test "x$enable_bluez4" = "xyes" && test "x$HAVE_BLUEZ_4" != "x1"],
-    [AC_MSG_ERROR([*** BLUEZ 4 support not found (requires sbc and D-Bus)])])
-AC_SUBST(HAVE_BLUEZ_4)
-AM_CONDITIONAL([HAVE_BLUEZ_4], [test "x$HAVE_BLUEZ_4" = x1])
 
 ## BlueZ 5 ##
 AS_IF([test "x$enable_bluez5" != "xno" && test "x$HAVE_DBUS" = "x1" && test "x$HAVE_SBC" = "x1"], HAVE_BLUEZ_5=1,
@@ -1097,7 +1093,7 @@ AS_IF([test "x$enable_bluez5" = "xyes" && test "x$HAVE_BLUEZ_5" != "x1"],
 AC_SUBST(HAVE_BLUEZ_5)
 AM_CONDITIONAL([HAVE_BLUEZ_5], [test "x$HAVE_BLUEZ_5" = x1])
 
-AS_IF([test "x$HAVE_BLUEZ_4" = "x1" || test "x$HAVE_BLUEZ_5" = "x1"], HAVE_BLUEZ=1, HAVE_BLUEZ=0)
+AS_IF([test "x$HAVE_BLUEZ_5" = "x1"], HAVE_BLUEZ=1, HAVE_BLUEZ=0)
 AC_SUBST(HAVE_BLUEZ)
 AM_CONDITIONAL([HAVE_BLUEZ], [test "x$HAVE_BLUEZ" = x1])
 
@@ -1446,6 +1442,21 @@ AS_IF([test "x$os_is_win32" != "x1"],
 AS_IF([test "x$ax_pthread_ok" = "xyes"],
     AC_DEFINE([_POSIX_PTHREAD_SEMANTICS], 1, [Needed on Solaris]))
 
+# Snappy support
+
+AC_ARG_ENABLE([snap],
+    AS_HELP_STRING([--enable-snap], [Enable snap support]))
+
+have_apparmor=0
+have_snapd_glib=0
+AS_IF([test "x$enable_snap" != "xno"],
+    [PKG_CHECK_MODULES(APPARMOR, [libapparmor], [have_apparmor=1])
+     PKG_CHECK_MODULES(SNAPD_GLIB, [snapd-glib], [have_snapd_glib=1])])
+
+AS_IF([test "x$enable_snap" = "xyes" && test "x$have_apparmor" = "x0" -o "x$have-snapd_glib" = "x0"],
+    [AC_MSG_ERROR([*** Snap module dependencies missing])])
+
+AM_CONDITIONAL([BUILD_SNAP], [test "x$enable_snap" = "xyes"])
 
 
 ###################################
@@ -1604,7 +1615,6 @@ AS_IF([test "x$HAVE_UDEV" = "x1"], ENABLE_UDEV=yes, ENABLE_UDEV=no)
 AS_IF([test "x$HAVE_SYSTEMD_DAEMON" = "x1"], ENABLE_SYSTEMD_DAEMON=yes, ENABLE_SYSTEMD_DAEMON=no)
 AS_IF([test "x$HAVE_SYSTEMD_LOGIN" = "x1"], ENABLE_SYSTEMD_LOGIN=yes, ENABLE_SYSTEMD_LOGIN=no)
 AS_IF([test "x$HAVE_SYSTEMD_JOURNAL" = "x1"], ENABLE_SYSTEMD_JOURNAL=yes, ENABLE_SYSTEMD_JOURNAL=no)
-AS_IF([test "x$HAVE_BLUEZ_4" = "x1"], ENABLE_BLUEZ_4=yes, ENABLE_BLUEZ_4=no)
 AS_IF([test "x$HAVE_BLUEZ_5" = "x1"], ENABLE_BLUEZ_5=yes, ENABLE_BLUEZ_5=no)
 AS_IF([test "x$HAVE_BLUEZ_5_OFONO_HEADSET" = "x1"], ENABLE_BLUEZ_5_OFONO_HEADSET=yes, ENABLE_BLUEZ_5_OFONO_HEADSET=no)
 AS_IF([test "x$HAVE_BLUEZ_5_NATIVE_HEADSET" = "x1"], ENABLE_BLUEZ_5_NATIVE_HEADSET=yes, ENABLE_BLUEZ_5_NATIVE_HEADSET=no)
@@ -1627,6 +1637,7 @@ AS_IF([test "x$HAVE_ESOUND" = "x1" -a "x$USE_PER_USER_ESOUND_SOCKET" = "x1"], EN
 AS_IF([test "x$HAVE_GCOV" = "x1"], ENABLE_GCOV=yes, ENABLE_GCOV=no)
 AS_IF([test "x$HAVE_LIBCHECK" = "x1"], ENABLE_TESTS=yes, ENABLE_TESTS=no)
 AS_IF([test "x$enable_legacy_database_entry_format" != "xno"], ENABLE_LEGACY_DATABASE_ENTRY_FORMAT=yes, ENABLE_LEGACY_DATABASE_ENTRY_FORMAT=no)
+AS_IF([test "x$enable_snap" != "xno"], ENABLE_SNAP=yes, ENABLE_SNAP=no)
 
 echo "
  ---{ $PACKAGE_NAME $VERSION }---
@@ -1663,7 +1674,6 @@ echo "
     Enable Async DNS:              ${ENABLE_LIBASYNCNS}
     Enable LIRC:                   ${ENABLE_LIRC}
     Enable D-Bus:                  ${ENABLE_DBUS}
-      Enable BlueZ 4:              ${ENABLE_BLUEZ_4}
       Enable BlueZ 5:              ${ENABLE_BLUEZ_5}
         Enable ofono headsets:     ${ENABLE_BLUEZ_5_OFONO_HEADSET}
         Enable native headsets:    ${ENABLE_BLUEZ_5_NATIVE_HEADSET}
@@ -1683,6 +1693,7 @@ echo "
     Enable speex (resampler, AEC): ${ENABLE_SPEEX}
     Enable soxr (resampler):       ${ENABLE_SOXR}
     Enable WebRTC echo canceller:  ${ENABLE_WEBRTC}
+    Enable Snap support:           ${ENABLE_SNAP}
     Enable gcov coverage:          ${ENABLE_GCOV}
     Enable unit tests:             ${ENABLE_TESTS}
     Database
@@ -1712,7 +1723,7 @@ that you enable D-Bus support if your platform supports it.
 Many parts of PulseAudio use D-Bus, from ConsoleKit interaction
 to the Device Reservation Protocol to speak to JACK, Bluetooth
 support and even a native control protocol for communicating and
-controling the PulseAudio daemon itself.
+controlling the PulseAudio daemon itself.
 ===== WARNING WARNING WARNING WARNING WARNING WARNING WARNING =====
 "
 fi

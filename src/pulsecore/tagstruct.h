@@ -64,6 +64,8 @@ pa_tagstruct *pa_tagstruct_new(void);
 pa_tagstruct *pa_tagstruct_new_fixed(const uint8_t* data, size_t length);
 void pa_tagstruct_free(pa_tagstruct*t);
 
+pa_tagstruct *pa_tagstruct_copy(pa_tagstruct*t);
+
 int pa_tagstruct_eof(pa_tagstruct*t);
 const uint8_t* pa_tagstruct_data(pa_tagstruct*t, size_t *l);
 
@@ -81,9 +83,9 @@ void pa_tagstruct_put_timeval(pa_tagstruct*t, const struct timeval *tv);
 void pa_tagstruct_put_usec(pa_tagstruct*t, pa_usec_t u);
 void pa_tagstruct_put_channel_map(pa_tagstruct *t, const pa_channel_map *map);
 void pa_tagstruct_put_cvolume(pa_tagstruct *t, const pa_cvolume *cvolume);
-void pa_tagstruct_put_proplist(pa_tagstruct *t, pa_proplist *p);
+void pa_tagstruct_put_proplist(pa_tagstruct *t, const pa_proplist *p);
 void pa_tagstruct_put_volume(pa_tagstruct *t, pa_volume_t volume);
-void pa_tagstruct_put_format_info(pa_tagstruct *t, pa_format_info *f);
+void pa_tagstruct_put_format_info(pa_tagstruct *t, const pa_format_info *f);
 
 int pa_tagstruct_get(pa_tagstruct *t, ...);
 

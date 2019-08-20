@@ -53,6 +53,7 @@ typedef enum pa_suspend_cause {
 #include <pulsecore/source.h>
 #include <pulsecore/core-subscribe.h>
 #include <pulsecore/msgobject.h>
+#include <pulsecore/access.h>
 
 typedef enum pa_server_type {
     PA_SERVER_TYPE_UNSET,
@@ -164,7 +165,7 @@ struct pa_core {
     pa_idxset *clients, *cards, *sinks, *sources, *sink_inputs, *source_outputs, *modules, *scache;
 
     /* Some hashmaps for all sorts of entities */
-    pa_hashmap *namereg, *shared;
+    pa_hashmap *namereg, *shared, *message_handlers;
 
     /* The default sink/source as configured by the user. If the user hasn't
      * explicitly configured anything, these are set to NULL. These are strings
@@ -231,6 +232,8 @@ struct pa_core {
 
     /* hooks */
     pa_hook hooks[PA_CORE_HOOK_MAX];
+    /* access hooks */
+    pa_hook access[PA_ACCESS_HOOK_MAX];
 };
 
 PA_DECLARE_PUBLIC_CLASS(pa_core);
@@ -257,6 +260,8 @@ void pa_core_set_configured_default_source(pa_core *core, const char *source);
  * ordering. */
 void pa_core_update_default_sink(pa_core *core);
 void pa_core_update_default_source(pa_core *core);
+
+void pa_core_set_exit_idle_time(pa_core *core, int time);
 
 /* Check whether no one is connected to this core */
 void pa_core_check_idle(pa_core *c);

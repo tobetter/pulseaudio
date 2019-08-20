@@ -1,5 +1,14 @@
-volume-test.patch
-alsa-mixer-Update-to-support-Arctis-Pro-Wireless-headset.patch
-alsa-mixer-Add-support-for-2018-Arctis-7.patch
-Don-t-compile-with-ffast-math.patch
-sink-source-Don-t-change-suspend-cause-when-unlinking.patch
+# Ubuntu specific config/fixes
+0001-volume-config-changes.patch
+0016-nodisplay-autostart.patch
+0022-inotify-wrapper-Quit-daemon-if-pid-file-is-removed.patch
+0030-load-module-switch-on-connect.patch
+memfd-glibc2.27.patch
+
+# Ubuntu Snap policy support
+0406-tagstruct-add-copy-method.patch
+0407-access-Add-access-control-hooks.patch
+0408-protocol-native-add-access-checks.patch
+0409-pa-client-peer-credentials.patch
+0700-modules-add-snappy-policy-module.patch
+0701-enable-snap-policy-module.patch

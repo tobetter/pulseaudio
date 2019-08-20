@@ -73,6 +73,7 @@
 #include <pulsecore/core-rtclock.h>
 #include <pulsecore/core-scache.h>
 #include <pulsecore/core.h>
+#include <pulsecore/inotify-wrapper.h>
 #include <pulsecore/module.h>
 #include <pulsecore/cli-command.h>
 #include <pulsecore/log.h>
@@ -97,6 +98,15 @@
 #include "caps.h"
 #include "ltdl-bind-now.h"
 #include "server-lookup.h"
+
+#ifdef DISABLE_LIBTOOL_PRELOAD
+/* FIXME: work around a libtool bug by making sure we have 2 elements. Bug has
+ * been reported: https://debbugs.gnu.org/cgi/bugreport.cgi?bug=29576 */
+const lt_dlsymlist lt_preloaded_symbols[] = {
+    { "@PROGRAM@", NULL },
+    { NULL, NULL }
+};
+#endif
 
 #ifdef HAVE_LIBWRAP
 /* Only one instance of these variables */
@@ -334,6 +344,15 @@ static char *check_configured_address(void) {
     return default_server;
 }
 
+static bool valid_pid_file = false;
+static void pid_file_deleted(void *userdata)
+{
+    pa_core *c = userdata;
+    pa_log_info("Our pid file has been deleted (probably due to session logout), quitting...");
+    valid_pid_file = false;
+    pa_core_exit(c, true, 0);
+}
+
 #ifdef HAVE_DBUS
 static pa_dbus_connection *register_dbus_name(pa_core *c, DBusBusType bus, const char* name) {
     DBusError error;
@@ -376,7 +395,6 @@ int main(int argc, char *argv[]) {
     char *s;
     char *configured_address;
     int r = 0, retval = 1, d = 0;
-    bool valid_pid_file = false;
     bool ltdl_init = false;
     int n_fds = 0, *passed_fds = NULL;
     const char *e;
@@ -384,6 +402,7 @@ int main(int argc, char *argv[]) {
     int daemon_pipe[2] = { -1, -1 };
     int daemon_pipe2[2] = { -1, -1 };
 #endif
+    pa_inotify *pid_monitor = NULL;
     int autospawn_fd = -1;
     bool autospawn_locked = false;
 #ifdef HAVE_DBUS
@@ -932,6 +951,12 @@ int main(int argc, char *argv[]) {
 
     pa_log_debug("Running in VM: %s", pa_yes_no(pa_running_in_vm()));
 
+#ifdef HAVE_RUNNING_FROM_BUILD_TREE
+    pa_log_debug("Running from build tree: %s", pa_yes_no(pa_run_from_build_tree()));
+#else
+    pa_log_debug("Running from build tree: no");
+#endif
+
 #ifdef __OPTIMIZE__
     pa_log_debug("Optimized build: yes");
 #else
@@ -1025,6 +1050,9 @@ int main(int argc, char *argv[]) {
         goto finish;
     }
 
+    if (valid_pid_file)
+        pid_monitor = pa_inotify_start(pa_pid_file_name(), c, pid_file_deleted, c);
+
     c->default_sample_spec = conf->default_sample_spec;
     c->alternate_sample_rate = conf->alternate_sample_rate;
     c->default_channel_map = conf->default_channel_map;
@@ -1073,25 +1101,31 @@ int main(int argc, char *argv[]) {
 #ifdef HAVE_DBUS
     pa_assert_se(dbus_threads_init_default());
 
-    if (start_server) {
+    if (start_server)
 #endif
+    {
+        const char *command_source = NULL;
+
         if (conf->load_default_script_file) {
             FILE *f;
 
             if ((f = pa_daemon_conf_open_default_script_file(conf))) {
                 r = pa_cli_command_execute_file_stream(c, f, buf, &conf->fail);
                 fclose(f);
+                command_source = pa_daemon_conf_get_default_script_file(conf);
             }
         }
 
-        if (r >= 0)
+        if (r >= 0) {
             r = pa_cli_command_execute(c, conf->script_commands, buf, &conf->fail);
+            command_source = _("command line arguments");
+        }
 
         pa_log_error("%s", s = pa_strbuf_to_string_free(buf));
         pa_xfree(s);
 
         if (r < 0 && conf->fail) {
-            pa_log(_("Failed to initialize daemon."));
+            pa_log(_("Failed to initialize daemon due to errors while executing startup commands. Source of commands: %s"), command_source);
             goto finish;
         }
 
@@ -1106,8 +1140,8 @@ int main(int argc, char *argv[]) {
          * think there's no way to contact the server, but receiving certain
          * signals could still cause modules to load. */
         conf->disallow_module_loading = true;
-    }
 #endif
+    }
 
     /* We completed the initial module loading, so let's disable it
      * from now on, if requested */
@@ -1166,6 +1200,9 @@ finish:
 
         pa_autospawn_lock_done(false);
     }
+
+    if (pid_monitor)
+        pa_inotify_stop(pid_monitor);
 
     if (c) {
         /* Ensure all the modules/samples are unloaded when the core is still ref'ed,
