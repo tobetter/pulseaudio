@@ -1,3 +1,9 @@
+pulseaudio (1:12.99.2-1ubuntu2) eoan; urgency=medium
+
+  * No-change upload with strops.h and sys/strops.h removed in glibc.
+
+ -- Matthias Klose <doko@ubuntu.com>  Thu, 05 Sep 2019 11:07:09 +0000
+
 pulseaudio (1:12.99.2-1ubuntu1) eoan; urgency=medium
 
   * Merged Debian version 12.99.2-1 (prerelease 9b91334fd).
