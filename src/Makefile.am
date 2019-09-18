@@ -688,6 +688,7 @@ commonlib_LTLIBRARIES = \
 # to the existing libpulse being linked to libpulsecommon). Duplicating the
 # code allows us to prevent this circular linking.
 libpulsecommon_@PA_MAJORMINOR@_la_SOURCES = \
+		pulsecore/access.h \
 		pulse/client-conf.c pulse/client-conf.h \
 		pulse/fork-detect.c pulse/fork-detect.h \
 		pulse/format.c pulse/format.h \
@@ -989,6 +990,7 @@ libpulsecore_@PA_MAJORMINOR@_la_SOURCES = \
 		pulsecore/core.c pulsecore/core.h \
 		pulsecore/message-handler.c pulsecore/message-handler.h \
 		pulsecore/hook-list.c pulsecore/hook-list.h \
+		pulsecore/inotify-wrapper.c pulsecore/inotify-wrapper.h \
 		pulsecore/ltdl-helper.c pulsecore/ltdl-helper.h \
 		pulsecore/modargs.c pulsecore/modargs.h \
 		pulsecore/modinfo.c pulsecore/modinfo.h \
@@ -1262,6 +1264,11 @@ if HAVE_ESOUND
 modlibexec_LTLIBRARIES += \
 		module-esound-protocol-tcp.la \
 		module-esound-sink.la
+endif
+
+if BUILD_SNAP
+modlibexec_LTLIBRARIES += \
+		module-snap-policy.la
 endif
 
 # See comment at librtp.la above
@@ -2043,6 +2050,14 @@ libwebrtc_util_la_LDFLAGS = -avoid-version
 
 module_echo_cancel_la_CFLAGS += -DHAVE_WEBRTC=1
 module_echo_cancel_la_LIBADD += libwebrtc-util.la
+endif
+
+# Snappy
+if BUILD_SNAP
+module_snap_policy_la_SOURCES = modules/module-snap-policy.c
+module_snap_policy_la_LDFLAGS = $(MODULE_LDFLAGS)
+module_snap_policy_la_LIBADD = $(MODULE_LIBADD) $(APPARMOR_LIBS) $(SNAPD_GLIB_LIBS)
+module_snap_policy_la_CFLAGS = $(AM_CFLAGS) $(APPARMOR_CFLAGS) $(SNAPD_GLIB_CFLAGS) -DPA_MODULE_NAME=module_snap_policy
 endif
 
 # RTP modules
