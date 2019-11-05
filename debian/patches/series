@@ -5,16 +5,13 @@
 0022-inotify-wrapper-Quit-daemon-if-pid-file-is-removed.patch
 0030-load-module-switch-on-connect.patch
 
-# Ubuntu touch: support for trust-store
+# Ubuntu Snap policy support
 0406-tagstruct-add-copy-method.patch
 0407-access-Add-access-control-hooks.patch
 0408-protocol-native-add-access-checks.patch
-0409-Trust-store-patch.patch
-0410-Add-thread-to-activate-trust-store-interface.patch
-0417-increase-timeout-check-apparmor.patch
-
-# Ubuntu Snappy
+0409-pa-client-peer-credentials.patch
 0700-modules-add-snappy-policy-module.patch
+0701-enable-snap-policy-module.patch
 
 # Bug fixes backported from PulseAudio 12
 0800-fix-lp1720684.patch

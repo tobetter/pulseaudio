@@ -1414,31 +1414,20 @@ AS_IF([test "x$ax_pthread_ok" = "xyes"],
 
 # Snappy support
 
-AC_ARG_ENABLE([snappy],
-    AS_HELP_STRING([--enable-snappy], [Enable snappy support]))
+AC_ARG_ENABLE([snap],
+    AS_HELP_STRING([--enable-snap], [Enable snap support]))
 
-AS_IF([test "x$enable_snappy" != "xno"],
-    [PKG_CHECK_MODULES(APPARMOR, [libapparmor], [HAVE_APPARMOR=1], [HAVE_APPARMOR=0])],
-    [HAVE_APPARMOR=0])
+have_apparmor=0
+have_snapd_glib=0
+AS_IF([test "x$enable_snap" != "xno"],
+    [PKG_CHECK_MODULES(APPARMOR, [libapparmor], [have_apparmor=1])
+     PKG_CHECK_MODULES(SNAPD_GLIB, [snapd-glib], [have_snapd_glib=1])])
 
-AS_IF([test "x$enable_snappy" = "xyes" && test "x$HAVE_APPARMOR" = "x0"],
-    [AC_MSG_ERROR([*** Apparmor library not found])])
+AS_IF([test "x$enable_snap" = "xyes" && test "x$have_apparmor" = "x0" -o "x$have-snapd_glib" = "x0"],
+    [AC_MSG_ERROR([*** Snap module dependencies missing])])
 
-AM_CONDITIONAL([HAVE_APPARMOR], [test "x$HAVE_APPARMOR" = "x1"])
+AM_CONDITIONAL([BUILD_SNAP], [test "x$enable_snap" = "xyes"])
 
-# Ubuntu touch trust store
-
-AC_ARG_ENABLE([trust-store],
-    AS_HELP_STRING([--enable-trust-store], [Enable Ubuntu touch trust store]))
-
-AS_IF([test "x$enable_trust_store" != "xno"],
-    [PKG_CHECK_MODULES(TRUST_STORE, [ trust-store ], [HAVE_TRUST_STORE=1], [HAVE_TRUST_STORE=0])],
-    [HAVE_WEBRTC=0])
-
-AS_IF([test "x$enable_trust_store" = "xyes" && test "x$HAVE_TRUST_STORE" = "x0"],
-    [AC_MSG_ERROR([*** Ubuntu touch trust store library not found])])
-
-AM_CONDITIONAL([HAVE_TRUST_STORE], [test "x$HAVE_TRUST_STORE" = "x1"])
 
 ###################################
 #            Output               #
@@ -1606,7 +1595,6 @@ AS_IF([test "x$HAVE_ADRIAN_EC" = "x1"], ENABLE_ADRIAN_EC=yes, ENABLE_ADRIAN_EC=n
 AS_IF([test "x$HAVE_SPEEX" = "x1"], ENABLE_SPEEX=yes, ENABLE_SPEEX=no)
 AS_IF([test "x$HAVE_SOXR" = "x1"], ENABLE_SOXR=yes, ENABLE_SOXR=no)
 AS_IF([test "x$HAVE_WEBRTC" = "x1"], ENABLE_WEBRTC=yes, ENABLE_WEBRTC=no)
-AS_IF([test "x$HAVE_TRUST_STORE" = "x1"], ENABLE_TRUST_STORE=yes, ENABLE_TRUST_STORE=no)
 AS_IF([test "x$HAVE_TDB" = "x1"], ENABLE_TDB=yes, ENABLE_TDB=no)
 AS_IF([test "x$HAVE_GDBM" = "x1"], ENABLE_GDBM=yes, ENABLE_GDBM=no)
 AS_IF([test "x$HAVE_SIMPLEDB" = "x1"], ENABLE_SIMPLEDB=yes, ENABLE_SIMPLEDB=no)
@@ -1615,8 +1603,7 @@ AS_IF([test "x$HAVE_ESOUND" = "x1" -a "x$USE_PER_USER_ESOUND_SOCKET" = "x1"], EN
 AS_IF([test "x$HAVE_GCOV" = "x1"], ENABLE_GCOV=yes, ENABLE_GCOV=no)
 AS_IF([test "x$HAVE_LIBCHECK" = "x1"], ENABLE_TESTS=yes, ENABLE_TESTS=no)
 AS_IF([test "x$enable_legacy_database_entry_format" != "xno"], ENABLE_LEGACY_DATABASE_ENTRY_FORMAT=yes, ENABLE_LEGACY_DATABASE_ENTRY_FORMAT=no)
-AS_IF([test "x$enable_snappy" = "x1"], ENABLE_SNAPPY=yes, ENABLE_SNAPPY=no)
-AS_IF([test "x$HAVE_APPARMOR" = "x1"], ENABLE_APPARMOR=yes, ENABLE_APPARMOR=no)
+AS_IF([test "x$enable_snap" != "xno"], ENABLE_SNAP=yes, ENABLE_SNAP=no)
 
 echo "
  ---{ $PACKAGE_NAME $VERSION }---
@@ -1672,9 +1659,7 @@ echo "
     Enable speex (resampler, AEC): ${ENABLE_SPEEX}
     Enable soxr (resampler):       ${ENABLE_SOXR}
     Enable WebRTC echo canceller:  ${ENABLE_WEBRTC}
-    Enable Ubuntu trust store:     ${ENABLE_TRUST_STORE}
-    Enable Snappy support:         ${ENABLE_SNAPPY}
-    Enable Apparmor:               ${ENABLE_APPARMOR}
+    Enable Snap support:           ${ENABLE_SNAP}
     Enable gcov coverage:          ${ENABLE_GCOV}
     Enable unit tests:             ${ENABLE_TESTS}
     Database
