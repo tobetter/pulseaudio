@@ -24,7 +24,29 @@
 
 #include <sys/syscall.h>
 #include <fcntl.h>
-#include <sys/mman.h>
+
+/*
+ * Before glibc version 2.27 there was no wrapper for memfd_create(2),
+ * so we have to provide our own.
+ *
+ * Also define memfd fcntl sealing macros. While they are already
+ * defined in the kernel header file <linux/fcntl.h>, that file as
+ * a whole conflicts with the original glibc header <fnctl.h>.
+ */
+
+static inline int memfd_create(const char *name, unsigned int flags) {
+    return syscall(SYS_memfd_create, name, flags);
+}
+
+/* memfd_create(2) flags */
+
+#ifndef MFD_CLOEXEC
+#define MFD_CLOEXEC       0x0001U
+#endif
+
+#ifndef MFD_ALLOW_SEALING
+#define MFD_ALLOW_SEALING 0x0002U
+#endif
 
 /* fcntl() seals-related flags */
 
