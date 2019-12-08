@@ -1,3 +1,12 @@
+pulseaudio (1:13.0-1ubuntu2) focal; urgency=medium
+
+  * Make autopkgtests cross-test-friendly.
+
+  [ Sebastien Bacher ]
+  * Remove some old patches that are not needed anymore.
+
+ -- Steve Langasek <steve.langasek@ubuntu.com>  Sat, 07 Dec 2019 21:38:59 -0800
+
 pulseaudio (1:13.0-1ubuntu1) eoan; urgency=medium
 
   * Merged Debian version 13.0-1
