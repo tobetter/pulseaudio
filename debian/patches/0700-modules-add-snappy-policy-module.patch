@@ -16,10 +16,10 @@ Co-authored-by: Simon Fels <simon.fels@canonical.com>
  3 files changed, 414 insertions(+)
  create mode 100644 src/modules/module-snap-policy.c
 
-Index: pulseaudio/configure.ac
+Index: pulseaudio-13.0/configure.ac
 ===================================================================
---- pulseaudio.orig/configure.ac
-+++ pulseaudio/configure.ac
+--- pulseaudio-13.0.orig/configure.ac
++++ pulseaudio-13.0/configure.ac
 @@ -1442,6 +1442,21 @@ AS_IF([test "x$os_is_win32" != "x1"],
  AS_IF([test "x$ax_pthread_ok" = "xyes"],
      AC_DEFINE([_POSIX_PTHREAD_SEMANTICS], 1, [Needed on Solaris]))
@@ -33,7 +33,7 @@ Index: pulseaudio/configure.ac
 +have_snapd_glib=0
 +AS_IF([test "x$enable_snap" != "xno"],
 +    [PKG_CHECK_MODULES(APPARMOR, [libapparmor], [have_apparmor=1])
-+     PKG_CHECK_MODULES(SNAPD_GLIB, [snapd-glib], [have_snapd_glib=1])])
++     PKG_CHECK_MODULES(SNAPD_GLIB, [snapd-glib glib-2.0], [have_snapd_glib=1])])
 +
 +AS_IF([test "x$enable_snap" = "xyes" && test "x$have_apparmor" = "x0" -o "x$have-snapd_glib" = "x0"],
 +    [AC_MSG_ERROR([*** Snap module dependencies missing])])
@@ -58,11 +58,11 @@ Index: pulseaudio/configure.ac
      Enable gcov coverage:          ${ENABLE_GCOV}
      Enable unit tests:             ${ENABLE_TESTS}
      Database
-Index: pulseaudio/src/Makefile.am
+Index: pulseaudio-13.0/src/Makefile.am
 ===================================================================
---- pulseaudio.orig/src/Makefile.am
-+++ pulseaudio/src/Makefile.am
-@@ -1266,6 +1266,11 @@ modlibexec_LTLIBRARIES += \
+--- pulseaudio-13.0.orig/src/Makefile.am
++++ pulseaudio-13.0/src/Makefile.am
+@@ -1265,6 +1265,11 @@ modlibexec_LTLIBRARIES += \
  		module-esound-sink.la
  endif
  
@@ -74,7 +74,7 @@ Index: pulseaudio/src/Makefile.am
  # See comment at librtp.la above
  if !OS_IS_WIN32
  modlibexec_LTLIBRARIES += \
-@@ -2047,6 +2052,14 @@ module_echo_cancel_la_CFLAGS += -DHAVE_W
+@@ -2046,6 +2051,14 @@ module_echo_cancel_la_CFLAGS += -DHAVE_W
  module_echo_cancel_la_LIBADD += libwebrtc-util.la
  endif
  
@@ -89,10 +89,10 @@ Index: pulseaudio/src/Makefile.am
  # RTP modules
  module_rtp_send_la_SOURCES = modules/rtp/module-rtp-send.c
  module_rtp_send_la_LDFLAGS = $(MODULE_LDFLAGS)
-Index: pulseaudio/src/modules/module-snap-policy.c
+Index: pulseaudio-13.0/src/modules/module-snap-policy.c
 ===================================================================
 --- /dev/null
-+++ pulseaudio/src/modules/module-snap-policy.c
++++ pulseaudio-13.0/src/modules/module-snap-policy.c
 @@ -0,0 +1,384 @@
 +/***
 +    This file is part of PulseAudio.
