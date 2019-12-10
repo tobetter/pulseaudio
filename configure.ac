@@ -1451,7 +1451,7 @@ have_apparmor=0
 have_snapd_glib=0
 AS_IF([test "x$enable_snap" != "xno"],
     [PKG_CHECK_MODULES(APPARMOR, [libapparmor], [have_apparmor=1])
-     PKG_CHECK_MODULES(SNAPD_GLIB, [snapd-glib], [have_snapd_glib=1])])
+     PKG_CHECK_MODULES(SNAPD_GLIB, [snapd-glib glib-2.0], [have_snapd_glib=1])])
 
 AS_IF([test "x$enable_snap" = "xyes" && test "x$have_apparmor" = "x0" -o "x$have-snapd_glib" = "x0"],
     [AC_MSG_ERROR([*** Snap module dependencies missing])])

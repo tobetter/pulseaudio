@@ -1,3 +1,11 @@
+pulseaudio (1:13.0-1ubuntu3) focal; urgency=medium
+
+  * debian/patches/0700-modules-add-snappy-policy-module.patch:
+    - include glib and gio in the pkgconfig requirements, they used to
+      get included by snapd-glib but not anymore, fix the build
+
+ -- Sebastien Bacher <seb128@ubuntu.com>  Tue, 10 Dec 2019 16:38:52 +0100
+
 pulseaudio (1:13.0-1ubuntu2) focal; urgency=medium
 
   * Make autopkgtests cross-test-friendly.
