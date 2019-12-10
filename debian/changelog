@@ -1,3 +1,9 @@
+pulseaudio (1:13.0-1ubuntu4) focal; urgency=medium
+
+  * Include the actual gio change now...
+
+ -- Sebastien Bacher <seb128@ubuntu.com>  Tue, 10 Dec 2019 17:00:03 +0100
+
 pulseaudio (1:13.0-1ubuntu3) focal; urgency=medium
 
   * debian/patches/0700-modules-add-snappy-policy-module.patch:
