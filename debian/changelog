@@ -1,3 +1,11 @@
+pulseaudio (1:13.0-1ubuntu5) focal; urgency=medium
+
+  * Add 0031-lp1847570-Revert-switch-on-connect-Do-not-ignore-HDMI-sinks.patch
+    to revert to PulseAudio v12 behaviour and ignore monitors with HDMI ports.
+    At least until a proper solution arrives in PulseAudio v14. (LP: #1847570)
+
+ -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Wed, 11 Dec 2019 16:34:39 +0800
+
 pulseaudio (1:13.0-1ubuntu4) focal; urgency=medium
 
   * Include the actual gio change now...
