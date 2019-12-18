@@ -1,3 +1,11 @@
+pulseaudio (1:13.0-1ubuntu1.1) eoan; urgency=medium
+
+  * Add 0031-lp1847570-Revert-switch-on-connect-Do-not-ignore-HDMI-sinks.patch
+    to revert to PulseAudio v12 behaviour and ignore monitors with HDMI ports.
+    At least until a proper solution arrives in PulseAudio v14. (LP: #1847570)
+
+ -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Wed, 18 Dec 2019 13:26:53 +0800
+
 pulseaudio (1:13.0-1ubuntu1) eoan; urgency=medium
 
   * Merged Debian version 13.0-1

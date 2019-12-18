@@ -3,6 +3,7 @@
 0016-nodisplay-autostart.patch
 0022-inotify-wrapper-Quit-daemon-if-pid-file-is-removed.patch
 0030-load-module-switch-on-connect.patch
+0031-lp1847570-Revert-switch-on-connect-Do-not-ignore-HDMI-sinks.patch
 memfd-glibc2.27.patch
 
 # Ubuntu Snap policy support
