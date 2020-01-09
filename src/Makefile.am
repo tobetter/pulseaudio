@@ -1265,6 +1265,11 @@ modlibexec_LTLIBRARIES += \
 		module-esound-sink.la
 endif
 
+if BUILD_SNAP
+modlibexec_LTLIBRARIES += \
+		module-snap-policy.la
+endif
+
 # See comment at librtp.la above
 if !OS_IS_WIN32
 modlibexec_LTLIBRARIES += \
@@ -2044,6 +2049,14 @@ libwebrtc_util_la_LDFLAGS = -avoid-version
 
 module_echo_cancel_la_CFLAGS += -DHAVE_WEBRTC=1
 module_echo_cancel_la_LIBADD += libwebrtc-util.la
+endif
+
+# Snappy
+if BUILD_SNAP
+module_snap_policy_la_SOURCES = modules/module-snap-policy.c
+module_snap_policy_la_LDFLAGS = $(MODULE_LDFLAGS)
+module_snap_policy_la_LIBADD = $(MODULE_LIBADD) $(APPARMOR_LIBS) $(SNAPD_GLIB_LIBS)
+module_snap_policy_la_CFLAGS = $(AM_CFLAGS) $(APPARMOR_CFLAGS) $(SNAPD_GLIB_CFLAGS) -DPA_MODULE_NAME=module_snap_policy
 endif
 
 # RTP modules
