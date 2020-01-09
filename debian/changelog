@@ -1,3 +1,10 @@
+pulseaudio (1:13.0-1ubuntu6) focal; urgency=medium
+
+  * Build-depend on dh-python.
+  * pulseaudio-equalizer: Depend on python2 instead of python.
+
+ -- Matthias Klose <doko@ubuntu.com>  Thu, 09 Jan 2020 14:10:34 +0100
+
 pulseaudio (1:13.0-1ubuntu5) focal; urgency=medium
 
   * Add 0031-lp1847570-Revert-switch-on-connect-Do-not-ignore-HDMI-sinks.patch
