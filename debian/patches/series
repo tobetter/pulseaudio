@@ -1,1 +1,15 @@
 disable-autospawn.patch
+
+# Ubuntu specific config/fixes
+0001-volume-config-changes.patch
+0016-nodisplay-autostart.patch
+0030-load-module-switch-on-connect.patch
+
+# Ubuntu Snap policy support
+0406-tagstruct-add-copy-method.patch
+0407-access-Add-access-control-hooks.patch
+0408-protocol-native-add-access-checks.patch
+0409-pa-client-peer-credentials.patch
+0700-modules-add-snappy-policy-module.patch
+0701-enable-snap-policy-module.patch
+
