@@ -30,3 +30,4 @@ steelseries.4.fe6a9a8f5.patch
 steelseries.5.3454c19f3.patch
 
 0900-stream-restore-Don-t-restore-if-the-active_port-is-P.patch
+gitlab-dual-jacks.patch

@@ -1,3 +1,16 @@
+pulseaudio (1:11.1-1ubuntu7.6) bionic; urgency=medium
+
+  [Kai-Heng Feng]
+  * alsa-mixer: Support dual Front Headphone Jack (lp: #1869819)
+  * alsa-mixer: Handle the index for ALSA mixer jack identifiers
+
+  [Tanu Kaskinen <tanuk@iki.fi>]
+  * alsa-mixer: autodetect the ELD device
+  * alsa-mixer: autodetect the HDMI jack PCM device
+  * alsa-mixer: add hw_device_index to pa_alsa_mapping
+
+ -- hugh chao <hugh.chao@canonical.com>  Wed, 08 Apr 2020 21:20:18 +0800
+
 pulseaudio (1:11.1-1ubuntu7.5) bionic; urgency=medium
 
   * Update snap policy to make access to audio recording conditional on
