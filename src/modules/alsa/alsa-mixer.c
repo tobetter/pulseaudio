@@ -107,7 +107,48 @@ struct description_map {
     const char *description;
 };
 
-pa_alsa_jack *pa_alsa_jack_new(pa_alsa_path *path, const char *name) {
+char *alsa_id_str(char *dst, size_t dst_len, pa_alsa_mixer_id *id) {
+    if (id->index > 0) {
+        snprintf(dst, dst_len, "'%s',%d", id->name, id->index);
+    } else {
+        snprintf(dst, dst_len, "'%s'", id->name);
+    }
+    return dst;
+}
+
+static int alsa_id_decode(const char *src, char *name, int *index) {
+    char *idx, c;
+    int i;
+
+    *index = 0;
+    c = src[0];
+    /* Strip quotes in entries such as 'Speaker',1 or "Speaker",1 */
+    if (c == '\'' || c == '"') {
+        strcpy(name, src + 1);
+        for (i = 0; name[i] != '\0' && name[i] != c; i++);
+        idx = NULL;
+        if (name[i]) {
+                name[i] = '\0';
+                idx = strchr(name + i + 1, ',');
+        }
+    } else {
+        strcpy(name, src);
+        idx = strchr(name, ',');
+    }
+    if (idx == NULL)
+        return 0;
+    *idx = '\0';
+    idx++;
+    if (*idx < '0' || *idx > '9') {
+        pa_log("Element %s: index value is invalid", src);
+        return 1;
+    }
+    *index = atoi(idx);
+    return 0;
+}
+
+
+pa_alsa_jack *pa_alsa_jack_new(pa_alsa_path *path, const char *name, int index) {
     pa_alsa_jack *jack;
 
     pa_assert(name);
@@ -115,7 +156,8 @@ pa_alsa_jack *pa_alsa_jack_new(pa_alsa_path *path, const char *name) {
     jack = pa_xnew0(pa_alsa_jack, 1);
     jack->path = path;
     jack->name = pa_xstrdup(name);
-    jack->alsa_name = pa_sprintf_malloc("%s Jack", name);
+    jack->alsa_id.name = pa_sprintf_malloc("%s Jack", name);
+    jack->alsa_id.index = index;
     jack->state_unplugged = PA_AVAILABLE_NO;
     jack->state_plugged = PA_AVAILABLE_YES;
     jack->ucm_devices = pa_dynarray_new(NULL);
@@ -130,7 +172,7 @@ void pa_alsa_jack_free(pa_alsa_jack *jack) {
     pa_dynarray_free(jack->ucm_hw_mute_devices);
     pa_dynarray_free(jack->ucm_devices);
 
-    pa_xfree(jack->alsa_name);
+    pa_xfree(jack->alsa_id.name);
     pa_xfree(jack->name);
     pa_xfree(jack);
 }
@@ -1812,13 +1854,32 @@ static int element_probe(pa_alsa_element *e, snd_mixer_t *m) {
     return 0;
 }
 
-static int jack_probe(pa_alsa_jack *j, snd_mixer_t *m) {
+static int jack_probe(pa_alsa_jack *j, pa_alsa_mapping *mapping, snd_mixer_t *m) {
     bool has_control;
 
     pa_assert(j);
     pa_assert(j->path);
 
-    has_control = pa_alsa_mixer_find(m, j->alsa_name, 0) != NULL;
+    if (j->append_pcm_to_name) {
+        char *new_name;
+
+        if (!mapping) {
+            /* This could also be an assertion, because this should never
+             * happen. At the time of writing, mapping can only be NULL when
+             * module-alsa-sink/source synthesizes a path, and those
+             * synthesized paths never have any jacks, so jack_probe() should
+             * never be called with a NULL mapping. */
+            pa_log("Jack %s: append_pcm_to_name is set, but mapping is NULL. Can't use this jack.", j->name);
+            return -1;
+        }
+
+        new_name = pa_sprintf_malloc("%s,pcm=%i Jack", j->name, mapping->hw_device_index);
+        pa_xfree(j->alsa_id.name);
+        j->alsa_id.name = new_name;
+        j->append_pcm_to_name = false;
+    }
+
+    has_control = pa_alsa_mixer_find_card(m, &j->alsa_id, 0) != NULL;
     pa_alsa_jack_set_has_control(j, has_control);
 
     if (j->has_control) {
@@ -1873,19 +1934,26 @@ finish:
 
 static pa_alsa_jack* jack_get(pa_alsa_path *p, const char *section) {
     pa_alsa_jack *j;
+    char *name;
+    int index;
 
     if (!pa_startswith(section, "Jack "))
         return NULL;
     section += 5;
 
-    if (p->last_jack && pa_streq(p->last_jack->name, section))
+    name = alloca(strlen(section) + 1);
+    if (alsa_id_decode(section, name, &index))
+        return NULL;
+
+    if (p->last_jack && pa_streq(p->last_jack->alsa_id.name, name) &&
+        p->last_jack->alsa_id.index == index)
         return p->last_jack;
 
     PA_LLIST_FOREACH(j, p->jacks)
-        if (pa_streq(j->name, section))
+        if (pa_streq(j->alsa_id.name, name) && j->alsa_id.index == index)
             goto finish;
 
-    j = pa_alsa_jack_new(p, section);
+    j = pa_alsa_jack_new(p, name, index);
     PA_LLIST_INSERT_AFTER(pa_alsa_jack, p->jacks, p->last_jack, j);
 
 finish:
@@ -2030,6 +2098,28 @@ static int element_parse_enumeration(pa_config_parser_state *state) {
     }
 
     return 0;
+}
+
+static int parse_eld_device(pa_config_parser_state *state) {
+    pa_alsa_path *path;
+    uint32_t eld_device;
+
+    path = state->userdata;
+
+    if (pa_atou(state->rvalue, &eld_device) >= 0) {
+        path->autodetect_eld_device = false;
+        path->eld_device = eld_device;
+        return 0;
+    }
+
+    if (pa_streq(state->rvalue, "auto")) {
+        path->autodetect_eld_device = true;
+        path->eld_device = -1;
+        return 0;
+    }
+
+    pa_log("[%s:%u] Invalid value for option 'eld-device': %s", state->filename, state->lineno, state->rvalue);
+    return -1;
 }
 
 static int option_parse_priority(pa_config_parser_state *state) {
@@ -2326,6 +2416,30 @@ static int jack_parse_state(pa_config_parser_state *state) {
     return 0;
 }
 
+static int jack_parse_append_pcm_to_name(pa_config_parser_state *state) {
+    pa_alsa_path *path;
+    pa_alsa_jack *jack;
+    int b;
+
+    pa_assert(state);
+
+    path = state->userdata;
+    if (!(jack = jack_get(path, state->section))) {
+        pa_log("[%s:%u] Option 'append_pcm_to_name' not expected in section '%s'",
+               state->filename, state->lineno, state->section);
+        return -1;
+    }
+
+    b = pa_parse_boolean(state->rvalue);
+    if (b < 0) {
+        pa_log("[%s:%u] Invalid value for 'append_pcm_to_name': %s", state->filename, state->lineno, state->rvalue);
+        return -1;
+    }
+
+    jack->append_pcm_to_name = b;
+    return 0;
+}
+
 static int element_set_option(pa_alsa_element *e, snd_mixer_t *m, int alsa_idx) {
     snd_mixer_selem_id_t *sid;
     snd_mixer_elem_t *me;
@@ -2527,7 +2641,7 @@ pa_alsa_path* pa_alsa_path_new(const char *paths_dir, const char *fname, pa_alsa
         { "description-key",     pa_config_parse_string,            NULL, "General" },
         { "description",         pa_config_parse_string,            NULL, "General" },
         { "mute-during-activation", pa_config_parse_bool,           NULL, "General" },
-        { "eld-device",          pa_config_parse_int,               NULL, "General" },
+        { "eld-device",          parse_eld_device,                  NULL, "General" },
 
         /* [Option ...] */
         { "priority",            option_parse_priority,             NULL, NULL },
@@ -2536,6 +2650,7 @@ pa_alsa_path* pa_alsa_path_new(const char *paths_dir, const char *fname, pa_alsa
         /* [Jack ...] */
         { "state.plugged",       jack_parse_state,                  NULL, NULL },
         { "state.unplugged",     jack_parse_state,                  NULL, NULL },
+        { "append-pcm-to-name",  jack_parse_append_pcm_to_name,     NULL, NULL },
 
         /* [Element ...] */
         { "switch",              element_parse_switch,              NULL, NULL },
@@ -2566,7 +2681,6 @@ pa_alsa_path* pa_alsa_path_new(const char *paths_dir, const char *fname, pa_alsa
     items[1].data = &p->description_key;
     items[2].data = &p->description;
     items[3].data = &mute_during_activation;
-    items[4].data = &p->eld_device;
 
     if (!paths_dir)
         paths_dir = get_default_paths_dir();
@@ -2748,12 +2862,13 @@ static void path_create_settings(pa_alsa_path *p) {
     element_create_settings(p->elements, NULL);
 }
 
-int pa_alsa_path_probe(pa_alsa_path *p, snd_mixer_t *m, bool ignore_dB) {
+int pa_alsa_path_probe(pa_alsa_path *p, pa_alsa_mapping *mapping, snd_mixer_t *m, bool ignore_dB) {
     pa_alsa_element *e;
     pa_alsa_jack *j;
     double min_dB[PA_CHANNEL_POSITION_MAX], max_dB[PA_CHANNEL_POSITION_MAX];
     pa_channel_position_t t;
     pa_channel_position_mask_t path_volume_channels = 0;
+    char buf[64];
 
     pa_assert(p);
     pa_assert(m);
@@ -2768,12 +2883,13 @@ int pa_alsa_path_probe(pa_alsa_path *p, snd_mixer_t *m, bool ignore_dB) {
     pa_log_debug("Probing path '%s'", p->name);
 
     PA_LLIST_FOREACH(j, p->jacks) {
-        if (jack_probe(j, m) < 0) {
+        alsa_id_str(buf, sizeof(buf), &j->alsa_id);
+        if (jack_probe(j, mapping, m) < 0) {
             p->supported = false;
-            pa_log_debug("Probe of jack '%s' failed.", j->alsa_name);
+            pa_log_debug("Probe of jack %s failed.", buf);
             return -1;
         }
-        pa_log_debug("Probe of jack '%s' succeeded (%s)", j->alsa_name, j->has_control ? "found!" : "not found");
+        pa_log_debug("Probe of jack %s succeeded (%s)", buf, j->has_control ? "found!" : "not found");
     }
 
     PA_LLIST_FOREACH(e, p->elements) {
@@ -2873,7 +2989,7 @@ void pa_alsa_setting_dump(pa_alsa_setting *s) {
 void pa_alsa_jack_dump(pa_alsa_jack *j) {
     pa_assert(j);
 
-    pa_log_debug("Jack %s, alsa_name='%s', detection %s", j->name, j->alsa_name, j->has_control ? "possible" : "unavailable");
+    pa_log_debug("Jack %s, alsa_name='%s', index='%d', detection %s", j->name, j->alsa_id.name, j->alsa_id.index, j->has_control ? "possible" : "unavailable");
 }
 
 void pa_alsa_option_dump(pa_alsa_option *o) {
@@ -3335,7 +3451,8 @@ static void path_set_condense(pa_alsa_path_set *ps, snd_mixer_t *m) {
                     continue;
 
                 PA_LLIST_FOREACH(jb, p2->jacks) {
-                    if (jb->has_control && pa_streq(jb->alsa_name, ja->alsa_name) &&
+                    if (jb->has_control && pa_streq(ja->alsa_id.name, jb->alsa_id.name) &&
+                       (ja->alsa_id.index == jb->alsa_id.index) &&
                        (ja->state_plugged == jb->state_plugged) &&
                        (ja->state_unplugged == jb->state_unplugged)) {
                         exists = true;
@@ -3507,6 +3624,7 @@ pa_alsa_mapping *pa_alsa_mapping_get(pa_alsa_profile_set *ps, const char *name) 
     pa_sample_spec_init(&m->sample_spec);
     pa_channel_map_init(&m->channel_map);
     m->proplist = pa_proplist_new();
+    m->hw_device_index = -1;
 
     pa_hashmap_put(ps->mappings, m->name, m);
 
@@ -3969,9 +4087,11 @@ static void mapping_paths_probe(pa_alsa_mapping *m, pa_alsa_profile *profile,
     }
 
     PA_HASHMAP_FOREACH(p, ps->paths, state) {
-        if (pa_alsa_path_probe(p, mixer_handle, m->profile_set->ignore_dB) < 0) {
+        if (p->autodetect_eld_device)
+            p->eld_device = m->hw_device_index;
+
+        if (pa_alsa_path_probe(p, m, mixer_handle, m->profile_set->ignore_dB) < 0)
             pa_hashmap_remove(ps->paths, p);
-        }
     }
 
     path_set_condense(ps, mixer_handle);
@@ -4534,6 +4654,25 @@ static int add_profiles_to_probe(
     return i;
 }
 
+static void mapping_query_hw_device(pa_alsa_mapping *mapping, snd_pcm_t *pcm) {
+    int r;
+    snd_pcm_info_t* pcm_info;
+    snd_pcm_info_alloca(&pcm_info);
+
+    r = snd_pcm_info(pcm, pcm_info);
+    if (r < 0) {
+        pa_log("Mapping %s: snd_pcm_info() failed %s: ", mapping->name, pa_alsa_strerror(r));
+        return;
+    }
+
+    /* XXX: It's not clear what snd_pcm_info_get_device() does if the device is
+     * not backed by a hw device or if it's backed by multiple hw devices. We
+     * only use hw_device_index for HDMI devices, however, and for those the
+     * return value is expected to be always valid, so this shouldn't be a
+     * significant problem. */
+    mapping->hw_device_index = snd_pcm_info_get_device(pcm_info);
+}
+
 void pa_alsa_profile_set_probe(
         pa_alsa_profile_set *ps,
         const char *dev_id,
@@ -4624,6 +4763,9 @@ void pa_alsa_profile_set_probe(
                         }
                         break;
                     }
+
+                    if (m->hw_device_index < 0)
+                        mapping_query_hw_device(m, m->output_pcm);
                 }
 
             if (p->input_mappings && p->supported)
@@ -4645,6 +4787,9 @@ void pa_alsa_profile_set_probe(
                         }
                         break;
                     }
+
+                    if (m->hw_device_index < 0)
+                        mapping_query_hw_device(m, m->input_pcm);
                 }
 
             last = p;

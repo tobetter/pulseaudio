@@ -34,6 +34,7 @@
 typedef struct pa_alsa_fdlist pa_alsa_fdlist;
 typedef struct pa_alsa_mixer_pdata pa_alsa_mixer_pdata;
 typedef struct pa_alsa_setting pa_alsa_setting;
+typedef struct pa_alsa_mixer_id pa_alsa_mixer_id;
 typedef struct pa_alsa_option pa_alsa_option;
 typedef struct pa_alsa_element pa_alsa_element;
 typedef struct pa_alsa_jack pa_alsa_jack;
@@ -97,6 +98,12 @@ struct pa_alsa_setting {
     unsigned priority;
 };
 
+/* ALSA mixer element identifier */
+struct pa_alsa_mixer_id {
+      char *name;
+      int index;
+};
+
 /* An option belongs to an element and refers to one enumeration item
  * of the element is an enumeration item, or a switch status if the
  * element is a switch item. */
@@ -158,8 +165,8 @@ struct pa_alsa_jack {
     pa_alsa_path *path;
     PA_LLIST_FIELDS(pa_alsa_jack);
 
+    struct pa_alsa_mixer_id alsa_id;
     char *name; /* E g "Headphone" */
-    char *alsa_name; /* E g "Headphone Jack" */
     bool has_control; /* is the jack itself present? */
     bool plugged_in; /* is this jack currently plugged in? */
     snd_mixer_elem_t *melem; /* Jack detection handle */
@@ -171,9 +178,12 @@ struct pa_alsa_jack {
 
     pa_dynarray *ucm_devices; /* pa_alsa_ucm_device */
     pa_dynarray *ucm_hw_mute_devices; /* pa_alsa_ucm_device */
+
+    bool append_pcm_to_name;
 };
 
-pa_alsa_jack *pa_alsa_jack_new(pa_alsa_path *path, const char *name);
+char *alsa_id_str(char *dst, size_t dst_len, pa_alsa_mixer_id *id);
+pa_alsa_jack *pa_alsa_jack_new(pa_alsa_path *path, const char *name, int index);
 void pa_alsa_jack_free(pa_alsa_jack *jack);
 void pa_alsa_jack_set_has_control(pa_alsa_jack *jack, bool has_control);
 void pa_alsa_jack_set_plugged_in(pa_alsa_jack *jack, bool plugged_in);
@@ -191,6 +201,7 @@ struct pa_alsa_path {
     char *description_key;
     char *description;
     unsigned priority;
+    bool autodetect_eld_device;
     int eld_device;
     pa_proplist *proplist;
 
@@ -234,7 +245,7 @@ void pa_alsa_element_dump(pa_alsa_element *e);
 
 pa_alsa_path *pa_alsa_path_new(const char *paths_dir, const char *fname, pa_alsa_direction_t direction);
 pa_alsa_path *pa_alsa_path_synthesize(const char *element, pa_alsa_direction_t direction);
-int pa_alsa_path_probe(pa_alsa_path *p, snd_mixer_t *m, bool ignore_dB);
+int pa_alsa_path_probe(pa_alsa_path *p, pa_alsa_mapping *mapping, snd_mixer_t *m, bool ignore_dB);
 void pa_alsa_path_dump(pa_alsa_path *p);
 int pa_alsa_path_get_volume(pa_alsa_path *p, snd_mixer_t *m, const pa_channel_map *cm, pa_cvolume *v);
 int pa_alsa_path_get_mute(pa_alsa_path *path, snd_mixer_t *m, bool *muted);
@@ -274,6 +285,10 @@ struct pa_alsa_mapping {
     unsigned supported;
     bool exact_channels:1;
     bool fallback:1;
+
+    /* The "y" in "hw:x,y". This is set to -1 before the device index has been
+     * queried, or if the query failed. */
+    int hw_device_index;
 
     /* Temporarily used during probing */
     snd_pcm_t *input_pcm;
