@@ -1,0 +1,327 @@
+From 2f8031cf7277bd82a823b10a7f091201683df540 Mon Sep 17 00:00:00 2001
+From: Kai-Heng Feng <kai.heng.feng@canonical.com>
+Date: Wed, 25 Mar 2020 18:08:49 +0800
+Subject: [PATCH 1/2] alsa-mixer: Handle the index for ALSA mixer jack
+ identifiers
+
+Some systems have two jacks with same name but different index, we need
+to take index into consideration to use both jacks.
+
+https://gitlab.freedesktop.org/pulseaudio/pulseaudio/-/merge_requests/272
+https://bugs.launchpad.net/oem-priority/+bug/1869819
+---
+ src/modules/alsa/alsa-mixer.c       | 38 ++++++++++++++++++-----------
+ src/modules/alsa/alsa-mixer.h       |  5 ++--
+ src/modules/alsa/alsa-ucm.c         |  4 +--
+ src/modules/alsa/alsa-util.c        |  4 +--
+ src/modules/alsa/alsa-util.h        |  2 +-
+ src/modules/alsa/module-alsa-card.c |  6 +++--
+ 6 files changed, 36 insertions(+), 23 deletions(-)
+
+Index: pulseaudio-13.99.1/src/modules/alsa/alsa-mixer.c
+===================================================================
+--- pulseaudio-13.99.1.orig/src/modules/alsa/alsa-mixer.c
++++ pulseaudio-13.99.1/src/modules/alsa/alsa-mixer.c
+@@ -107,7 +107,7 @@ struct description_map {
+     const char *description;
+ };
+ 
+-static char *alsa_id_str(char *dst, size_t dst_len, pa_alsa_mixer_id *id) {
++char *alsa_id_str(char *dst, size_t dst_len, pa_alsa_mixer_id *id) {
+     if (id->index > 0) {
+         snprintf(dst, dst_len, "'%s',%d", id->name, id->index);
+     } else {
+@@ -147,7 +147,7 @@ static int alsa_id_decode(const char *sr
+     return 0;
+ }
+ 
+-pa_alsa_jack *pa_alsa_jack_new(pa_alsa_path *path, const char *mixer_device_name, const char *name) {
++pa_alsa_jack *pa_alsa_jack_new(pa_alsa_path *path, const char *mixer_device_name, const char *name, int index) {
+     pa_alsa_jack *jack;
+ 
+     pa_assert(name);
+@@ -156,7 +156,8 @@ pa_alsa_jack *pa_alsa_jack_new(pa_alsa_p
+     jack->path = path;
+     jack->mixer_device_name = pa_xstrdup(mixer_device_name);
+     jack->name = pa_xstrdup(name);
+-    jack->alsa_name = pa_sprintf_malloc("%s Jack", name);
++    jack->alsa_id.name = pa_sprintf_malloc("%s Jack", name);
++    jack->alsa_id.index = index;
+     jack->state_unplugged = PA_AVAILABLE_NO;
+     jack->state_plugged = PA_AVAILABLE_YES;
+     jack->ucm_devices = pa_dynarray_new(NULL);
+@@ -171,7 +172,7 @@ void pa_alsa_jack_free(pa_alsa_jack *jac
+     pa_dynarray_free(jack->ucm_hw_mute_devices);
+     pa_dynarray_free(jack->ucm_devices);
+ 
+-    pa_xfree(jack->alsa_name);
++    pa_xfree(jack->alsa_id.name);
+     pa_xfree(jack->name);
+     pa_xfree(jack->mixer_device_name);
+     pa_xfree(jack);
+@@ -1910,12 +1911,12 @@ static int jack_probe(pa_alsa_jack *j, p
+         }
+ 
+         new_name = pa_sprintf_malloc("%s,pcm=%i Jack", j->name, mapping->hw_device_index);
+-        pa_xfree(j->alsa_name);
+-        j->alsa_name = new_name;
++        pa_xfree(j->alsa_id.name);
++        j->alsa_id.name = new_name;
+         j->append_pcm_to_name = false;
+     }
+ 
+-    has_control = pa_alsa_mixer_find_card(m, j->alsa_name, 0) != NULL;
++    has_control = pa_alsa_mixer_find_card(m, &j->alsa_id, 0) != NULL;
+     pa_alsa_jack_set_has_control(j, has_control);
+ 
+     if (j->has_control) {
+@@ -1978,19 +1979,26 @@ finish:
+ 
+ static pa_alsa_jack* jack_get(pa_alsa_path *p, const char *section) {
+     pa_alsa_jack *j;
++    char *name;
++    int index;
+ 
+     if (!pa_startswith(section, "Jack "))
+         return NULL;
+     section += 5;
+ 
+-    if (p->last_jack && pa_streq(p->last_jack->name, section))
++    name = alloca(strlen(section) + 1);
++    if (alsa_id_decode(section, name, &index))
++        return NULL;
++
++    if (p->last_jack && pa_streq(p->last_jack->alsa_id.name, name) &&
++        p->last_jack->alsa_id.index == index)
+         return p->last_jack;
+ 
+     PA_LLIST_FOREACH(j, p->jacks)
+-        if (pa_streq(j->name, section))
++        if (pa_streq(j->alsa_id.name, name) && j->alsa_id.index == index)
+             goto finish;
+ 
+-    j = pa_alsa_jack_new(p, NULL, section);
++    j = pa_alsa_jack_new(p, NULL, name, index);
+     PA_LLIST_INSERT_AFTER(pa_alsa_jack, p->jacks, p->last_jack, j);
+ 
+ finish:
+@@ -2950,12 +2958,13 @@ int pa_alsa_path_probe(pa_alsa_path *p,
+     pa_log_debug("Probing path '%s'", p->name);
+ 
+     PA_LLIST_FOREACH(j, p->jacks) {
++        alsa_id_str(buf, sizeof(buf), &j->alsa_id);
+         if (jack_probe(j, mapping, m) < 0) {
+             p->supported = false;
+-            pa_log_debug("Probe of jack '%s' failed.", j->alsa_name);
++            pa_log_debug("Probe of jack %s failed.", buf);
+             return -1;
+         }
+-        pa_log_debug("Probe of jack '%s' succeeded (%s)", j->alsa_name, j->has_control ? "found!" : "not found");
++        pa_log_debug("Probe of jack %s succeeded (%s)", buf, j->has_control ? "found!" : "not found");
+     }
+ 
+     PA_LLIST_FOREACH(e, p->elements) {
+@@ -3056,7 +3065,7 @@ void pa_alsa_setting_dump(pa_alsa_settin
+ void pa_alsa_jack_dump(pa_alsa_jack *j) {
+     pa_assert(j);
+ 
+-    pa_log_debug("Jack %s, alsa_name='%s', detection %s", j->name, j->alsa_name, j->has_control ? "possible" : "unavailable");
++    pa_log_debug("Jack %s, alsa_name='%s', index='%d', detection %s", j->name, j->alsa_id.name, j->alsa_id.index, j->has_control ? "possible" : "unavailable");
+ }
+ 
+ void pa_alsa_option_dump(pa_alsa_option *o) {
+@@ -3539,7 +3548,8 @@ static void path_set_condense(pa_alsa_pa
+                     continue;
+ 
+                 PA_LLIST_FOREACH(jb, p2->jacks) {
+-                    if (jb->has_control && pa_streq(jb->alsa_name, ja->alsa_name) &&
++                    if (jb->has_control && pa_streq(ja->alsa_id.name, jb->alsa_id.name) &&
++                       (ja->alsa_id.index == jb->alsa_id.index) &&
+                        (ja->state_plugged == jb->state_plugged) &&
+                        (ja->state_unplugged == jb->state_unplugged)) {
+                         exists = true;
+Index: pulseaudio-13.99.1/src/modules/alsa/alsa-mixer.h
+===================================================================
+--- pulseaudio-13.99.1.orig/src/modules/alsa/alsa-mixer.h
++++ pulseaudio-13.99.1/src/modules/alsa/alsa-mixer.h
+@@ -177,8 +177,8 @@ struct pa_alsa_jack {
+     snd_mixer_t *mixer_handle;
+     char *mixer_device_name;
+ 
++    struct pa_alsa_mixer_id alsa_id;
+     char *name; /* E g "Headphone" */
+-    char *alsa_name; /* E g "Headphone Jack" */
+     bool has_control; /* is the jack itself present? */
+     bool plugged_in; /* is this jack currently plugged in? */
+     snd_mixer_elem_t *melem; /* Jack detection handle */
+@@ -194,7 +194,8 @@ struct pa_alsa_jack {
+     bool append_pcm_to_name;
+ };
+ 
+-pa_alsa_jack *pa_alsa_jack_new(pa_alsa_path *path, const char *mixer_device_name, const char *name);
++char *alsa_id_str(char *dst, size_t dst_len, pa_alsa_mixer_id *id);
++pa_alsa_jack *pa_alsa_jack_new(pa_alsa_path *path, const char *mixer_device_name, const char *name, int index);
+ void pa_alsa_jack_free(pa_alsa_jack *jack);
+ void pa_alsa_jack_set_has_control(pa_alsa_jack *jack, bool has_control);
+ void pa_alsa_jack_set_plugged_in(pa_alsa_jack *jack, bool plugged_in);
+Index: pulseaudio-13.99.1/src/modules/alsa/alsa-ucm.c
+===================================================================
+--- pulseaudio-13.99.1.orig/src/modules/alsa/alsa-ucm.c
++++ pulseaudio-13.99.1/src/modules/alsa/alsa-ucm.c
+@@ -1643,7 +1643,7 @@ static pa_alsa_jack* ucm_get_jack(pa_als
+         pa_log("[%s] No mixer device name for JackControl \"%s\"", device_name, jack_control);
+         return NULL;
+     }
+-    j = pa_alsa_jack_new(NULL, mixer_device_name, name);
++    j = pa_alsa_jack_new(NULL, mixer_device_name, name, 0);
+     PA_LLIST_PREPEND(pa_alsa_jack, ucm->jacks, j);
+ 
+ finish:
+@@ -1873,7 +1873,7 @@ static void ucm_mapping_jack_probe(pa_al
+             continue;
+         }
+ 
+-        has_control = pa_alsa_mixer_find_card(mixer_handle, dev->jack->alsa_name, 0) != NULL;
++        has_control = pa_alsa_mixer_find_card(mixer_handle, &dev->jack->alsa_id, 0) != NULL;
+         pa_alsa_jack_set_has_control(dev->jack, has_control);
+         pa_log_info("UCM jack %s has_control=%d", dev->jack->name, dev->jack->has_control);
+     }
+Index: pulseaudio-13.99.1/src/modules/alsa/alsa-util.c
+===================================================================
+--- pulseaudio-13.99.1.orig/src/modules/alsa/alsa-util.c
++++ pulseaudio-13.99.1/src/modules/alsa/alsa-util.c
+@@ -1635,8 +1635,8 @@ static snd_mixer_elem_t *pa_alsa_mixer_f
+     return NULL;
+ }
+ 
+-snd_mixer_elem_t *pa_alsa_mixer_find_card(snd_mixer_t *mixer, const char *name, unsigned int device) {
+-    return pa_alsa_mixer_find(mixer, SND_CTL_ELEM_IFACE_CARD, name, 0, device);
++snd_mixer_elem_t *pa_alsa_mixer_find_card(snd_mixer_t *mixer, struct pa_alsa_mixer_id *alsa_id, unsigned int device) {
++    return pa_alsa_mixer_find(mixer, SND_CTL_ELEM_IFACE_CARD, alsa_id->name, alsa_id->index, device);
+ }
+ 
+ snd_mixer_elem_t *pa_alsa_mixer_find_pcm(snd_mixer_t *mixer, const char *name, unsigned int device) {
+Index: pulseaudio-13.99.1/src/modules/alsa/alsa-util.h
+===================================================================
+--- pulseaudio-13.99.1.orig/src/modules/alsa/alsa-util.h
++++ pulseaudio-13.99.1/src/modules/alsa/alsa-util.h
+@@ -141,7 +141,7 @@ const char* pa_alsa_strerror(int errnum)
+ 
+ bool pa_alsa_may_tsched(bool want);
+ 
+-snd_mixer_elem_t *pa_alsa_mixer_find_card(snd_mixer_t *mixer, const char *name, unsigned int device);
++snd_mixer_elem_t *pa_alsa_mixer_find_card(snd_mixer_t *mixer, struct pa_alsa_mixer_id *alsa_id, unsigned int device);
+ snd_mixer_elem_t *pa_alsa_mixer_find_pcm(snd_mixer_t *mixer, const char *name, unsigned int device);
+ 
+ snd_mixer_t *pa_alsa_open_mixer(pa_hashmap *mixers, int alsa_card_index, bool probe);
+Index: pulseaudio-13.99.1/src/modules/alsa/module-alsa-card.c
+===================================================================
+--- pulseaudio-13.99.1.orig/src/modules/alsa/module-alsa-card.c
++++ pulseaudio-13.99.1/src/modules/alsa/module-alsa-card.c
+@@ -621,6 +621,7 @@ static void init_jacks(struct userdata *
+     void *state;
+     pa_alsa_path* path;
+     pa_alsa_jack* jack;
++    char buf[64];
+ 
+     u->jacks = pa_hashmap_new(pa_idxset_trivial_hash_func, pa_idxset_trivial_compare_func);
+ 
+@@ -663,9 +664,10 @@ static void init_jacks(struct userdata *
+             }
+         }
+         pa_alsa_mixer_set_fdlist(u->mixers, jack->mixer_handle, u->core->mainloop);
+-        jack->melem = pa_alsa_mixer_find_card(jack->mixer_handle, jack->alsa_name, 0);
++        jack->melem = pa_alsa_mixer_find_card(jack->mixer_handle, &jack->alsa_id, 0);
+         if (!jack->melem) {
+-            pa_log_warn("Jack '%s' seems to have disappeared.", jack->alsa_name);
++            alsa_id_str(buf, sizeof(buf), &jack->alsa_id);
++            pa_log_warn("Jack %s seems to have disappeared.", buf);
+             pa_alsa_jack_set_has_control(jack, false);
+             continue;
+         }
+Index: pulseaudio-13.99.1/src/modules/alsa/mixer/paths/analog-input-headset-mic.conf
+===================================================================
+--- pulseaudio-13.99.1.orig/src/modules/alsa/mixer/paths/analog-input-headset-mic.conf
++++ pulseaudio-13.99.1/src/modules/alsa/mixer/paths/analog-input-headset-mic.conf
+@@ -35,6 +35,15 @@ state.plugged = unknown
+ [Jack Front Headphone]
+ state.plugged = unknown
+ 
++[Jack Front Headphone,1]
++state.plugged = unknown
++
++[Jack Front Headphone Front]
++state.plugged = unknown
++
++[Jack Front Headphone Surround]
++state.plugged = unknown
++
+ [Jack Headphone Mic]
+ state.plugged = unknown
+ 
+Index: pulseaudio-13.99.1/src/modules/alsa/mixer/paths/analog-output-headphones.conf
+===================================================================
+--- pulseaudio-13.99.1.orig/src/modules/alsa/mixer/paths/analog-output-headphones.conf
++++ pulseaudio-13.99.1/src/modules/alsa/mixer/paths/analog-output-headphones.conf
+@@ -35,6 +35,15 @@ state.unplugged = unknown
+ [Jack Front Headphone]
+ required-any = any
+ 
++[Jack Front Headphone,1]
++required-any = any
++
++[Jack Front Headphone Front]
++required-any = any
++
++[Jack Front Headphone Surround]
++required-any = any
++
+ [Jack Front Headphone Phantom]
+ required-any = any
+ state.plugged = unknown
+Index: pulseaudio-13.99.1/src/modules/alsa/mixer/paths/analog-output-speaker-always.conf
+===================================================================
+--- pulseaudio-13.99.1.orig/src/modules/alsa/mixer/paths/analog-output-speaker-always.conf
++++ pulseaudio-13.99.1/src/modules/alsa/mixer/paths/analog-output-speaker-always.conf
+@@ -33,6 +33,18 @@ state.unplugged = unknown
+ state.plugged = no
+ state.unplugged = unknown
+ 
++[Jack Front Headphone,1]
++state.plugged = no
++state.unplugged = unknown
++
++[Jack Front Headphone Front]
++state.plugged = no
++state.unplugged = unknown
++
++[Jack Front Headphone Surround]
++state.plugged = no
++state.unplugged = unknown
++
+ [Jack Line Out]
+ state.plugged = no
+ state.unplugged = unknown
+Index: pulseaudio-13.99.1/src/modules/alsa/mixer/paths/analog-output-speaker.conf
+===================================================================
+--- pulseaudio-13.99.1.orig/src/modules/alsa/mixer/paths/analog-output-speaker.conf
++++ pulseaudio-13.99.1/src/modules/alsa/mixer/paths/analog-output-speaker.conf
+@@ -36,6 +36,18 @@ state.unplugged = unknown
+ state.plugged = no
+ state.unplugged = unknown
+ 
++[Jack Front Headphone,1]
++state.plugged = no
++state.unplugged = unknown
++
++[Jack Front Headphone Front]
++state.plugged = no
++state.unplugged = unknown
++
++[Jack Front Headphone Surround]
++state.plugged = no
++state.unplugged = unknown
++
+ [Jack Line Out]
+ state.plugged = no
+ state.unplugged = unknown

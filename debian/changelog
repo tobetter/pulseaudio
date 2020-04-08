@@ -1,3 +1,14 @@
+pulseaudio (1:13.99.1-1ubuntu2) focal; urgency=medium
+
+  * debian/patches/git_ucm_assert.patch:
+    - backport an assert fix from git (lp: #1871039)
+
+  [Kai-Heng Feng]
+  * alsa-mixer: Handle the index for ALSA mixer jack identifiers
+  * alsa-mixer: Support dual Front Headphone Jack
+
+ -- Sebastien Bacher <seb128@ubuntu.com>  Wed, 08 Apr 2020 17:58:57 +0200
+
 pulseaudio (1:13.99.1-1ubuntu1) focal; urgency=medium
 
   [ Sebastien Bacher ]
