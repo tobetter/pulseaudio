@@ -1,0 +1,824 @@
+From 2f8031cf7277bd82a823b10a7f091201683df540
+From: Kai-Heng Feng <kai.heng.feng@canonical.com>
+Date: Wed, 25 Mar 2020 18:08:49 +0800
+Subject: [PATCH 1/2] alsa-mixer: Handle the index for ALSA mixer jack
+identifiers
+
+Some systems have two jacks with same name but different index, we need
+to take index into consideration to use both jacks.
+
+https://gitlab.freedesktop.org/pulseaudio/pulseaudio/-/merge_requests/272
+https://bugs.launchpad.net/oem-priority/+bug/1869819
+---
+
+From 72fa468a45031ba4be4d24d70fddf282b5c9da66
+From: Tanu Kaskinen <tanuk@iki.fi>
+Date:   Sun Oct 8 19:48:26 2017
+Subject:alsa-mixer: autodetect the ELD device
+
+This removes the need to hardcode the ELD device index in the path
+configuration. The hardcoded values don't work with the Intel HDMI LPE
+driver.
+
+BugLink: https://bugs.freedesktop.org/show_bug.cgi?id=100488
+
+---
+From 67f11ff30177d40e408523bdce0eeff27b8e6f9b
+From: Tanu Kaskinen <tanuk@iki.fi>
+Date:   Sun Oct 8 19:48:25 2017
+Subject: alsa-mixer: autodetect the HDMI jack PCM device
+
+This removes the need to hardcode the PCM device index in the HDMI jack
+names. The hardcoded values don't work with the Intel HDMI LPE driver.
+
+BugLink: https://bugs.freedesktop.org/show_bug.cgi?id=100488
+---
+From 09ff3fca2fa9fe928990b3f0effeb1ddfbba0df1
+From: Tanu Kaskinen <tanuk@iki.fi>
+Date:   Sun Oct 8 19:48:24 2017
+Subject: alsa-mixer: add hw_device_index to pa_alsa_mapping
+
+We have so far assumed that HDMI always uses device indexes 3, 7, 8, 9,
+10, 11, 12 and 13. These values are hardcoded in the path configuration.
+The Intel HDMI LPE driver, however, uses different device numbering
+scheme. Since the indexes aren't always the same, we need to query the
+hw device index from ALSA.
+
+Later patches will use the queried index for HDMI jack detection and ELD
+information reading.
+
+BugLink: https://bugs.freedesktop.org/show_bug.cgi?id=100488
+--- a/src/modules/alsa/alsa-mixer.c
++++ b/src/modules/alsa/alsa-mixer.c
+@@ -107,7 +107,48 @@
+     const char *description;
+ };
+ 
+-pa_alsa_jack *pa_alsa_jack_new(pa_alsa_path *path, const char *name) {
++char *alsa_id_str(char *dst, size_t dst_len, pa_alsa_mixer_id *id) {
++    if (id->index > 0) {
++        snprintf(dst, dst_len, "'%s',%d", id->name, id->index);
++    } else {
++        snprintf(dst, dst_len, "'%s'", id->name);
++    }
++    return dst;
++}
++
++static int alsa_id_decode(const char *src, char *name, int *index) {
++    char *idx, c;
++    int i;
++
++    *index = 0;
++    c = src[0];
++    /* Strip quotes in entries such as 'Speaker',1 or "Speaker",1 */
++    if (c == '\'' || c == '"') {
++        strcpy(name, src + 1);
++        for (i = 0; name[i] != '\0' && name[i] != c; i++);
++        idx = NULL;
++        if (name[i]) {
++                name[i] = '\0';
++                idx = strchr(name + i + 1, ',');
++        }
++    } else {
++        strcpy(name, src);
++        idx = strchr(name, ',');
++    }
++    if (idx == NULL)
++        return 0;
++    *idx = '\0';
++    idx++;
++    if (*idx < '0' || *idx > '9') {
++        pa_log("Element %s: index value is invalid", src);
++        return 1;
++    }
++    *index = atoi(idx);
++    return 0;
++}
++
++
++pa_alsa_jack *pa_alsa_jack_new(pa_alsa_path *path, const char *name, int index) {
+     pa_alsa_jack *jack;
+ 
+     pa_assert(name);
+@@ -115,7 +156,8 @@
+     jack = pa_xnew0(pa_alsa_jack, 1);
+     jack->path = path;
+     jack->name = pa_xstrdup(name);
+-    jack->alsa_name = pa_sprintf_malloc("%s Jack", name);
++    jack->alsa_id.name = pa_sprintf_malloc("%s Jack", name);
++    jack->alsa_id.index = index;
+     jack->state_unplugged = PA_AVAILABLE_NO;
+     jack->state_plugged = PA_AVAILABLE_YES;
+     jack->ucm_devices = pa_dynarray_new(NULL);
+@@ -130,7 +172,7 @@
+     pa_dynarray_free(jack->ucm_hw_mute_devices);
+     pa_dynarray_free(jack->ucm_devices);
+ 
+-    pa_xfree(jack->alsa_name);
++    pa_xfree(jack->alsa_id.name);
+     pa_xfree(jack->name);
+     pa_xfree(jack);
+ }
+@@ -1812,13 +1854,32 @@
+     return 0;
+ }
+ 
+-static int jack_probe(pa_alsa_jack *j, snd_mixer_t *m) {
++static int jack_probe(pa_alsa_jack *j, pa_alsa_mapping *mapping, snd_mixer_t *m) {
+     bool has_control;
+ 
+     pa_assert(j);
+     pa_assert(j->path);
+ 
+-    has_control = pa_alsa_mixer_find(m, j->alsa_name, 0) != NULL;
++    if (j->append_pcm_to_name) {
++        char *new_name;
++
++        if (!mapping) {
++            /* This could also be an assertion, because this should never
++             * happen. At the time of writing, mapping can only be NULL when
++             * module-alsa-sink/source synthesizes a path, and those
++             * synthesized paths never have any jacks, so jack_probe() should
++             * never be called with a NULL mapping. */
++            pa_log("Jack %s: append_pcm_to_name is set, but mapping is NULL. Can't use this jack.", j->name);
++            return -1;
++        }
++
++        new_name = pa_sprintf_malloc("%s,pcm=%i Jack", j->name, mapping->hw_device_index);
++        pa_xfree(j->alsa_id.name);
++        j->alsa_id.name = new_name;
++        j->append_pcm_to_name = false;
++    }
++
++    has_control = pa_alsa_mixer_find_card(m, &j->alsa_id, 0) != NULL;
+     pa_alsa_jack_set_has_control(j, has_control);
+ 
+     if (j->has_control) {
+@@ -1873,19 +1934,26 @@
+ 
+ static pa_alsa_jack* jack_get(pa_alsa_path *p, const char *section) {
+     pa_alsa_jack *j;
++    char *name;
++    int index;
+ 
+     if (!pa_startswith(section, "Jack "))
+         return NULL;
+     section += 5;
+ 
+-    if (p->last_jack && pa_streq(p->last_jack->name, section))
++    name = alloca(strlen(section) + 1);
++    if (alsa_id_decode(section, name, &index))
++        return NULL;
++
++    if (p->last_jack && pa_streq(p->last_jack->alsa_id.name, name) &&
++        p->last_jack->alsa_id.index == index)
+         return p->last_jack;
+ 
+     PA_LLIST_FOREACH(j, p->jacks)
+-        if (pa_streq(j->name, section))
++        if (pa_streq(j->alsa_id.name, name) && j->alsa_id.index == index)
+             goto finish;
+ 
+-    j = pa_alsa_jack_new(p, section);
++    j = pa_alsa_jack_new(p, name, index);
+     PA_LLIST_INSERT_AFTER(pa_alsa_jack, p->jacks, p->last_jack, j);
+ 
+ finish:
+@@ -2032,6 +2100,28 @@
+     return 0;
+ }
+ 
++static int parse_eld_device(pa_config_parser_state *state) {
++    pa_alsa_path *path;
++    uint32_t eld_device;
++
++    path = state->userdata;
++
++    if (pa_atou(state->rvalue, &eld_device) >= 0) {
++        path->autodetect_eld_device = false;
++        path->eld_device = eld_device;
++        return 0;
++    }
++
++    if (pa_streq(state->rvalue, "auto")) {
++        path->autodetect_eld_device = true;
++        path->eld_device = -1;
++        return 0;
++    }
++
++    pa_log("[%s:%u] Invalid value for option 'eld-device': %s", state->filename, state->lineno, state->rvalue);
++    return -1;
++}
++
+ static int option_parse_priority(pa_config_parser_state *state) {
+     pa_alsa_path *p;
+     pa_alsa_option *o;
+@@ -2326,6 +2416,30 @@
+     return 0;
+ }
+ 
++static int jack_parse_append_pcm_to_name(pa_config_parser_state *state) {
++    pa_alsa_path *path;
++    pa_alsa_jack *jack;
++    int b;
++
++    pa_assert(state);
++
++    path = state->userdata;
++    if (!(jack = jack_get(path, state->section))) {
++        pa_log("[%s:%u] Option 'append_pcm_to_name' not expected in section '%s'",
++               state->filename, state->lineno, state->section);
++        return -1;
++    }
++
++    b = pa_parse_boolean(state->rvalue);
++    if (b < 0) {
++        pa_log("[%s:%u] Invalid value for 'append_pcm_to_name': %s", state->filename, state->lineno, state->rvalue);
++        return -1;
++    }
++
++    jack->append_pcm_to_name = b;
++    return 0;
++}
++
+ static int element_set_option(pa_alsa_element *e, snd_mixer_t *m, int alsa_idx) {
+     snd_mixer_selem_id_t *sid;
+     snd_mixer_elem_t *me;
+@@ -2527,7 +2641,7 @@
+         { "description-key",     pa_config_parse_string,            NULL, "General" },
+         { "description",         pa_config_parse_string,            NULL, "General" },
+         { "mute-during-activation", pa_config_parse_bool,           NULL, "General" },
+-        { "eld-device",          pa_config_parse_int,               NULL, "General" },
++        { "eld-device",          parse_eld_device,                  NULL, "General" },
+ 
+         /* [Option ...] */
+         { "priority",            option_parse_priority,             NULL, NULL },
+@@ -2536,6 +2650,7 @@
+         /* [Jack ...] */
+         { "state.plugged",       jack_parse_state,                  NULL, NULL },
+         { "state.unplugged",     jack_parse_state,                  NULL, NULL },
++        { "append-pcm-to-name",  jack_parse_append_pcm_to_name,     NULL, NULL },
+ 
+         /* [Element ...] */
+         { "switch",              element_parse_switch,              NULL, NULL },
+@@ -2566,7 +2681,6 @@
+     items[1].data = &p->description_key;
+     items[2].data = &p->description;
+     items[3].data = &mute_during_activation;
+-    items[4].data = &p->eld_device;
+ 
+     if (!paths_dir)
+         paths_dir = get_default_paths_dir();
+@@ -2748,12 +2862,13 @@
+     element_create_settings(p->elements, NULL);
+ }
+ 
+-int pa_alsa_path_probe(pa_alsa_path *p, snd_mixer_t *m, bool ignore_dB) {
++int pa_alsa_path_probe(pa_alsa_path *p, pa_alsa_mapping *mapping, snd_mixer_t *m, bool ignore_dB) {
+     pa_alsa_element *e;
+     pa_alsa_jack *j;
+     double min_dB[PA_CHANNEL_POSITION_MAX], max_dB[PA_CHANNEL_POSITION_MAX];
+     pa_channel_position_t t;
+     pa_channel_position_mask_t path_volume_channels = 0;
++    char buf[64];
+ 
+     pa_assert(p);
+     pa_assert(m);
+@@ -2768,12 +2883,13 @@
+     pa_log_debug("Probing path '%s'", p->name);
+ 
+     PA_LLIST_FOREACH(j, p->jacks) {
+-        if (jack_probe(j, m) < 0) {
++        alsa_id_str(buf, sizeof(buf), &j->alsa_id);
++        if (jack_probe(j, mapping, m) < 0) {
+             p->supported = false;
+-            pa_log_debug("Probe of jack '%s' failed.", j->alsa_name);
++            pa_log_debug("Probe of jack %s failed.", buf);
+             return -1;
+         }
+-        pa_log_debug("Probe of jack '%s' succeeded (%s)", j->alsa_name, j->has_control ? "found!" : "not found");
++        pa_log_debug("Probe of jack %s succeeded (%s)", buf, j->has_control ? "found!" : "not found");
+     }
+ 
+     PA_LLIST_FOREACH(e, p->elements) {
+@@ -2873,7 +2989,7 @@
+ void pa_alsa_jack_dump(pa_alsa_jack *j) {
+     pa_assert(j);
+ 
+-    pa_log_debug("Jack %s, alsa_name='%s', detection %s", j->name, j->alsa_name, j->has_control ? "possible" : "unavailable");
++    pa_log_debug("Jack %s, alsa_name='%s', index='%d', detection %s", j->name, j->alsa_id.name, j->alsa_id.index, j->has_control ? "possible" : "unavailable");
+ }
+ 
+ void pa_alsa_option_dump(pa_alsa_option *o) {
+@@ -3335,7 +3451,8 @@
+                     continue;
+ 
+                 PA_LLIST_FOREACH(jb, p2->jacks) {
+-                    if (jb->has_control && pa_streq(jb->alsa_name, ja->alsa_name) &&
++                    if (jb->has_control && pa_streq(ja->alsa_id.name, jb->alsa_id.name) &&
++                       (ja->alsa_id.index == jb->alsa_id.index) &&
+                        (ja->state_plugged == jb->state_plugged) &&
+                        (ja->state_unplugged == jb->state_unplugged)) {
+                         exists = true;
+@@ -3507,6 +3624,7 @@
+     pa_sample_spec_init(&m->sample_spec);
+     pa_channel_map_init(&m->channel_map);
+     m->proplist = pa_proplist_new();
++    m->hw_device_index = -1;
+ 
+     pa_hashmap_put(ps->mappings, m->name, m);
+ 
+@@ -3969,9 +4087,11 @@
+     }
+ 
+     PA_HASHMAP_FOREACH(p, ps->paths, state) {
+-        if (pa_alsa_path_probe(p, mixer_handle, m->profile_set->ignore_dB) < 0) {
++        if (p->autodetect_eld_device)
++            p->eld_device = m->hw_device_index;
++
++        if (pa_alsa_path_probe(p, m, mixer_handle, m->profile_set->ignore_dB) < 0)
+             pa_hashmap_remove(ps->paths, p);
+-        }
+     }
+ 
+     path_set_condense(ps, mixer_handle);
+@@ -4534,6 +4654,25 @@
+     return i;
+ }
+ 
++static void mapping_query_hw_device(pa_alsa_mapping *mapping, snd_pcm_t *pcm) {
++    int r;
++    snd_pcm_info_t* pcm_info;
++    snd_pcm_info_alloca(&pcm_info);
++
++    r = snd_pcm_info(pcm, pcm_info);
++    if (r < 0) {
++        pa_log("Mapping %s: snd_pcm_info() failed %s: ", mapping->name, pa_alsa_strerror(r));
++        return;
++    }
++
++    /* XXX: It's not clear what snd_pcm_info_get_device() does if the device is
++     * not backed by a hw device or if it's backed by multiple hw devices. We
++     * only use hw_device_index for HDMI devices, however, and for those the
++     * return value is expected to be always valid, so this shouldn't be a
++     * significant problem. */
++    mapping->hw_device_index = snd_pcm_info_get_device(pcm_info);
++}
++
+ void pa_alsa_profile_set_probe(
+         pa_alsa_profile_set *ps,
+         const char *dev_id,
+@@ -4624,6 +4763,9 @@
+                         }
+                         break;
+                     }
++
++                    if (m->hw_device_index < 0)
++                        mapping_query_hw_device(m, m->output_pcm);
+                 }
+ 
+             if (p->input_mappings && p->supported)
+@@ -4645,6 +4787,9 @@
+                         }
+                         break;
+                     }
++
++                    if (m->hw_device_index < 0)
++                        mapping_query_hw_device(m, m->input_pcm);
+                 }
+ 
+             last = p;
+--- a/src/modules/alsa/alsa-mixer.h
++++ b/src/modules/alsa/alsa-mixer.h
+@@ -34,6 +34,7 @@
+ typedef struct pa_alsa_fdlist pa_alsa_fdlist;
+ typedef struct pa_alsa_mixer_pdata pa_alsa_mixer_pdata;
+ typedef struct pa_alsa_setting pa_alsa_setting;
++typedef struct pa_alsa_mixer_id pa_alsa_mixer_id;
+ typedef struct pa_alsa_option pa_alsa_option;
+ typedef struct pa_alsa_element pa_alsa_element;
+ typedef struct pa_alsa_jack pa_alsa_jack;
+@@ -97,6 +98,12 @@
+     unsigned priority;
+ };
+ 
++/* ALSA mixer element identifier */
++struct pa_alsa_mixer_id {
++      char *name;
++      int index;
++};
++
+ /* An option belongs to an element and refers to one enumeration item
+  * of the element is an enumeration item, or a switch status if the
+  * element is a switch item. */
+@@ -158,8 +165,8 @@
+     pa_alsa_path *path;
+     PA_LLIST_FIELDS(pa_alsa_jack);
+ 
++    struct pa_alsa_mixer_id alsa_id;
+     char *name; /* E g "Headphone" */
+-    char *alsa_name; /* E g "Headphone Jack" */
+     bool has_control; /* is the jack itself present? */
+     bool plugged_in; /* is this jack currently plugged in? */
+     snd_mixer_elem_t *melem; /* Jack detection handle */
+@@ -171,9 +178,12 @@
+ 
+     pa_dynarray *ucm_devices; /* pa_alsa_ucm_device */
+     pa_dynarray *ucm_hw_mute_devices; /* pa_alsa_ucm_device */
++
++    bool append_pcm_to_name;
+ };
+ 
+-pa_alsa_jack *pa_alsa_jack_new(pa_alsa_path *path, const char *name);
++char *alsa_id_str(char *dst, size_t dst_len, pa_alsa_mixer_id *id);
++pa_alsa_jack *pa_alsa_jack_new(pa_alsa_path *path, const char *name, int index);
+ void pa_alsa_jack_free(pa_alsa_jack *jack);
+ void pa_alsa_jack_set_has_control(pa_alsa_jack *jack, bool has_control);
+ void pa_alsa_jack_set_plugged_in(pa_alsa_jack *jack, bool plugged_in);
+@@ -191,6 +201,7 @@
+     char *description_key;
+     char *description;
+     unsigned priority;
++    bool autodetect_eld_device;
+     int eld_device;
+     pa_proplist *proplist;
+ 
+@@ -234,7 +245,7 @@
+ 
+ pa_alsa_path *pa_alsa_path_new(const char *paths_dir, const char *fname, pa_alsa_direction_t direction);
+ pa_alsa_path *pa_alsa_path_synthesize(const char *element, pa_alsa_direction_t direction);
+-int pa_alsa_path_probe(pa_alsa_path *p, snd_mixer_t *m, bool ignore_dB);
++int pa_alsa_path_probe(pa_alsa_path *p, pa_alsa_mapping *mapping, snd_mixer_t *m, bool ignore_dB);
+ void pa_alsa_path_dump(pa_alsa_path *p);
+ int pa_alsa_path_get_volume(pa_alsa_path *p, snd_mixer_t *m, const pa_channel_map *cm, pa_cvolume *v);
+ int pa_alsa_path_get_mute(pa_alsa_path *path, snd_mixer_t *m, bool *muted);
+@@ -275,6 +286,10 @@
+     bool exact_channels:1;
+     bool fallback:1;
+ 
++    /* The "y" in "hw:x,y". This is set to -1 before the device index has been
++     * queried, or if the query failed. */
++    int hw_device_index;
++
+     /* Temporarily used during probing */
+     snd_pcm_t *input_pcm;
+     snd_pcm_t *output_pcm;
+--- a/src/modules/alsa/alsa-sink.c
++++ b/src/modules/alsa/alsa-sink.c
+@@ -1912,7 +1912,7 @@
+         if (!(u->mixer_path = pa_alsa_path_synthesize(element, PA_ALSA_DIRECTION_OUTPUT)))
+             goto fail;
+ 
+-        if (pa_alsa_path_probe(u->mixer_path, u->mixer_handle, ignore_dB) < 0)
++        if (pa_alsa_path_probe(u->mixer_path, NULL, u->mixer_handle, ignore_dB) < 0)
+             goto fail;
+ 
+         pa_log_debug("Probed mixer path %s:", u->mixer_path->name);
+--- a/src/modules/alsa/alsa-source.c
++++ b/src/modules/alsa/alsa-source.c
+@@ -1615,7 +1615,7 @@
+         if (!(u->mixer_path = pa_alsa_path_synthesize(element, PA_ALSA_DIRECTION_INPUT)))
+             goto fail;
+ 
+-        if (pa_alsa_path_probe(u->mixer_path, u->mixer_handle, ignore_dB) < 0)
++        if (pa_alsa_path_probe(u->mixer_path, NULL, u->mixer_handle, ignore_dB) < 0)
+             goto fail;
+ 
+         pa_log_debug("Probed mixer path %s:", u->mixer_path->name);
+--- a/src/modules/alsa/alsa-ucm.c
++++ b/src/modules/alsa/alsa-ucm.c
+@@ -1321,7 +1321,7 @@
+         if (pa_streq(j->name, name))
+             goto finish;
+ 
+-    j = pa_alsa_jack_new(NULL, name);
++    j = pa_alsa_jack_new(NULL, name, 0);
+     PA_LLIST_PREPEND(pa_alsa_jack, ucm->jacks, j);
+ 
+ finish:
+@@ -1515,7 +1515,7 @@
+     PA_IDXSET_FOREACH(dev, context->ucm_devices, idx) {
+         bool has_control;
+ 
+-        has_control = pa_alsa_mixer_find(mixer_handle, dev->jack->alsa_name, 0) != NULL;
++        has_control = pa_alsa_mixer_find_card(mixer_handle, &dev->jack->alsa_id, 0) != NULL;
+         pa_alsa_jack_set_has_control(dev->jack, has_control);
+         pa_log_info("UCM jack %s has_control=%d", dev->jack->name, dev->jack->has_control);
+     }
+--- a/src/modules/alsa/alsa-util.c
++++ b/src/modules/alsa/alsa-util.c
+@@ -1492,7 +1492,10 @@
+ 
+ #define SND_MIXER_ELEM_PULSEAUDIO (SND_MIXER_ELEM_LAST + 10)
+ 
+-snd_mixer_elem_t *pa_alsa_mixer_find(snd_mixer_t *mixer, const char *name, unsigned int device) {
++snd_mixer_elem_t *pa_alsa_mixer_find(snd_mixer_t *mixer,
++                                     const char *name,
++                                     unsigned int index,
++                                     unsigned int device) {
+     snd_mixer_elem_t *elem;
+ 
+     for (elem = snd_mixer_first_elem(mixer); elem; elem = snd_mixer_elem_next(elem)) {
+@@ -1502,6 +1505,8 @@
+         helem = snd_mixer_elem_get_private(elem);
+         if (!pa_streq(snd_hctl_elem_get_name(helem), name))
+             continue;
++        if (snd_hctl_elem_get_index(helem) != index)
++            continue;
+         if (snd_hctl_elem_get_device(helem) != device)
+             continue;
+         return elem;
+@@ -1509,6 +1514,14 @@
+     return NULL;
+ }
+ 
++snd_mixer_elem_t *pa_alsa_mixer_find_card(snd_mixer_t *mixer, struct pa_alsa_mixer_id *alsa_id, unsigned int device) {
++      return pa_alsa_mixer_find(mixer, alsa_id->name, alsa_id->index, device);
++}
++
++snd_mixer_elem_t *pa_alsa_mixer_find_pcm(snd_mixer_t *mixer, const char *name, unsigned int device) {
++      return pa_alsa_mixer_find(mixer, name, 0, device);
++}
++
+ static int mixer_class_compare(const snd_mixer_elem_t *c1, const snd_mixer_elem_t *c2)
+ {
+     /* Dummy compare function */
+--- a/src/modules/alsa/alsa-util.h
++++ b/src/modules/alsa/alsa-util.h
+@@ -140,7 +140,9 @@
+ 
+ bool pa_alsa_may_tsched(bool want);
+ 
+-snd_mixer_elem_t *pa_alsa_mixer_find(snd_mixer_t *mixer, const char *name, unsigned int device);
++snd_mixer_elem_t *pa_alsa_mixer_find(snd_mixer_t *mixer, const char *name, unsigned int index, unsigned int device);
++snd_mixer_elem_t *pa_alsa_mixer_find_card(snd_mixer_t *mixer, struct pa_alsa_mixer_id *alsa_id, unsigned int device);
++snd_mixer_elem_t *pa_alsa_mixer_find_pcm(snd_mixer_t *mixer, const char *name, unsigned int device);
+ 
+ snd_mixer_t *pa_alsa_open_mixer(int alsa_card_index, char **ctl_device);
+ 
+--- a/src/modules/alsa/mixer/paths/analog-input-headset-mic.conf
++++ b/src/modules/alsa/mixer/paths/analog-input-headset-mic.conf
+@@ -35,6 +35,15 @@
+ [Jack Front Headphone]
+ state.plugged = unknown
+ 
++[Jack Front Headphone,1]
++state.plugged = unknown
++
++[Jack Front Headphone Front]
++state.plugged = unknown
++
++[Jack Front Headphone Surround]
++state.plugged = unknown
++
+ [Jack Headphone Mic]
+ state.plugged = unknown
+ 
+--- a/src/modules/alsa/mixer/paths/analog-output-headphones.conf
++++ b/src/modules/alsa/mixer/paths/analog-output-headphones.conf
+@@ -35,6 +35,15 @@
+ [Jack Front Headphone]
+ required-any = any
+ 
++[Jack Front Headphone,1]
++required-any = any
++
++[Jack Front Headphone Front]
++required-any = any
++
++[Jack Front Headphone Surround]
++required-any = any
++
+ [Jack Front Headphone Phantom]
+ required-any = any
+ state.plugged = unknown
+--- a/src/modules/alsa/mixer/paths/analog-output-speaker-always.conf
++++ b/src/modules/alsa/mixer/paths/analog-output-speaker-always.conf
+@@ -33,6 +33,18 @@
+ state.plugged = no
+ state.unplugged = unknown
+ 
++[Jack Front Headphone,1]
++state.plugged = no
++state.unplugged = unknown
++
++[Jack Front Headphone Front]
++state.plugged = no
++state.unplugged = unknown
++
++[Jack Front Headphone Surround]
++state.plugged = no
++state.unplugged = unknown
++
+ [Jack Line Out]
+ state.plugged = no
+ state.unplugged = unknown
+--- a/src/modules/alsa/mixer/paths/analog-output-speaker.conf
++++ b/src/modules/alsa/mixer/paths/analog-output-speaker.conf
+@@ -36,6 +36,18 @@
+ state.plugged = no
+ state.unplugged = unknown
+ 
++[Jack Front Headphone,1]
++state.plugged = no
++state.unplugged = unknown
++
++[Jack Front Headphone Front]
++state.plugged = no
++state.unplugged = unknown
++
++[Jack Front Headphone Surround]
++state.plugged = no
++state.unplugged = unknown
++
+ [Jack Line Out]
+ state.plugged = no
+ state.unplugged = unknown
+--- a/src/modules/alsa/mixer/paths/analog-output.conf.common
++++ b/src/modules/alsa/mixer/paths/analog-output.conf.common
+@@ -64,8 +64,12 @@
+ ; mute-during-activation = yes | no      # If this path supports hardware mute, should the hw mute be used while activating this
+ ;                                        # path? In some cases this can reduce extra noises during port switching, while in other
+ ;                                        # cases this can increase such noises. Default: no.
+-; eld-device = ...                       # If this is an HDMI port, here's where to specify the device number for the ELD mixer
+-;                                        # control. The default is to not make use of ELD information.
++; eld-device = ...                       # If this is an HDMI port, set to "auto" so that PulseAudio will try to read
++;                                        # the monitor ELD information from the ALSA mixer. By default the ELD information
++;                                        # is not read, because it's only applicable with HDMI. Earlier the "auto" option
++;                                        # didn't exist, and the hw device index had to be manually configured. For
++;                                        # backwards compatibility, it's still possible to manually configure the device
++;                                        # index using this option.
+ ;
+ ; [Properties]                           # Property list for this path. The list is merged into the port property list.
+ ; <key> = <value>                        # Each property is defined on its own line.
+@@ -122,6 +126,10 @@
+ ;                                      # the required-any are present.
+ ; state.plugged = yes | no | unknown   # Normally a plugged jack would mean the port becomes available, and an unplugged means it's
+ ; state.unplugged = yes | no | unknown # unavailable, but the port status can be overridden by specifying state.plugged and/or state.unplugged.
++; append-pcm-to-name = no | yes        # Add ",pcm=N" to the jack name? N is the hw PCM device index. HDMI jacks have
++;                                      # the PCM device index in their name, but different drivers use different
++;                                      # numbering schemes, so we can't hardcode the full jack name in our configuration
++;                                      # files.
+ 
+ [Element PCM]
+ switch = mute
+--- a/src/modules/alsa/mixer/paths/hdmi-output-0.conf
++++ b/src/modules/alsa/mixer/paths/hdmi-output-0.conf
+@@ -1,10 +1,11 @@
+ [General]
+ description = HDMI / DisplayPort
+ priority = 59
+-eld-device = 3
++eld-device = auto
+ 
+ [Properties]
+ device.icon_name = video-display
+ 
+-[Jack HDMI/DP,pcm=3]
++[Jack HDMI/DP]
++append-pcm-to-name = yes
+ required = ignore
+--- a/src/modules/alsa/mixer/paths/hdmi-output-1.conf
++++ b/src/modules/alsa/mixer/paths/hdmi-output-1.conf
+@@ -1,10 +1,11 @@
+ [General]
+ description = HDMI / DisplayPort 2
+ priority = 58
+-eld-device = 7
++eld-device = auto
+ 
+ [Properties]
+ device.icon_name = video-display
+ 
+-[Jack HDMI/DP,pcm=7]
++[Jack HDMI/DP]
++append-pcm-to-name = yes
+ required = ignore
+--- a/src/modules/alsa/mixer/paths/hdmi-output-2.conf
++++ b/src/modules/alsa/mixer/paths/hdmi-output-2.conf
+@@ -1,10 +1,11 @@
+ [General]
+ description = HDMI / DisplayPort 3
+ priority = 57
+-eld-device = 8
++eld-device = auto
+ 
+ [Properties]
+ device.icon_name = video-display
+ 
+-[Jack HDMI/DP,pcm=8]
++[Jack HDMI/DP]
++append-pcm-to-name = yes
+ required = ignore
+--- a/src/modules/alsa/mixer/paths/hdmi-output-3.conf
++++ b/src/modules/alsa/mixer/paths/hdmi-output-3.conf
+@@ -1,10 +1,11 @@
+ [General]
+ description = HDMI / DisplayPort 4
+ priority = 56
+-eld-device = 9
++eld-device = auto
+ 
+ [Properties]
+ device.icon_name = video-display
+ 
+-[Jack HDMI/DP,pcm=9]
++[Jack HDMI/DP]
++append-pcm-to-name = yes
+ required = ignore
+--- a/src/modules/alsa/mixer/paths/hdmi-output-4.conf
++++ b/src/modules/alsa/mixer/paths/hdmi-output-4.conf
+@@ -1,10 +1,11 @@
+ [General]
+ description = HDMI / DisplayPort 5
+ priority = 55
+-eld-device = 10
++eld-device = auto
+ 
+ [Properties]
+ device.icon_name = video-display
+ 
+-[Jack HDMI/DP,pcm=10]
++[Jack HDMI/DP]
++append-pcm-to-name = yes
+ required = ignore
+--- a/src/modules/alsa/mixer/paths/hdmi-output-5.conf
++++ b/src/modules/alsa/mixer/paths/hdmi-output-5.conf
+@@ -1,10 +1,11 @@
+ [General]
+ description = HDMI / DisplayPort 6
+ priority = 54
+-eld-device = 11
++eld-device = auto
+ 
+ [Properties]
+ device.icon_name = video-display
+ 
+-[Jack HDMI/DP,pcm=11]
++[Jack HDMI/DP]
++append-pcm-to-name = yes
+ required = ignore
+--- a/src/modules/alsa/mixer/paths/hdmi-output-6.conf
++++ b/src/modules/alsa/mixer/paths/hdmi-output-6.conf
+@@ -1,10 +1,11 @@
+ [General]
+ description = HDMI / DisplayPort 7
+ priority = 53
+-eld-device = 12
++eld-device = auto
+ 
+ [Properties]
+ device.icon_name = video-display
+ 
+-[Jack HDMI/DP,pcm=12]
++[Jack HDMI/DP]
++append-pcm-to-name = yes
+ required = ignore
+--- a/src/modules/alsa/mixer/paths/hdmi-output-7.conf
++++ b/src/modules/alsa/mixer/paths/hdmi-output-7.conf
+@@ -1,10 +1,11 @@
+ [General]
+ description = HDMI / DisplayPort 8
+ priority = 52
+-eld-device = 13
++eld-device = auto
+ 
+ [Properties]
+ device.icon_name = video-display
+ 
+-[Jack HDMI/DP,pcm=13]
++[Jack HDMI/DP]
++append-pcm-to-name = yes
+ required = ignore
+--- a/src/modules/alsa/module-alsa-card.c
++++ b/src/modules/alsa/module-alsa-card.c
+@@ -529,7 +529,7 @@
+         if (device < 0)
+             continue;
+ 
+-        melem = pa_alsa_mixer_find(u->mixer_handle, "ELD", device);
++        melem = pa_alsa_mixer_find_pcm(u->mixer_handle, "ELD", device);
+         if (melem) {
+             snd_mixer_elem_set_callback(melem, hdmi_eld_changed);
+             snd_mixer_elem_set_callback_private(melem, u);
+@@ -544,6 +544,7 @@
+     void *state;
+     pa_alsa_path* path;
+     pa_alsa_jack* jack;
++    char buf[64];
+ 
+     u->jacks = pa_hashmap_new(pa_idxset_trivial_hash_func, pa_idxset_trivial_compare_func);
+ 
+@@ -576,9 +577,10 @@
+     u->mixer_handle = pa_alsa_open_mixer(u->alsa_card_index, NULL);
+     if (u->mixer_handle && pa_alsa_fdlist_set_handle(u->mixer_fdl, u->mixer_handle, NULL, u->core->mainloop) >= 0) {
+         PA_HASHMAP_FOREACH(jack, u->jacks, state) {
+-            jack->melem = pa_alsa_mixer_find(u->mixer_handle, jack->alsa_name, 0);
++            jack->melem = pa_alsa_mixer_find_card(u->mixer_handle, &jack->alsa_id, 0);
+             if (!jack->melem) {
+-                pa_log_warn("Jack '%s' seems to have disappeared.", jack->alsa_name);
++                alsa_id_str(buf, sizeof(buf), &jack->alsa_id);
++                pa_log_warn("Jack %s seems to have disappeared.", buf);
+                 pa_alsa_jack_set_has_control(jack, false);
+                 continue;
+             }
