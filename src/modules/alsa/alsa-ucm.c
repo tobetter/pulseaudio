@@ -377,6 +377,13 @@ static int ucm_get_device_property(
             pa_log("UCM playback device %s fetch pcm failed", device_name);
     }
 
+    if (pa_proplist_gets(device->proplist, PA_ALSA_PROP_UCM_SINK) &&
+        device->playback_channels == 0) {
+        pa_log_info("UCM file does not specify 'PlaybackChannels' "
+                    "for device %s, assuming stereo.", device_name);
+        device->playback_channels = 2;
+    }
+
     value = pa_proplist_gets(device->proplist, PA_ALSA_PROP_UCM_CAPTURE_CHANNELS);
     if (value) { /* input */
         /* get channels */
@@ -391,10 +398,10 @@ static int ucm_get_device_property(
             pa_log("UCM capture device %s fetch pcm failed", device_name);
     }
 
-    if (device->playback_channels == 0 && device->capture_channels == 0) {
-        pa_log_warn("UCM file does not specify 'PlaybackChannels' or 'CaptureChannels'"
-                    "for device %s, assuming stereo duplex.", device_name);
-        device->playback_channels = 2;
+    if (pa_proplist_gets(device->proplist, PA_ALSA_PROP_UCM_SOURCE) &&
+        device->capture_channels == 0) {
+        pa_log_info("UCM file does not specify 'CaptureChannels' "
+                    "for device %s, assuming stereo.", device_name);
         device->capture_channels = 2;
     }
 
@@ -1308,7 +1315,7 @@ int pa_alsa_ucm_set_profile(pa_alsa_ucm_config *ucm, pa_card *card, const char *
     /* select volume controls on ports */
     PA_HASHMAP_FOREACH(port, card->ports, state) {
         data = PA_DEVICE_PORT_DATA(port);
-        data->path = pa_hashmap_get(data->paths, new_profile);
+        data->path = pa_hashmap_get(data->paths, profile);
     }
 
     return ret;
@@ -1723,6 +1730,10 @@ static int ucm_create_profile(
         /* JackHWMute contains a list of device names. Each listed device must
          * be associated with the jack object that we just created. */
         jack_hw_mute = pa_proplist_gets(dev->proplist, PA_ALSA_PROP_UCM_JACK_HW_MUTE);
+        if (jack_hw_mute && !jack) {
+            pa_log("[%s] JackHWMute set, but JackControl is missing", name);
+            jack_hw_mute = NULL;
+        }
         if (jack_hw_mute) {
             char *hw_mute_device_name;
             const char *state = NULL;

@@ -1,3 +1,14 @@
+pulseaudio (1:13.99.1-1ubuntu3) focal; urgency=medium
+
+  * debian/patches/git_cherrypick_fixes.patch:
+    - cherry pick pending commits from git, we are on a rc version but it
+      looks like the stable isn't going to be rolled before focal is out
+      so let's include the pending fixes in our package.
+    - fixes for sound not working on Bay and Cherry trail (lp: #1872970)
+    - remove git_ucm_assert.patch which was an individual cherrypick
+
+ -- Sebastien Bacher <seb128@ubuntu.com>  Thu, 16 Apr 2020 10:07:10 +0200
+
 pulseaudio (1:13.99.1-1ubuntu2) focal; urgency=medium
 
   * debian/patches/git_ucm_assert.patch:

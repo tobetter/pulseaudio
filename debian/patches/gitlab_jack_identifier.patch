@@ -168,7 +168,7 @@ Index: pulseaudio-13.99.1/src/modules/alsa/alsa-ucm.c
 ===================================================================
 --- pulseaudio-13.99.1.orig/src/modules/alsa/alsa-ucm.c
 +++ pulseaudio-13.99.1/src/modules/alsa/alsa-ucm.c
-@@ -1643,7 +1643,7 @@ static pa_alsa_jack* ucm_get_jack(pa_als
+@@ -1650,7 +1650,7 @@ static pa_alsa_jack* ucm_get_jack(pa_als
          pa_log("[%s] No mixer device name for JackControl \"%s\"", device_name, jack_control);
          return NULL;
      }
@@ -177,7 +177,7 @@ Index: pulseaudio-13.99.1/src/modules/alsa/alsa-ucm.c
      PA_LLIST_PREPEND(pa_alsa_jack, ucm->jacks, j);
  
  finish:
-@@ -1873,7 +1873,7 @@ static void ucm_mapping_jack_probe(pa_al
+@@ -1884,7 +1884,7 @@ static void ucm_mapping_jack_probe(pa_al
              continue;
          }
  
