@@ -1458,6 +1458,21 @@ AS_IF([test "x$os_is_win32" != "x1"],
 AS_IF([test "x$ax_pthread_ok" = "xyes"],
     AC_DEFINE([_POSIX_PTHREAD_SEMANTICS], 1, [Needed on Solaris]))
 
+# Snappy support
+
+AC_ARG_ENABLE([snap],
+    AS_HELP_STRING([--enable-snap], [Enable snap support]))
+
+have_apparmor=0
+have_snapd_glib=0
+AS_IF([test "x$enable_snap" != "xno"],
+    [PKG_CHECK_MODULES(APPARMOR, [libapparmor], [have_apparmor=1])
+     PKG_CHECK_MODULES(SNAPD_GLIB, [snapd-glib glib-2.0 gio-2.0], [have_snapd_glib=1])])
+
+AS_IF([test "x$enable_snap" = "xyes" && test "x$have_apparmor" = "x0" -o "x$have-snapd_glib" = "x0"],
+    [AC_MSG_ERROR([*** Snap module dependencies missing])])
+
+AM_CONDITIONAL([BUILD_SNAP], [test "x$enable_snap" = "xyes"])
 
 
 ###################################
@@ -1639,6 +1654,7 @@ AS_IF([test "x$HAVE_ESOUND" = "x1" -a "x$USE_PER_USER_ESOUND_SOCKET" = "x1"], EN
 AS_IF([test "x$HAVE_GCOV" = "x1"], ENABLE_GCOV=yes, ENABLE_GCOV=no)
 AS_IF([test "x$HAVE_LIBCHECK" = "x1"], ENABLE_TESTS=yes, ENABLE_TESTS=no)
 AS_IF([test "x$enable_legacy_database_entry_format" != "xno"], ENABLE_LEGACY_DATABASE_ENTRY_FORMAT=yes, ENABLE_LEGACY_DATABASE_ENTRY_FORMAT=no)
+AS_IF([test "x$enable_snap" != "xno"], ENABLE_SNAP=yes, ENABLE_SNAP=no)
 
 echo "
  ---{ $PACKAGE_NAME $VERSION }---
@@ -1695,6 +1711,7 @@ echo "
     Enable soxr (resampler):       ${ENABLE_SOXR}
     Enable WebRTC echo canceller:  ${ENABLE_WEBRTC}
     Enable GStreamer-based RTP:    ${ENABLE_GSTREAMER}
+    Enable Snap support:           ${ENABLE_SNAP}
     Enable gcov coverage:          ${ENABLE_GCOV}
     Enable unit tests:             ${ENABLE_TESTS}
     Database
