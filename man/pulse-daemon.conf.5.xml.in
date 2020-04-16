@@ -61,7 +61,7 @@ License along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
   <section name="General Directives">
 
     <option>
-      <p><opt>daemonize= </opt> Daemonize after startup. Takes a
+      <p><opt>daemonize=</opt> Daemonize after startup. Takes a
       boolean value, defaults to <opt>no</opt>. The <opt>--daemonize</opt>
       command line option takes precedence.</p>
     </option>
@@ -135,7 +135,10 @@ License along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
     <option>
       <p><opt>enable-remixing=</opt> If disabled never upmix or
       downmix channels to different channel maps. Instead, do a simple
-      name-based matching only. Defaults to <opt>yes.</opt></p>
+      name-based matching only. Defaults to <opt>yes</opt>.
+      There is no known valid use case for setting this option to
+      <opt>no</opt>, therefore, this option is deprecated and may be
+      removed in a future version of PulseAudio.</p>
     </option>
 
     <option>
@@ -490,7 +493,7 @@ License along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
       format. Specify one of <opt>u8</opt>, <opt>s16le</opt>,
       <opt>s16be</opt>, <opt>s24le</opt>, <opt>s24be</opt>,
       <opt>s24-32le</opt>, <opt>s24-32be</opt>, <opt>s32le</opt>,
-      <opt>s32be</opt> <opt>float32le</opt>, <opt>float32be</opt>,
+      <opt>s32be</opt>, <opt>float32le</opt>, <opt>float32be</opt>,
       <opt>ulaw</opt>, <opt>alaw</opt>. Depending on the endianness of
       the CPU the formats <opt>s16ne</opt>, <opt>s16re</opt>,
       <opt>s24ne</opt>, <opt>s24re</opt>, <opt>s24-32ne</opt>,
