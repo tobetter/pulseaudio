@@ -182,5 +182,5 @@ load-module module-filter-apply
 ])dnl
 
 ### Make some devices default
-#set-default-sink output
+set-default-sink alsa_output.platform-sound.hdmi-stereo
 #set-default-source input
